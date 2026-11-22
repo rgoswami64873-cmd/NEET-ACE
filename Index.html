@@ -1,0 +1,2625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEET Ace Portal</title>
+    
+    <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* ==========================================
+           1. MODERN DESIGN TOKENS (Dark & Light)
+           ========================================== */
+        :root {
+            --bg-base: #060913;
+            --bg-elevated: rgba(15, 23, 42, 0.78);
+            --bg-solid: #0f172a;
+            --bg-glass: rgba(15, 23, 42, 0.8);
+            --border-subtle: rgba(148, 163, 184, 0.15);
+            --border-glow: rgba(16, 185, 129, 0.38);
+
+            --primary: #10b981;
+            --primary-bright: #34d399;
+            --secondary: #06b6d4;
+            --indigo: #6366f1;
+            --accent: #f59e0b;
+            --danger: #f43f5e;
+            --purple: #8b5cf6;
+
+            --physics-color: #fb7185;
+            --chemistry-color: #38bdf8;
+            --biology-color: #34d399;
+
+            --text-main: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+
+            --input-bg: rgba(2, 6, 23, 0.6);
+            --input-border: rgba(148, 163, 184, 0.24);
+            --shadow-card: 0 12px 35px -10px rgba(0, 0, 0, 0.55);
+            --shadow-glow: 0 0 22px rgba(16, 185, 129, 0.28);
+            --radius-lg: 20px;
+            --radius-md: 14px;
+        }
+
+        body.light-mode {
+            --bg-base: #f1f5f9;
+            --bg-elevated: rgba(255, 255, 255, 0.94);
+            --bg-solid: #ffffff;
+            --bg-glass: rgba(255, 255, 255, 0.9);
+            --border-subtle: rgba(15, 23, 42, 0.1);
+            --border-glow: rgba(5, 150, 105, 0.35);
+
+            --primary: #059669;
+            --primary-bright: #059669;
+            --secondary: #0284c7;
+            --physics-color: #e11d48;
+            --chemistry-color: #0284c7;
+            --biology-color: #059669;
+
+            --text-main: #0f172a;
+            --text-secondary: #334155;
+            --text-muted: #64748b;
+
+            --input-bg: #f8fafc;
+            --input-border: #cbd5e1;
+            --shadow-card: 0 10px 30px -10px rgba(15, 23, 42, 0.08);
+            --shadow-glow: 0 8px 20px rgba(5, 150, 105, 0.2);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            line-height: 1.5;
+            transition: background-color 0.25s ease, color 0.25s ease;
+        }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        /* Ambient Background Blobs */
+        .bg-mesh { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+        .blob { position: absolute; border-radius: 50%; filter: blur(110px); opacity: 0.15; }
+        body.light-mode .blob { opacity: 0.08; }
+        .blob-1 { width: 420px; height: 420px; background: var(--primary); top: -120px; left: -100px; }
+        .blob-2 { width: 460px; height: 460px; background: var(--indigo); bottom: -140px; right: -100px; }
+        .blob-3 { width: 300px; height: 300px; background: var(--secondary); top: 45%; left: 55%; }
+
+        /* ==========================================
+           2. NAVBAR, DRAWER & MOBILE DOCK
+           ========================================== */
+        nav {
+            background: var(--bg-glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 12px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            gap: 10px;
+        }
+        .nav-left { display: flex; align-items: center; gap: 12px; }
+        .logo { font-size: 20px; font-weight: 800; letter-spacing: -0.4px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .logo-icon {
+            width: 36px; height: 36px; border-radius: 11px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #041014; display: flex; align-items: center; justify-content: center; font-size: 16px;
+            box-shadow: var(--shadow-glow);
+        }
+        .menu-btn {
+            width: 38px; height: 38px; border-radius: 10px;
+            border: 1px solid var(--border-subtle); background: transparent;
+            color: var(--text-main); display: flex; align-items: center; justify-content: center;
+            font-size: 17px; cursor: pointer; transition: 0.2s;
+        }
+        .menu-btn:hover { border-color: var(--primary); color: var(--primary-bright); }
+
+        .desktop-nav {
+            display: flex; align-items: center; gap: 4px;
+            background: rgba(148, 163, 184, 0.08); padding: 4px;
+            border-radius: 14px; border: 1px solid var(--border-subtle);
+        }
+        .desktop-nav button {
+            background: transparent; border: none; color: var(--text-muted);
+            padding: 7px 14px; border-radius: 10px; font-size: 13px; font-weight: 600;
+            cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 7px;
+        }
+        .desktop-nav button:hover { color: var(--text-main); }
+        .desktop-nav button.active { background: var(--bg-solid); color: var(--primary-bright); box-shadow: 0 2px 10px rgba(0,0,0,0.16); }
+        @media (max-width: 920px) { .desktop-nav { display: none; } }
+
+        .nav-right { display: flex; align-items: center; gap: 10px; }
+        .db-badge {
+            font-size: 11px; padding: 5px 10px; border-radius: 999px; font-weight: 700;
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(16, 185, 129, 0.14); color: var(--primary-bright);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .db-badge.offline { background: rgba(245, 158, 11, 0.14); color: var(--accent); border-color: rgba(245, 158, 11, 0.3); }
+        .pulse-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: pulseDot 1.8s infinite; }
+        @keyframes pulseDot { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+        @media (max-width: 560px) { .db-badge span.db-text { display: none; } }
+
+        .user-pill-btn {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(6, 182, 212, 0.14));
+            border: 1px solid var(--border-glow); color: var(--text-main);
+            padding: 5px 13px 5px 7px; border-radius: 999px; font-weight: 600; font-size: 13px;
+            cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px;
+        }
+        .user-pill-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-glow); }
+        .user-avatar-sm {
+            width: 26px; height: 26px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #041014; font-weight: 800; font-size: 11.5px;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* Side Drawer */
+        .side-menu {
+            height: 100%; width: 280px; max-width: 85vw;
+            position: fixed; top: 0; left: -300px;
+            background: var(--bg-solid); border-right: 1px solid var(--border-subtle);
+            z-index: 250; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 20px 16px; display: flex; flex-direction: column;
+            box-shadow: 10px 0 35px rgba(0, 0, 0, 0.5);
+        }
+        .side-menu.open { left: 0; }
+        .side-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 4px 8px 16px; border-bottom: 1px solid var(--border-subtle); margin-bottom: 14px;
+        }
+        .side-menu a {
+            padding: 12px 14px; text-decoration: none; font-size: 14.5px; font-weight: 600;
+            color: var(--text-muted); display: flex; align-items: center; gap: 12px;
+            border-radius: 12px; margin-bottom: 4px; transition: 0.2s; cursor: pointer;
+        }
+        .side-menu a:hover, .side-menu a.active-side { color: var(--primary-bright); background: rgba(16, 185, 129, 0.12); }
+        .menu-overlay { position: fixed; inset: 0; background: rgba(2, 6, 23, 0.65); backdrop-filter: blur(4px); z-index: 200; display: none; }
+        .menu-overlay.active { display: block; }
+
+        /* Mobile Bottom App Dock */
+        .mobile-dock {
+            display: none; position: fixed; bottom: 0; left: 0; right: 0;
+            background: var(--bg-glass); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+            border-top: 1px solid var(--border-subtle);
+            padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+            z-index: 120; justify-content: space-around; align-items: center;
+        }
+        .mobile-dock button {
+            background: none; border: none; color: var(--text-muted);
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            font-size: 10.5px; font-weight: 600; cursor: pointer; padding: 6px 10px;
+            border-radius: 12px; transition: 0.2s;
+        }
+        .mobile-dock button i { font-size: 18px; }
+        .mobile-dock button.active { color: var(--primary-bright); background: rgba(16, 185, 129, 0.12); }
+        @media (max-width: 768px) {
+            .mobile-dock { display: flex; }
+            body { padding-bottom: 76px; }
+        }
+
+        /* ==========================================
+           3. MAIN LAYOUT, CARDS & HERO
+           ========================================== */
+        .container { max-width: 1320px; width: 92%; margin: 22px auto; position: relative; z-index: 10; flex-grow: 1; }
+        .tab-content { display: none; animation: fadeUp 0.25s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card {
+            background: var(--bg-elevated);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-radius: var(--radius-lg);
+            padding: 22px;
+            border: 1px solid var(--border-subtle);
+            box-shadow: var(--shadow-card);
+            margin-bottom: 20px;
+        }
+
+        .hero-card {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(99, 102, 241, 0.15) 55%, rgba(15, 23, 42, 0.9) 100%);
+            border: 1px solid var(--border-glow);
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 22px; padding: 26px;
+        }
+        body.light-mode .hero-card {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(56, 189, 248, 0.14) 55%, #ffffff 100%);
+        }
+        .hero-greeting { max-width: 560px; }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.8px; color: var(--primary-bright);
+            background: rgba(16, 185, 129, 0.14); padding: 5px 12px; border-radius: 999px; margin-bottom: 12px;
+        }
+        .hero-greeting h1 { font-size: clamp(22px, 3.2vw, 31px); font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; margin-bottom: 8px; }
+        .hero-greeting p { font-size: 13.5px; color: var(--text-muted); }
+
+        .countdown-box { display: grid; grid-template-columns: repeat(4, minmax(66px, 1fr)); gap: 10px; }
+        .cd-pill {
+            background: var(--input-bg); border: 1px solid var(--border-subtle);
+            border-radius: 14px; padding: 12px 10px; text-align: center;
+        }
+        .cd-pill span { display: block; font-size: 22px; font-weight: 700; color: var(--text-main); line-height: 1.15; }
+        .cd-pill label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.7px; font-weight: 600; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin-bottom: 20px; }
+        .stat-tile {
+            background: var(--bg-elevated); border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md); padding: 16px 18px;
+            display: flex; align-items: center; gap: 14px; transition: 0.2s;
+        }
+        .stat-tile:hover { transform: translateY(-2px); border-color: var(--border-glow); }
+        .stat-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+        .stat-value { font-size: 21px; font-weight: 800; line-height: 1.15; }
+        .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+        .dash-split { display: grid; grid-template-columns: 2.1fr 1fr; gap: 20px; align-items: start; }
+        @media (max-width: 960px) { .dash-split { grid-template-columns: 1fr; } }
+
+        /* Subject Cards */
+        .subjects-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; }
+        .subject-card {
+            background: var(--bg-elevated); border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg); padding: 22px;
+            display: flex; flex-direction: column; justify-content: space-between; gap: 18px;
+            transition: all 0.22s ease; position: relative; overflow: hidden;
+        }
+        .subject-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+        .subject-card.bio::before { background: linear-gradient(90deg, #10b981, #34d399); }
+        .subject-card.phy::before { background: linear-gradient(90deg, #f43f5e, #fb7185); }
+        .subject-card.chem::before { background: linear-gradient(90deg, #0284c7, #38bdf8); }
+        .subject-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-card); }
+        .subject-icon-wrap {
+            width: 48px; height: 48px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center; font-size: 21px; margin-bottom: 12px;
+        }
+
+        /* ==========================================
+           4. BUTTONS, INPUTS, TAGS & GOALS
+           ========================================== */
+        .input-field, select, textarea {
+            width: 100%; background: var(--input-bg); border: 1px solid var(--input-border);
+            padding: 11px 14px; border-radius: 12px; color: var(--text-main);
+            outline: none; font-size: 14px; transition: 0.2s;
+        }
+        .input-field:focus, select:focus, textarea:focus {
+            border-color: var(--primary-bright); box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+        }
+        select option { background: var(--bg-solid); color: var(--text-main); }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #041014; border: none; padding: 10px 18px; border-radius: 12px;
+            font-weight: 700; font-size: 13.5px; cursor: pointer; transition: all 0.2s ease;
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-glow); }
+        .btn:active { transform: scale(0.98); }
+        .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+        .btn-outline { background: transparent; border: 1px solid var(--border-subtle); color: var(--text-main); }
+        .btn-outline:hover { border-color: var(--primary-bright); color: var(--primary-bright); box-shadow: none; }
+        .btn-danger { background: linear-gradient(135deg, #e11d48, #f43f5e); color: #ffffff; }
+        .btn-accent { background: linear-gradient(135deg, #d97706, #f59e0b); color: #041014; }
+        .btn-bio { background: linear-gradient(135deg, #059669, #34d399); color: #041014; }
+        .btn-bio:hover { box-shadow: 0 8px 22px rgba(16, 185, 129, 0.35); }
+        .btn-phy { background: linear-gradient(135deg, #e11d48, #fb7185); color: #ffffff; }
+        .btn-phy:hover { box-shadow: 0 8px 22px rgba(244, 63, 94, 0.35); }
+        .btn-chem { background: linear-gradient(135deg, #0284c7, #38bdf8); color: #041014; }
+        .btn-chem:hover { box-shadow: 0 8px 22px rgba(56, 189, 248, 0.35); }
+
+        .tag { font-size: 11px; padding: 4px 10px; border-radius: 999px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; }
+        .tag.b { background: rgba(16, 185, 129, 0.16); color: var(--biology-color); }
+        .tag.p { background: rgba(244, 63, 94, 0.16); color: var(--physics-color); }
+        .tag.c { background: rgba(56, 189, 248, 0.16); color: var(--chemistry-color); }
+        .tag.a { background: rgba(245, 158, 11, 0.16); color: var(--accent); }
+
+        .checklist-item {
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(148, 163, 184, 0.06); padding: 11px 13px; border-radius: 12px;
+            margin-bottom: 8px; border: 1px solid var(--border-subtle); gap: 10px;
+        }
+        .checklist-item.done span.task-text { text-decoration: line-through; color: var(--text-muted); }
+        .check-left { display: flex; align-items: center; gap: 10px; flex-grow: 1; }
+        .check-left input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--primary); cursor: pointer; }
+        .task-text { outline: none; width: 100%; font-size: 13.5px; }
+        .icon-del-btn { background: none; border: none; color: var(--danger); cursor: pointer; padding: 5px; opacity: 0.75; transition: 0.2s; }
+        .icon-del-btn:hover { opacity: 1; transform: scale(1.1); }
+
+        /* ==========================================
+           5. NTA MOCK TEST ENGINE
+           ========================================== */
+        .engine-topbar {
+            background: var(--bg-elevated); border: 1px solid var(--border-subtle);
+            padding: 15px 18px; border-radius: 16px; margin-bottom: 16px;
+        }
+        .engine-topbar-row {
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+        }
+        .progress-track { width: 100%; height: 6px; background: rgba(148, 163, 184, 0.16); border-radius: 999px; overflow: hidden; margin-top: 12px; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--secondary)); border-radius: 999px; transition: width 0.25s ease; width: 0%; }
+        .timer-chip {
+            background: rgba(244, 63, 94, 0.14); border: 1px solid rgba(244, 63, 94, 0.35);
+            color: var(--physics-color); padding: 7px 13px; border-radius: 999px;
+            font-weight: 700; font-size: 14px; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .q-text-box { font-size: 16.5px; font-weight: 500; line-height: 1.7; margin-bottom: 16px; white-space: pre-line; }
+        .q-image { max-width: 100%; max-height: 290px; object-fit: contain; border-radius: 12px; margin: 12px 0; display: none; background: #fff; padding: 8px; }
+        .q-options { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+        .q-options li {
+            background: rgba(148, 163, 184, 0.06); padding: 13px 15px; border-radius: 14px;
+            cursor: pointer; border: 1.5px solid var(--border-subtle);
+            display: flex; align-items: center; gap: 13px; transition: all 0.18s ease;
+        }
+        .q-options li:hover { border-color: rgba(16, 185, 129, 0.5); background: rgba(16, 185, 129, 0.07); }
+        .q-options li.selected {
+            border-color: var(--primary-bright); background: rgba(16, 185, 129, 0.15);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+        }
+        .opt-letter {
+            width: 30px; height: 30px; border-radius: 9px; background: rgba(148, 163, 184, 0.16);
+            color: var(--text-main); font-weight: 700; font-size: 13px;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .q-options li.selected .opt-letter { background: var(--primary); color: #041014; }
+        .action-buttons { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 24px; gap: 10px; flex-wrap: wrap; }
+
+        /* Sliding Question Palette */
+        .sliding-pallet {
+            position: fixed; top: 0; right: -360px; width: 325px; max-width: 90vw; height: 100vh;
+            background: var(--bg-solid); border-left: 1px solid var(--border-subtle);
+            box-shadow: -12px 0 35px rgba(0, 0, 0, 0.55); z-index: 1000;
+            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 22px; overflow-y: auto;
+        }
+        .sliding-pallet.open { right: 0; }
+        .pallet-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+        .pallet-btn { padding: 10px 0; text-align: center; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; color: #fff; }
+        .status-not-visited { background: #334155; }
+        .status-answered { background: #10b981; color: #041014; }
+        .status-unanswered { background: #f43f5e; }
+        .status-review { background: #8b5cf6; }
+
+        /* ==========================================
+           6. TABLES, LEADERBOARD & ADMIN PANEL
+           ========================================== */
+        .results-table-wrap { overflow-x: auto; border-radius: 14px; border: 1px solid var(--border-subtle); }
+        table.modern-table { width: 100%; border-collapse: collapse; font-size: 13.5px; text-align: left; }
+        table.modern-table th {
+            background: rgba(148, 163, 184, 0.08); color: var(--text-muted); font-weight: 700;
+            font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px;
+            padding: 12px 15px; border-bottom: 1px solid var(--border-subtle); white-space: nowrap;
+        }
+        table.modern-table td { padding: 12px 15px; border-bottom: 1px solid var(--border-subtle); vertical-align: middle; }
+        table.modern-table tr:last-child td { border-bottom: none; }
+        table.modern-table tbody tr:hover { background: rgba(16, 185, 129, 0.05); }
+
+        .rank-badge { width: 28px; height: 28px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; }
+        .rank-1 { background: rgba(250, 204, 21, 0.22); color: #facc15; }
+        .rank-2 { background: rgba(203, 213, 225, 0.22); color: #cbd5e1; }
+        .rank-3 { background: rgba(251, 146, 60, 0.22); color: #fb923c; }
+        .rank-other { background: rgba(148, 163, 184, 0.14); color: var(--text-muted); }
+
+        .admin-nav { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+        .admin-tab-btn {
+            background: rgba(148, 163, 184, 0.08); color: var(--text-muted);
+            border: 1px solid var(--border-subtle); padding: 9px 14px; border-radius: 12px;
+            cursor: pointer; font-weight: 600; font-size: 13px; transition: 0.2s;
+            display: inline-flex; align-items: center; gap: 7px;
+        }
+        .admin-tab-btn.active { background: var(--primary); color: #041014; border-color: var(--primary); }
+        .admin-section { display: none; }
+        .admin-section.active { display: block; animation: fadeUp 0.22s ease; }
+
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: 14px; margin-bottom: 14px; }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 12.5px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600; }
+
+        .manage-item {
+            display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+            background: rgba(148, 163, 184, 0.05); padding: 15px 18px; border-radius: 14px;
+            margin-bottom: 10px; border: 1px solid var(--border-subtle);
+        }
+
+        /* ==========================================
+           7. MODALS & TOASTS
+           ========================================== */
+        .modal-backdrop {
+            position: fixed; inset: 0; background: rgba(2, 6, 23, 0.78); backdrop-filter: blur(7px);
+            z-index: 2500; display: none; align-items: center; justify-content: center; padding: 16px;
+        }
+        .modal-backdrop.open { display: flex; }
+        .modal-box {
+            background: var(--bg-solid); border: 1px solid var(--border-subtle);
+            border-radius: 22px; padding: 24px; width: 100%; max-width: 420px;
+            box-shadow: 0 24px 50px rgba(0, 0, 0, 0.55); animation: fadeUp 0.2s ease;
+        }
+        .auth-switcher {
+            display: grid; grid-template-columns: 1fr 1fr;
+            background: rgba(148, 163, 184, 0.1); padding: 4px; border-radius: 12px; margin-bottom: 16px;
+        }
+        .auth-switcher button {
+            padding: 9px; border: none; border-radius: 9px; background: transparent;
+            color: var(--text-muted); font-weight: 700; font-size: 13px; cursor: pointer; transition: 0.2s;
+        }
+        .auth-switcher button.active { background: var(--primary); color: #041014; }
+
+        .toast-container { position: fixed; top: 72px; right: 16px; z-index: 3000; display: flex; flex-direction: column; gap: 10px; max-width: 92vw; }
+        .toast {
+            background: var(--bg-solid); color: var(--text-main); padding: 13px 18px;
+            border-radius: 14px; border: 1px solid var(--border-subtle); border-left: 4px solid var(--primary);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45); font-size: 13.5px; font-weight: 600;
+            display: flex; align-items: center; gap: 10px; animation: slideToast 0.25s ease;
+        }
+        .toast.error { border-left-color: var(--danger); }
+        .toast.warning { border-left-color: var(--accent); }
+        @keyframes slideToast { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        footer {
+            text-align: center; padding: 20px; border-top: 1px solid var(--border-subtle);
+            margin-top: auto; font-size: 12.5px; color: var(--text-muted); position: relative; z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="timer-bell" src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg" preload="auto"></audio>
+
+    <div class="bg-mesh">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <div id="menu-overlay" class="menu-overlay" onclick="toggleMenu()"></div>
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- ==========================================
+         UNIFIED AUTH MODAL (STUDENT + ADMIN)
+         ========================================== -->
+    <div id="auth-modal" class="modal-backdrop">
+        <div class="modal-box">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                <h3 style="font-size:18px; font-weight:800;"><i class="fa-solid fa-user-astronaut" style="color:var(--primary-bright);"></i> NEET Ace Account</h3>
+                <button onclick="closeAuthModal()" style="background:none; border:none; color:var(--text-muted); font-size:20px; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="auth-switcher">
+                <button id="auth-tab-student" class="active" onclick="switchAuthMode('student')"><i class="fa-solid fa-graduation-cap"></i> Student</button>
+                <button id="auth-tab-admin" onclick="switchAuthMode('admin')"><i class="fa-solid fa-shield-halved"></i> Admin</button>
+            </div>
+
+            <!-- Student Form -->
+            <div id="auth-student-form">
+                <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:14px;">
+                    Apna naam aur Email/Mobile dalein taaki aapke har test ka score aur Leaderboard rank save ho sake!
+                </p>
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="student-name-input" class="input-field" placeholder="e.g. Rahul Sharma">
+                </div>
+                <div class="form-group">
+                    <label>Email or Mobile Number (Unique ID)</label>
+                    <input type="text" id="student-id-input" class="input-field" placeholder="e.g. rahul@gmail.com or 9876543210">
+                </div>
+                <div class="form-group">
+                    <label>Target Exam</label>
+                    <select id="student-target-input">
+                        <option value="NEET 2027">NEET 2027</option>
+                        <option value="NEET 2026">NEET 2026</option>
+                        <option value="NEET Dropper">NEET Dropper Batch</option>
+                    </select>
+                </div>
+                <button class="btn" id="student-login-submit-btn" style="width:100%; padding:12px;" onclick="loginStudent()">
+                    <i class="fa-solid fa-right-to-bracket"></i> Login & Continue
+                </button>
+                <button id="student-logout-btn" class="btn btn-danger" style="width:100%; margin-top:10px; display:none;" onclick="logoutStudent()">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout Student
+                </button>
+            </div>
+
+            <!-- Admin Form -->
+            <div id="auth-admin-form" style="display:none;">
+                <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:14px;">
+                    Enter Admin PIN to create tests, bulk upload questions, and track all student scores.
+                </p>
+                <div class="form-group">
+                    <label>Admin Secret PIN</label>
+                    <input type="password" id="admin-pin-input" class="input-field mono" placeholder="••••" style="text-align:center; font-size:20px; letter-spacing:6px;">
+                </div>
+                <button class="btn btn-accent" style="width:100%; padding:12px;" onclick="verifyAdminPin()">
+                    <i class="fa-solid fa-unlock-keyhole"></i> Unlock Admin Panel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Confirm Modal -->
+    <div id="confirm-modal" class="modal-backdrop">
+        <div class="modal-box" style="text-align:center;">
+            <i class="fa-solid fa-circle-question" style="font-size:38px; color:var(--accent); margin-bottom:12px;"></i>
+            <h3 id="confirm-title" style="margin-bottom:8px; font-size:19px;">Are you sure?</h3>
+            <p id="confirm-msg" style="font-size:13.5px; color:var(--text-muted); margin-bottom:22px;"></p>
+            <div style="display:flex; gap:10px; justify-content:center;">
+                <button class="btn btn-outline" onclick="closeConfirmModal(false)" style="min-width:100px;">Cancel</button>
+                <button class="btn btn-danger" onclick="closeConfirmModal(true)" style="min-width:110px;">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Focus Timer Modal -->
+    <div id="timer-popup" class="modal-backdrop">
+        <div class="modal-box" style="text-align:center; border-color:var(--danger);">
+            <h2 style="color: var(--danger); font-size: 25px; margin-bottom: 8px;">⏰ Time's Up!</h2>
+            <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 14px;">Focus session complete! Take a short recharge break.</p>
+            <button class="btn btn-danger" onclick="closeTimerPopup()" style="width: 100%;">Stop Alarm</button>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         SIDEBAR DRAWER
+         ========================================== -->
+    <div id="side-menu" class="side-menu">
+        <div class="side-header">
+            <div class="logo" style="font-size:18px;" onclick="switchTab('dashboard-tab')">
+                <div class="logo-icon" style="width:32px; height:32px; font-size:14px;"><i class="fa-solid fa-stethoscope"></i></div>
+                NEET Ace
+            </div>
+            <button onclick="toggleMenu()" style="background:none; border:none; color:var(--text-muted); font-size:22px; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <a id="snav-dashboard-tab" onclick="switchTab('dashboard-tab')" class="active-side"><i class="fa-solid fa-house"></i> Dashboard</a>
+        <a id="snav-tests-tab" onclick="switchTab('tests-tab')"><i class="fa-solid fa-file-signature"></i> Mock Test Arena</a>
+        <a id="snav-results-tab" onclick="switchTab('results-tab')"><i class="fa-solid fa-trophy"></i> Results & Leaderboard</a>
+        <a id="snav-focus-tab" onclick="switchTab('focus-tab')"><i class="fa-solid fa-stopwatch"></i> Focus Hub</a>
+        <a id="snav-notes-tab" onclick="switchTab('notes-tab')"><i class="fa-solid fa-book-open"></i> NCERT Notes</a>
+        <a id="snav-settings-tab" onclick="switchTab('settings-tab')"><i class="fa-solid fa-gear"></i> Settings</a>
+        <a id="side-admin-link" style="display:none; color:var(--accent);" onclick="switchTab('admin-tab')"><i class="fa-solid fa-crown"></i> Admin Panel</a>
+
+        <div style="margin-top:auto; padding-top:14px; border-top:1px solid var(--border-subtle);">
+            <button class="btn btn-outline" style="width:100%;" onclick="toggleMenu(); openAuthModal('student');">
+                <i class="fa-solid fa-user-circle"></i> <span id="side-user-label">Student / Admin Login</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         TOP NAVBAR
+         ========================================== -->
+    <nav>
+        <div class="nav-left">
+            <button class="menu-btn" onclick="toggleMenu()" aria-label="Menu"><i class="fa-solid fa-bars"></i></button>
+            <div class="logo" onclick="switchTab('dashboard-tab')">
+                <div class="logo-icon"><i class="fa-solid fa-stethoscope"></i></div>
+                <span>NEET Ace</span>
+            </div>
+        </div>
+
+        <div class="desktop-nav">
+            <button id="dnav-dashboard-tab" class="active" onclick="switchTab('dashboard-tab')"><i class="fa-solid fa-house"></i> Home</button>
+            <button id="dnav-tests-tab" onclick="switchTab('tests-tab')"><i class="fa-solid fa-file-signature"></i> Mock Tests</button>
+            <button id="dnav-results-tab" onclick="switchTab('results-tab')"><i class="fa-solid fa-trophy"></i> Leaderboard</button>
+            <button id="dnav-focus-tab" onclick="switchTab('focus-tab')"><i class="fa-solid fa-stopwatch"></i> Focus</button>
+            <button id="dnav-notes-tab" onclick="switchTab('notes-tab')"><i class="fa-solid fa-book-open"></i> Notes</button>
+            <button id="dnav-admin-tab" style="display:none; color:var(--accent);" onclick="switchTab('admin-tab')"><i class="fa-solid fa-crown"></i> Admin</button>
+        </div>
+
+        <div class="nav-right">
+            <div id="db-status-badge" class="db-badge offline" title="Cloud Sync Status">
+                <span class="pulse-dot"></span>
+                <span class="db-text">Connecting...</span>
+            </div>
+            <button id="nav-auth-btn" class="user-pill-btn" onclick="openAuthModal('student')">
+                <div id="nav-avatar" class="user-avatar-sm"><i class="fa-solid fa-user" style="font-size:11px;"></i></div>
+                <span id="nav-user-name">Login</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ==========================================
+         MAIN CONTAINER
+         ========================================== -->
+    <div class="container">
+
+        <!-- TAB 1: DASHBOARD -->
+        <div id="dashboard-tab" class="tab-content active">
+            <div class="card hero-card">
+                <div class="hero-greeting">
+                    <div class="hero-badge"><i class="fa-solid fa-sparkles"></i> <span id="hero-target-badge">Target AIR 1 • NEET 2027</span></div>
+                    <h1 id="hero-welcome-title">Welcome, Future Doctor!</h1>
+                    <p id="hero-welcome-sub">Login karein taaki aapke har test ka score, rank, aur detailed progress cloud par safe rahe.</p>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;">
+                        <button class="btn" onclick="switchTab('tests-tab')"><i class="fa-solid fa-play"></i> Start Mock Test</button>
+                        <button id="hero-login-cta" class="btn btn-outline" onclick="openAuthModal('student')"><i class="fa-solid fa-right-to-bracket"></i> Student Login</button>
+                    </div>
+                </div>
+                <div style="width:100%; max-width:340px;">
+                    <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--primary-bright); margin-bottom:10px; text-align:center;">
+                        <i class="fa-regular fa-clock"></i> NEET 2027 Countdown
+                    </div>
+                    <div class="countdown-box">
+                        <div class="cd-pill"><span id="cd-days" class="mono">--</span><label>Days</label></div>
+                        <div class="cd-pill"><span id="cd-hours" class="mono">--</span><label>Hrs</label></div>
+                        <div class="cd-pill"><span id="cd-minutes" class="mono">--</span><label>Min</label></div>
+                        <div class="cd-pill"><span id="cd-seconds" class="mono">--</span><label>Sec</label></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI Stats -->
+            <div class="stats-grid">
+                <div class="stat-tile">
+                    <div class="stat-icon" style="background:rgba(16,185,129,0.15); color:var(--biology-color);"><i class="fa-solid fa-file-circle-check"></i></div>
+                    <div>
+                        <div id="kpi-tests-given" class="stat-value mono">0</div>
+                        <div class="stat-label">My Tests Given</div>
+                    </div>
+                </div>
+                <div class="stat-tile">
+                    <div class="stat-icon" style="background:rgba(245,158,11,0.15); color:var(--accent);"><i class="fa-solid fa-bullseye"></i></div>
+                    <div>
+                        <div id="kpi-avg-accuracy" class="stat-value mono">0%</div>
+                        <div class="stat-label">My Avg Accuracy</div>
+                    </div>
+                </div>
+                <div class="stat-tile">
+                    <div class="stat-icon" style="background:rgba(99,102,241,0.15); color:var(--indigo);"><i class="fa-solid fa-medal"></i></div>
+                    <div>
+                        <div id="kpi-best-score" class="stat-value mono">--</div>
+                        <div class="stat-label">My Best Score</div>
+                    </div>
+                </div>
+                <div class="stat-tile">
+                    <div class="stat-icon" style="background:rgba(6,182,212,0.15); color:var(--secondary);"><i class="fa-solid fa-users"></i></div>
+                    <div>
+                        <div id="kpi-total-attempts" class="stat-value mono">0</div>
+                        <div class="stat-label">Portal Attempts</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2-Column Split -->
+            <div class="dash-split">
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                        <h2 style="font-size:18px; font-weight:800;"><i class="fa-solid fa-layer-group" style="color:var(--primary-bright);"></i> Chapter-wise Practice</h2>
+                        <span style="font-size:12px; color:var(--text-muted);">NCERT Line-by-Line</span>
+                    </div>
+                    <div class="subjects-grid">
+                        <!-- Biology -->
+                        <div class="subject-card bio">
+                            <div>
+                                <div class="subject-icon-wrap" style="background:rgba(16,185,129,0.16); color:var(--biology-color);"><i class="fa-solid fa-dna"></i></div>
+                                <h3 style="font-size:19px; font-weight:700;">Biology</h3>
+                                <p style="font-size:12.5px; color:var(--text-muted); margin-top:4px;">Botany & Zoology • 360 Marks</p>
+                            </div>
+                            <button class="btn btn-bio" style="width:100%;" onclick="openSubject('Biology')"><i class="fa-solid fa-folder-open"></i> Open Chapters</button>
+                        </div>
+                        <!-- Physics -->
+                        <div class="subject-card phy">
+                            <div>
+                                <div class="subject-icon-wrap" style="background:rgba(244,63,94,0.16); color:var(--physics-color);"><i class="fa-solid fa-magnet"></i></div>
+                                <h3 style="font-size:19px; font-weight:700;">Physics</h3>
+                                <p style="font-size:12.5px; color:var(--text-muted); margin-top:4px;">Concepts & Numericals • 180 Marks</p>
+                            </div>
+                            <button class="btn btn-phy" style="width:100%;" onclick="openSubject('Physics')"><i class="fa-solid fa-folder-open"></i> Open Chapters</button>
+                        </div>
+                        <!-- Chemistry -->
+                        <div class="subject-card chem">
+                            <div>
+                                <div class="subject-icon-wrap" style="background:rgba(56,189,248,0.16); color:var(--chemistry-color);"><i class="fa-solid fa-flask"></i></div>
+                                <h3 style="font-size:19px; font-weight:700;">Chemistry</h3>
+                                <p style="font-size:12.5px; color:var(--text-muted); margin-top:4px;">Physical, Org & Inorg • 180 Marks</p>
+                            </div>
+                            <button class="btn btn-chem" style="width:100%;" onclick="openSubject('Chemistry')"><i class="fa-solid fa-folder-open"></i> Open Chapters</button>
+                        </div>
+                    </div>
+
+                    <!-- Live Activity Feed -->
+                    <div class="card" style="margin-top:20px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                            <h3 style="font-size:16px; font-weight:700;"><i class="fa-solid fa-bolt" style="color:var(--accent);"></i> Live Activity Feed</h3>
+                            <button class="btn btn-outline" style="padding:5px 12px; font-size:12px;" onclick="switchTab('results-tab')">Leaderboard</button>
+                        </div>
+                        <div id="dash-recent-feed" style="font-size:13px; color:var(--text-muted);">No test attempts yet. Be the first to set a high score!</div>
+                    </div>
+                </div>
+
+                <!-- Today's Goals -->
+                <div class="card">
+                    <h3 style="font-size:17px; font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:8px;">
+                        <i class="fa-solid fa-list-check" style="color:var(--primary-bright);"></i> Today's Study Goals
+                    </h3>
+                    <div style="display:flex; gap:8px; margin-bottom:14px;">
+                        <input type="text" id="goal-input" class="input-field" placeholder="Add a NEET target...">
+                        <button class="btn" onclick="addGoal()" style="padding:10px 14px;"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <div id="goal-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 1.5: CHAPTER PRACTICE -->
+        <div id="chapter-list-screen" class="tab-content">
+            <div class="card" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
+                <div style="display:flex; align-items:center; gap:14px;">
+                    <div id="chapter-icon-box" class="subject-icon-wrap" style="margin:0; background:rgba(16,185,129,0.16); color:var(--biology-color);">
+                        <i id="chapter-subject-icon" class="fa-solid fa-dna"></i>
+                    </div>
+                    <div>
+                        <h2 id="chapter-subject-title" style="font-size:20px; font-weight:800;">Biology Chapter Practice</h2>
+                        <p style="font-size:13px; color:var(--text-muted);">Select a chapter to start focused NCERT practice.</p>
+                    </div>
+                </div>
+                <button class="btn btn-outline" onclick="switchTab('dashboard-tab')"><i class="fa-solid fa-arrow-left"></i> Back to Home</button>
+            </div>
+            <div id="dynamic-chapters-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;"></div>
+        </div>
+
+        <!-- TAB 2: MOCK TEST ARENA & ENGINE -->
+        <div id="tests-tab" class="tab-content">
+            <div id="test-list-screen">
+                <div class="card" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                    <div>
+                        <h2 style="font-size:21px; font-weight:800;"><i class="fa-solid fa-file-signature" style="color:var(--primary-bright);"></i> Mock Test Arena</h2>
+                        <p style="font-size:13px; color:var(--text-muted); margin-top:4px;">Real NTA +4 / -1 Marking Pattern • Instant Score & Analysis</p>
+                    </div>
+                    <div id="test-list-user-banner"></div>
+                </div>
+                <div id="dynamic-tests-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(285px, 1fr)); gap: 16px;"></div>
+            </div>
+
+            <!-- Active Test Engine -->
+            <div id="test-engine" style="display:none;">
+                <div class="engine-topbar">
+                    <div class="engine-topbar-row">
+                        <div>
+                            <div id="engine-test-title" style="font-size:12px; color:var(--text-muted); font-weight:600; margin-bottom:4px;">Mock Test</div>
+                            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                                <span id="q-number" style="font-size:17px; font-weight:800;">Question 1 / 1</span>
+                                <span id="q-subject" class="tag b">Biology</span>
+                            </div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                            <div class="timer-chip mono"><i class="fa-regular fa-clock"></i> <span id="mock-timer">00:00</span></div>
+                            <button class="btn btn-outline" onclick="togglePallet()" style="padding:8px 13px;"><i class="fa-solid fa-grip"></i> Palette</button>
+                            <button class="btn btn-danger" onclick="confirmSubmitTest()" style="padding:8px 13px;"><i class="fa-solid fa-paper-plane"></i> Submit</button>
+                        </div>
+                    </div>
+                    <div class="progress-track"><div id="q-progress-fill" class="progress-fill"></div></div>
+                </div>
+
+                <div class="card" style="min-height: 380px; display:flex; flex-direction:column;">
+                    <div id="q-text" class="q-text-box"></div>
+                    <img id="q-image" class="q-image" src="" alt="Question Diagram" onerror="this.style.display='none'">
+                    <ul class="q-options" id="q-options-container"></ul>
+
+                    <div class="action-buttons">
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <button id="prev-q-btn" class="btn btn-outline" onclick="prevQuestion()"><i class="fa-solid fa-arrow-left"></i> Prev</button>
+                            <button class="btn btn-outline" style="color:var(--danger); border-color:rgba(244,63,94,0.35);" onclick="clearResponse()"><i class="fa-solid fa-eraser"></i> Clear</button>
+                        </div>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <button class="btn btn-accent" onclick="markForReview()"><i class="fa-solid fa-bookmark"></i> Review & Next</button>
+                            <button id="save-next-btn" class="btn" onclick="saveAndNext()">Save & Next <i class="fa-solid fa-arrow-right"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sliding Palette -->
+                <div id="sliding-pallet" class="sliding-pallet">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                        <h3 style="font-size:17px; font-weight:800;">Question Palette</h3>
+                        <button onclick="togglePallet()" style="background:none; border:none; color:var(--text-muted); font-size:22px; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; font-size:11.5px; margin-bottom:16px; color:var(--text-muted);">
+                        <span><i class="fa-solid fa-circle" style="color:#10b981;"></i> Saved</span>
+                        <span><i class="fa-solid fa-circle" style="color:#f43f5e;"></i> Skipped</span>
+                        <span><i class="fa-solid fa-circle" style="color:#8b5cf6;"></i> Review</span>
+                    </div>
+                    <div class="pallet-grid" id="pallet-grid"></div>
+                    <button class="btn btn-danger" onclick="confirmSubmitTest()" style="margin-top:24px; width:100%; padding:12px;">
+                        <i class="fa-solid fa-paper-plane"></i> Final Submit Test
+                    </button>
+                </div>
+            </div>
+
+            <!-- Result Summary Screen -->
+            <div id="test-result" class="card" style="display:none; text-align:center;">
+                <div style="width:66px; height:66px; border-radius:20px; background:rgba(245,158,11,0.16); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:30px; margin:0 auto 14px;">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+                <h2 style="font-size:23px; font-weight:800;">Test Submitted Successfully!</h2>
+                <p id="result-student-meta" style="font-size:13px; color:var(--text-muted); margin-top:6px;"></p>
+
+                <div class="mono" style="font-size:46px; font-weight:800; color:var(--primary-bright); margin:16px 0;" id="final-score">0 / 0</div>
+                <div id="score-analysis" style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:20px;"></div>
+
+                <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:22px;">
+                    <button class="btn" onclick="switchTab('results-tab')"><i class="fa-solid fa-ranking-star"></i> View Leaderboard</button>
+                    <button class="btn btn-outline" onclick="switchTab('tests-tab')"><i class="fa-solid fa-rotate-left"></i> More Tests</button>
+                    <button class="btn btn-outline" onclick="switchTab('dashboard-tab')"><i class="fa-solid fa-house"></i> Home</button>
+                </div>
+
+                <div id="detailed-analysis-container"></div>
+            </div>
+        </div>
+
+        <!-- TAB 3: RESULTS & LEADERBOARD -->
+        <div id="results-tab" class="tab-content">
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+                    <div>
+                        <h2 style="font-size:19px; font-weight:800;"><i class="fa-solid fa-clock-rotate-left" style="color:var(--secondary);"></i> My Test History</h2>
+                        <p id="my-history-sub" style="font-size:13px; color:var(--text-muted);">Login to view your personal test scores here.</p>
+                    </div>
+                    <button class="btn btn-outline" style="padding:7px 14px; font-size:12.5px;" onclick="openAuthModal('student')">
+                        <i class="fa-solid fa-user"></i> Switch / Login
+                    </button>
+                </div>
+                <div id="my-history-container"></div>
+            </div>
+
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+                    <div>
+                        <h2 style="font-size:19px; font-weight:800;"><i class="fa-solid fa-trophy" style="color:var(--accent);"></i> Live Leaderboard</h2>
+                        <p style="font-size:13px; color:var(--text-muted);">Top NEET Ace performers ranked by score & accuracy.</p>
+                    </div>
+                    <select id="leaderboard-test-filter" style="max-width:250px;" onchange="renderLeaderboard()">
+                        <option value="ALL">All Tests Combined</option>
+                    </select>
+                </div>
+                <div id="leaderboard-container"></div>
+            </div>
+        </div>
+
+        <!-- TAB 4: FOCUS HUB -->
+        <div id="focus-tab" class="tab-content">
+            <div class="card" style="max-width: 540px; margin: 0 auto; text-align:center;">
+                <h2 style="font-size:21px; font-weight:800; margin-bottom:6px;"><i class="fa-solid fa-stopwatch" style="color:var(--primary-bright);"></i> Deep Focus Hub</h2>
+                <p style="font-size:13px; color:var(--text-muted); margin-bottom:22px;">Distraction-free Pomodoro timer for NCERT study & mock practice.</p>
+                
+                <div style="background: var(--input-bg); border: 1px solid var(--border-glow); padding: 32px 18px; border-radius: 20px;">
+                    <div id="bg-timer-display" class="mono" style="font-size: 60px; font-weight: 700; color: var(--primary-bright); margin-bottom: 22px;">00:00</div>
+                    <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:18px;">
+                        <button class="btn btn-outline" style="padding:6px 13px; font-size:12px;" onclick="quickStartTimer(25)">25m</button>
+                        <button class="btn btn-outline" style="padding:6px 13px; font-size:12px;" onclick="quickStartTimer(45)">45m</button>
+                        <button class="btn btn-outline" style="padding:6px 13px; font-size:12px;" onclick="quickStartTimer(60)">60m</button>
+                        <button class="btn btn-outline" style="padding:6px 13px; font-size:12px;" onclick="quickStartTimer(180)">180m</button>
+                    </div>
+                    <input type="number" id="bg-timer-input" class="input-field" placeholder="Or custom minutes (e.g. 50)" style="max-width: 250px; margin: 0 auto 18px; text-align: center;">
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <button class="btn" onclick="startBgTimer()" style="min-width: 115px;"><i class="fa-solid fa-play"></i> Start</button>
+                        <button class="btn btn-danger" onclick="stopBgTimer()" style="min-width: 115px;"><i class="fa-solid fa-stop"></i> Stop</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 5: NOTES -->
+        <div id="notes-tab" class="tab-content">
+            <div class="card" style="text-align:center; padding:42px 24px;">
+                <i class="fa-solid fa-book-open" style="font-size:40px; color:var(--secondary); margin-bottom:14px;"></i>
+                <h2 style="font-size:21px; font-weight:800;">Digital Library & NCERT Notes</h2>
+                <p style="color:var(--text-muted); font-size:13.5px; margin:8px auto 20px; max-width:440px;">Short formula sheets, NCERT Biology diagrams, and Organic Chemistry named reactions.</p>
+                <button class="btn" onclick="showToast('NCERT PDF Notes coming soon! You can ask to add PDF upload in Admin Panel.', 'warning')">Explore Library</button>
+            </div>
+        </div>
+
+        <!-- TAB 6: SETTINGS -->
+        <div id="settings-tab" class="tab-content">
+            <div class="card" style="max-width: 620px; margin: 0 auto;">
+                <h2 style="font-size:20px; font-weight:800; margin-bottom: 18px;"><i class="fa-solid fa-gear" style="color:var(--primary-bright);"></i> Portal Settings</h2>
+                
+                <div class="manage-item">
+                    <div>
+                        <h3 style="font-size: 15px; font-weight:700;">Appearance Theme</h3>
+                        <p style="color: var(--text-muted); font-size: 12.5px;">Switch between Dark and Light Mode.</p>
+                    </div>
+                    <button class="btn" id="theme-toggle-btn" onclick="toggleTheme()"><i class="fa-solid fa-sun"></i> Light Mode</button>
+                </div>
+
+                <div class="manage-item">
+                    <div>
+                        <h3 style="font-size: 15px; font-weight:700;">Student Account</h3>
+                        <p id="settings-student-info" style="color: var(--text-muted); font-size: 12.5px;">Not logged in</p>
+                    </div>
+                    <button class="btn btn-outline" onclick="openAuthModal('student')"><i class="fa-solid fa-user-pen"></i> Manage</button>
+                </div>
+
+                <div class="manage-item">
+                    <div>
+                        <h3 style="font-size: 15px; font-weight:700;"><i class="fa-solid fa-database" style="color:var(--primary-bright);"></i> Cloud Database</h3>
+                        <p id="settings-db-info" style="color: var(--text-muted); font-size: 12.5px;">Project: neet-ace-portal (Connecting...)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 7: ADMIN PANEL -->
+        <div id="admin-tab" class="tab-content">
+            <div class="card" style="border: 1px solid rgba(245, 158, 11, 0.38);">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:18px;">
+                    <div>
+                        <h2 style="color:var(--accent); font-size:21px; font-weight:800;"><i class="fa-solid fa-crown"></i> NEET Ace Admin Panel</h2>
+                        <p style="font-size:13px; color:var(--text-muted);">Create tests, bulk upload questions, and track every student's test results.</p>
+                    </div>
+                    <button class="btn btn-danger" onclick="logoutAdmin()" style="padding:8px 14px; font-size:12.5px;"><i class="fa-solid fa-right-from-bracket"></i> Logout Admin</button>
+                </div>
+
+                <div class="admin-nav">
+                    <button class="admin-tab-btn active" onclick="switchAdminSection('admin-results-tracker', this)"><i class="fa-solid fa-chart-line"></i> Student Results</button>
+                    <button class="admin-tab-btn" onclick="switchAdminSection('admin-add-test', this)"><i class="fa-solid fa-folder-plus"></i> Create Test</button>
+                    <button class="admin-tab-btn" onclick="switchAdminSection('admin-add-single', this)"><i class="fa-solid fa-circle-plus"></i> Add 1 Q</button>
+                    <button class="admin-tab-btn" onclick="switchAdminSection('admin-bulk-upload', this)"><i class="fa-solid fa-bolt"></i> Bulk JSON</button>
+                    <button class="admin-tab-btn" onclick="switchAdminSection('admin-manage', this)"><i class="fa-solid fa-list-ul"></i> Manage DB</button>
+                </div>
+
+                <!-- SUB-TAB 1: STUDENT RESULTS -->
+                <div id="admin-results-tracker" class="admin-section active">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+                        <h3 style="color:var(--primary-bright); font-size:16.5px;">Who Took Which Test</h3>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap; width:100%; max-width:500px;">
+                            <input type="text" id="admin-result-search" class="input-field" placeholder="Search student name or ID..." oninput="renderAdminResultsTable()" style="flex:1; min-width:160px;">
+                            <select id="admin-result-test-filter" onchange="renderAdminResultsTable()" style="max-width:200px;">
+                                <option value="ALL">All Tests</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="admin-results-summary" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;"></div>
+                    <div id="admin-results-table-container"></div>
+                </div>
+
+                <!-- SUB-TAB 2: CREATE TEST -->
+                <div id="admin-add-test" class="admin-section">
+                    <h3 style="margin-bottom:14px; color:var(--primary-bright);">Create New Mock Test or Chapter</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Unique ID (e.g. test_03 or bio_ch5)</label>
+                            <input type="text" id="new-test-id" class="input-field" placeholder="e.g. test_03">
+                        </div>
+                        <div class="form-group">
+                            <label>Display Title</label>
+                            <input type="text" id="new-test-title" class="input-field" placeholder="e.g. Genetics Mega Test">
+                        </div>
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select id="new-test-type">
+                                <option value="mock">Mock Test (Mock Test Arena)</option>
+                                <option value="chapter">Chapter Practice (Subject Chapters)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Subject</label>
+                            <select id="new-test-subject">
+                                <option value="Biology">Biology</option>
+                                <option value="Physics">Physics</option>
+                                <option value="Chemistry">Chemistry</option>
+                                <option value="All">All Subjects</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Short Tag</label>
+                            <input type="text" id="new-test-tag" class="input-field" placeholder="e.g. Class 12 / Full Syllabus">
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <input type="text" id="new-test-desc" class="input-field" placeholder="e.g. NCERT Line by Line • +4/-1">
+                        </div>
+                    </div>
+                    <button class="btn" id="create-test-btn" onclick="createTestInCloud()"><i class="fa-solid fa-cloud-arrow-up"></i> Save Test / Chapter</button>
+                </div>
+
+                <!-- SUB-TAB 3: ADD SINGLE QUESTION -->
+                <div id="admin-add-single" class="admin-section">
+                    <h3 style="margin-bottom:14px; color:var(--primary-bright);">Add Single Question</h3>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Target Test / Chapter</label><select id="sq-test-select"></select></div>
+                        <div class="form-group">
+                            <label>Subject</label>
+                            <select id="sq-subject">
+                                <option value="Biology">Biology</option>
+                                <option value="Physics">Physics</option>
+                                <option value="Chemistry">Chemistry</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group"><label>Question Text</label><textarea id="sq-text" rows="3" placeholder="Enter question text..."></textarea></div>
+                    <div class="form-group"><label>Diagram Image URL (Optional)</label><input type="text" id="sq-image" class="input-field" placeholder="https://..."></div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Option A</label><input type="text" id="sq-opt-0" class="input-field" placeholder="Option A"></div>
+                        <div class="form-group"><label>Option B</label><input type="text" id="sq-opt-1" class="input-field" placeholder="Option B"></div>
+                        <div class="form-group"><label>Option C</label><input type="text" id="sq-opt-2" class="input-field" placeholder="Option C"></div>
+                        <div class="form-group"><label>Option D</label><input type="text" id="sq-opt-3" class="input-field" placeholder="Option D"></div>
+                    </div>
+                    <div class="form-group" style="max-width:250px;">
+                        <label>Correct Answer</label>
+                        <select id="sq-correct">
+                            <option value="0">Option A</option>
+                            <option value="1">Option B</option>
+                            <option value="2">Option C</option>
+                            <option value="3">Option D</option>
+                        </select>
+                    </div>
+                    <button class="btn" id="save-sq-btn" onclick="addSingleQuestionToCloud()"><i class="fa-solid fa-plus"></i> Add Question</button>
+                </div>
+
+                <!-- SUB-TAB 4: BULK JSON -->
+                <div id="admin-bulk-upload" class="admin-section">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+                        <h3 style="color:var(--primary-bright);"><i class="fa-solid fa-bolt"></i> Bulk JSON Uploader</h3>
+                        <button class="btn btn-outline" style="padding:6px 12px; font-size:12px;" onclick="copyGeminiPrompt()"><i class="fa-solid fa-copy"></i> Copy Gemini Prompt</button>
+                    </div>
+                    <div class="form-group" style="max-width:380px;">
+                        <label>Select Target Test / Chapter</label>
+                        <select id="bulk-test-select"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Paste JSON Array:</label>
+                        <textarea id="bulk-json-input" rows="7" class="mono" style="font-size:12.5px;" placeholder='[{"subject":"Biology","text":"Question?","image":null,"options":["A","B","C","D"],"correct":0}]'></textarea>
+                    </div>
+                    <button class="btn" id="bulk-upload-btn" onclick="bulkUploadQuestions()"><i class="fa-solid fa-cloud-arrow-up"></i> Upload All to Cloud</button>
+                    <span id="bulk-progress" style="margin-left:12px; font-size:13px; color:var(--primary-bright);"></span>
+                </div>
+
+                <!-- SUB-TAB 5: MANAGE DB -->
+                <div id="admin-manage" class="admin-section">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
+                        <h3 style="color:var(--primary-bright);">Live Cloud Tests & Chapters</h3>
+                        <button class="btn btn-accent" id="migrate-btn" onclick="migrateLocalQuestionsJs()" style="font-size:12.5px; padding:8px 14px;">
+                            <i class="fa-solid fa-upload"></i> Import Old questions.js
+                        </button>
+                    </div>
+                    <div id="admin-manage-list"></div>
+                </div>
+            </div>
+        </div>
+
+    </div> <!-- CONTAINER ENDS -->
+
+    <!-- Mobile Bottom Dock -->
+    <div class="mobile-dock">
+        <button id="mnav-dashboard-tab" class="active" onclick="switchTab('dashboard-tab')"><i class="fa-solid fa-house"></i><span>Home</span></button>
+        <button id="mnav-tests-tab" onclick="switchTab('tests-tab')"><i class="fa-solid fa-file-signature"></i><span>Tests</span></button>
+        <button id="mnav-results-tab" onclick="switchTab('results-tab')"><i class="fa-solid fa-trophy"></i><span>Ranks</span></button>
+        <button id="mnav-focus-tab" onclick="switchTab('focus-tab')"><i class="fa-solid fa-stopwatch"></i><span>Focus</span></button>
+        <button id="mnav-settings-tab" onclick="switchTab('settings-tab')"><i class="fa-solid fa-gear"></i><span>More</span></button>
+    </div>
+
+    <footer>
+        <p>&copy; NEET Ace Portal | JAY SHRI RAM &#128681;</p>
+    </footer>
+
+    <!-- Optional Fallback for local questions.js (works on GitHub Pages if file exists) -->
+    <script src="questions.js?v=4" onerror="console.log('Running without local questions.js')"></script>
+
+    <!-- ==========================================
+         BUG-PROOF CORE ENGINE (Zero Blocking Imports)
+         ========================================== -->
+    <script>
+        (function() {
+            "use strict";
+
+            /* ==========================================
+               1. CONFIG & SAFE STORAGE HELPERS
+               ========================================== */
+            const FIREBASE_CONFIG = {
+                apiKey: "AIzaSyAfjBdGyktTMAYR9vPn83xwbzPYM3Iowqs",
+                authDomain: "neet-ace-portal.firebaseapp.com",
+                projectId: "neet-ace-portal",
+                storageBucket: "neet-ace-portal.firebasestorage.app",
+                messagingSenderId: "1098024797220",
+                appId: "1:1098024797220:web:e5b9c10ae7cbc6afbb84b1",
+                measurementId: "G-531GJCEQ37"
+            };
+            const ADMIN_PIN = "1234";
+
+            function safeGet(key, fallback) {
+                try {
+                    const val = localStorage.getItem(key);
+                    return val !== null ? JSON.parse(val) : fallback;
+                } catch (e) { return fallback; }
+            }
+            function safeSet(key, val) {
+                try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {}
+            }
+            function safeRemove(key) {
+                try { localStorage.removeItem(key); } catch (e) {}
+            }
+            function withTimeout(promise, ms) {
+                return Promise.race([
+                    promise,
+                    new Promise((_, reject) => setTimeout(() => reject(new Error("Cloud request timed out")), ms || 7000))
+                ]);
+            }
+
+            /* ==========================================
+               2. APP STATE & STARTER DATA
+               ========================================== */
+            let db = null;
+            let fsApi = null; // Dynamically loaded Firestore functions
+            let isFirebaseReady = false;
+
+            let cloudTests = {};
+            let cloudQuestions = {};
+            let cloudResults = [];
+            let localResults = safeGet("neet_ace_local_results", []);
+
+            let currentStudent = safeGet("neet_ace_student", null);
+            let isAdminLoggedIn = false;
+            let activeSubjectView = "Biology";
+            let currentActiveTab = "dashboard-tab";
+            let pendingTestId = null;
+            let confirmCallback = null;
+
+            // Active Test Engine State
+            let activeTestId = null;
+            let activeTestTitle = "";
+            let testStartTime = 0;
+            let mockQuestions = [];
+            let userResponses = [];
+            let currentQIndex = 0;
+            let mockTimerInterval = null;
+            let isSubmittingTest = false;
+
+            const starterTests = {
+                test_02: {
+                    title: "Biology Mega Test",
+                    type: "mock",
+                    subject: "Biology",
+                    tag: "NEET NCERT",
+                    description: "Botany & Zoology • +4 / -1 Marking"
+                },
+                bio_ch1: {
+                    title: "1. Sexual Reproduction in Flowering Plants",
+                    type: "chapter",
+                    subject: "Biology",
+                    tag: "Class 12",
+                    description: "NCERT Line-by-Line Practice"
+                },
+                bio_ch2: {
+                    title: "2. Human Reproduction",
+                    type: "chapter",
+                    subject: "Biology",
+                    tag: "Class 12",
+                    description: "NCERT Line-by-Line Practice"
+                },
+                bio_ch3: {
+                    title: "3. Reproductive Health",
+                    type: "chapter",
+                    subject: "Biology",
+                    tag: "Class 12",
+                    description: "NCERT Line-by-Line Practice"
+                },
+                bio_ch4: {
+                    title: "4. Human Health and Diseases",
+                    type: "chapter",
+                    subject: "Biology",
+                    tag: "Class 12",
+                    description: "NCERT Line-by-Line Practice"
+                },
+                phy_ch1: {
+                    title: "1. Electric Charges & Fields",
+                    type: "chapter",
+                    subject: "Physics",
+                    tag: "Class 12",
+                    description: "Concepts & Numericals"
+                },
+                chem_ch1: {
+                    title: "1. Solutions",
+                    type: "chapter",
+                    subject: "Chemistry",
+                    tag: "Class 12",
+                    description: "Physical Chemistry Practice"
+                }
+            };
+
+            const demoQuestions = {
+                test_02: [
+                    {
+                        subject: "Biology",
+                        text: "DNA के डबल हेलिक्स मॉडल में, यदि एक स्ट्रैंड में एडेनिन (Adenine) की मात्रा 30% है, तो साइटोसिन (Cytosine) की मात्रा कितनी होगी?",
+                        image: null,
+                        options: ["30%", "20%", "40%", "60%"],
+                        correct: 1
+                    },
+                    {
+                        subject: "Biology",
+                        text: "Assertion (A): AUG कोडॉन के दोहरे कार्य (dual functions) होते हैं।\nReason (R): यह Methionine के लिए कोड करता है और initiator codon के रूप में भी कार्य करता है।",
+                        image: null,
+                        options: [
+                            "दोनों A और R सत्य हैं, और R, A की सही व्याख्या है",
+                            "दोनों A और R सत्य हैं, लेकिन R, A की सही व्याख्या नहीं है",
+                            "A सत्य है लेकिन R असत्य है",
+                            "दोनों A और R असत्य हैं"
+                        ],
+                        correct: 0
+                    },
+                    {
+                        subject: "Biology",
+                        text: "ग्रिफिथ (Griffith) के रूपांतरण प्रयोग (Transforming principle) में किस जीवाणु का उपयोग किया गया था?",
+                        image: null,
+                        options: ["Escherichia coli", "Streptococcus pneumoniae", "Salmonella typhimurium", "Bacillus thuringiensis"],
+                        correct: 1
+                    },
+                    {
+                        subject: "Biology",
+                        text: "परागकणों (Pollen grains) को लिक्विड नाइट्रोजन में किस तापमान पर वर्षों तक स्टोर किया जा सकता है?",
+                        image: null,
+                        options: ["-120°C", "-196°C", "-160°C", "-273°C"],
+                        correct: 1
+                    }
+                ],
+                bio_ch1: [
+                    {
+                        subject: "Biology",
+                        text: "परागकण के एक्जाइन (Exine) में स्पोरोपोलेनिन (Sporopollenin) कहाँ अनुपस्थित होता है?",
+                        image: null,
+                        options: ["Vegetative cell", "Generative cell", "Germ pore (जनन छिद्र)", "Intine"],
+                        correct: 2
+                    },
+                    {
+                        subject: "Biology",
+                        text: "निम्नलिखित में से कौन सा आभासी फल (False fruit) का उदाहरण है?",
+                        image: null,
+                        options: ["Apple (सेब)", "Strawberry (स्ट्रॉबेरी)", "Cashew (काजू)", "उपरोक्त सभी"],
+                        correct: 3
+                    }
+                ],
+                phy_ch1: [
+                    {
+                        subject: "Physics",
+                        text: "SI unit of Electric Flux (विद्युत फ्लक्स) kya hoti hai?",
+                        image: null,
+                        options: ["N·m²/C", "N·C/m²", "J/C", "V/m"],
+                        correct: 0
+                    }
+                ],
+                chem_ch1: [
+                    {
+                        subject: "Chemistry",
+                        text: "विलयन (Solutions) में Raoult's Law किस पर लागू होता है?",
+                        image: null,
+                        options: ["Ideal Solutions", "Non-ideal Solutions", "Both", "None"],
+                        correct: 0
+                    }
+                ]
+            };
+
+            /* ==========================================
+               3. NON-BLOCKING FIREBASE CLOUD INITIALIZER
+               ========================================== */
+            async function initFirebaseCloud() {
+                try {
+                    const [appMod, fsMod] = await withTimeout(Promise.all([
+                        import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js"),
+                        import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js")
+                    ]), 10000);
+
+                    const app = appMod.initializeApp(FIREBASE_CONFIG);
+                    db = fsMod.getFirestore(app);
+                    fsApi = fsMod;
+                    isFirebaseReady = true;
+
+                    // 1. Live Tests Listener
+                    fsApi.onSnapshot(fsApi.collection(db, "tests"), (snap) => {
+                        cloudTests = {};
+                        snap.forEach((d) => { cloudTests[d.id] = Object.assign({ id: d.id }, d.data()); });
+                        updateDbBadge(true, "Cloud Live");
+                        renderAllDynamicUI();
+                    }, (err) => {
+                        console.warn("Tests sync error:", err.message);
+                        updateDbBadge(false, "Check Rules");
+                    });
+
+                    // 2. Live Questions Listener
+                    fsApi.onSnapshot(fsApi.collection(db, "questions"), (snap) => {
+                        cloudQuestions = {};
+                        snap.forEach((d) => {
+                            const data = d.data();
+                            const tId = data.testId || "test_02";
+                            if (!cloudQuestions[tId]) cloudQuestions[tId] = [];
+                            cloudQuestions[tId].push(Object.assign({ docId: d.id }, data));
+                        });
+                        Object.keys(cloudQuestions).forEach((tId) => {
+                            cloudQuestions[tId].sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+                        });
+                        renderAllDynamicUI();
+                    }, (err) => { console.warn("Questions sync error:", err.message); });
+
+                    // 3. Live Results Listener
+                    fsApi.onSnapshot(fsApi.collection(db, "results"), (snap) => {
+                        cloudResults = [];
+                        snap.forEach((d) => { cloudResults.push(Object.assign({ docId: d.id }, d.data())); });
+                        // Remove duplicates from localResults already synced to cloud
+                        if (localResults.length > 0) {
+                            localResults = localResults.filter((lr) =>
+                                !cloudResults.some((cr) => cr.clientSubmissionId && cr.clientSubmissionId === lr.clientSubmissionId)
+                            );
+                            safeSet("neet_ace_local_results", localResults);
+                        }
+                        cloudResults.sort((a, b) => (b.submittedAt || 0) - (a.submittedAt || 0));
+                        renderResultsAndAnalytics();
+                    }, (err) => { console.warn("Results sync error:", err.message); });
+
+                } catch (err) {
+                    console.warn("Firebase running in offline fallback:", err.message);
+                    updateDbBadge(false, "Local Mode");
+                }
+            }
+
+            function updateDbBadge(online, text) {
+                const badge = document.getElementById("db-status-badge");
+                const settingsInfo = document.getElementById("settings-db-info");
+                if (badge) {
+                    badge.classList.toggle("offline", !online);
+                    badge.innerHTML = `<span class="pulse-dot"></span><span class="db-text">${escapeHtml(text)}</span>`;
+                }
+                if (settingsInfo) {
+                    settingsInfo.innerText = online
+                        ? "Project: neet-ace-portal • Status: Connected (Real-time Sync Active)"
+                        : `Project: neet-ace-portal • Status: ${text} (Enable Firestore Test Mode)`;
+                }
+            }
+
+            /* ==========================================
+               4. STUDENT LOGIN & ADMIN AUTH
+               ========================================== */
+            function switchAuthMode(mode) {
+                const isStudent = mode === "student";
+                document.getElementById("auth-tab-student").classList.toggle("active", isStudent);
+                document.getElementById("auth-tab-admin").classList.toggle("active", !isStudent);
+                document.getElementById("auth-student-form").style.display = isStudent ? "block" : "none";
+                document.getElementById("auth-admin-form").style.display = isStudent ? "none" : "block";
+                if (!isStudent) {
+                    const pinInput = document.getElementById("admin-pin-input");
+                    pinInput.value = "";
+                    setTimeout(() => pinInput.focus(), 60);
+                }
+            }
+
+            function openAuthModal(mode) {
+                switchAuthMode(mode || "student");
+                if (currentStudent) {
+                    document.getElementById("student-name-input").value = currentStudent.name || "";
+                    document.getElementById("student-id-input").value = currentStudent.studentId || "";
+                    document.getElementById("student-target-input").value = currentStudent.target || "NEET 2027";
+                    document.getElementById("student-logout-btn").style.display = "inline-flex";
+                    document.getElementById("student-login-submit-btn").innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Update Profile`;
+                } else {
+                    document.getElementById("student-logout-btn").style.display = "none";
+                    document.getElementById("student-login-submit-btn").innerHTML = `<i class="fa-solid fa-right-to-bracket"></i> Login & Continue`;
+                }
+                document.getElementById("auth-modal").classList.add("open");
+            }
+
+            function closeAuthModal() {
+                document.getElementById("auth-modal").classList.remove("open");
+                pendingTestId = null;
+            }
+
+            function loginStudent() {
+                const name = document.getElementById("student-name-input").value.trim();
+                const rawId = document.getElementById("student-id-input").value.trim().toLowerCase();
+                const target = document.getElementById("student-target-input").value;
+
+                if (!name || name.length < 2) {
+                    showToast("Please enter your full name!", "error");
+                    return;
+                }
+                if (!rawId || rawId.length < 4) {
+                    showToast("Please enter a valid Email or Mobile number!", "error");
+                    return;
+                }
+
+                const testToLaunch = pendingTestId;
+                const returnTab = currentActiveTab || "dashboard-tab";
+
+                currentStudent = { name: name, studentId: rawId, target: target };
+                safeSet("neet_ace_student", currentStudent);
+
+                // Close modal & confirm immediately
+                closeAuthModal();
+                updateStudentUI();
+                showToast(`Login Successful! Welcome, ${name}!`);
+
+                // Background Firestore sync
+                if (isFirebaseReady && db && fsApi) {
+                    const safeDocId = rawId.replace(/[^a-z0-9@._-]/g, "_");
+                    withTimeout(fsApi.setDoc(fsApi.doc(db, "students", safeDocId), {
+                        name: name,
+                        studentId: rawId,
+                        target: target,
+                        lastLoginAt: Date.now()
+                    }, { merge: true }), 7000).catch((err) => console.warn("Profile cloud sync skipped:", err.message));
+                }
+
+                // Redirect to pending test OR back to previous page (Home / Test Arena / Notes)
+                if (testToLaunch) {
+                    startMockTest(testToLaunch);
+                } else {
+                    switchTab(returnTab);
+                }
+            }
+
+            function logoutStudent() {
+                currentStudent = null;
+                safeRemove("neet_ace_student");
+                closeAuthModal();
+                updateStudentUI();
+                showToast("Logged out successfully.");
+            }
+
+            function updateStudentUI() {
+                const navName = document.getElementById("nav-user-name");
+                const navAvatar = document.getElementById("nav-avatar");
+                const heroTitle = document.getElementById("hero-welcome-title");
+                const heroSub = document.getElementById("hero-welcome-sub");
+                const heroBadge = document.getElementById("hero-target-badge");
+                const heroCta = document.getElementById("hero-login-cta");
+                const sideLabel = document.getElementById("side-user-label");
+                const settingsInfo = document.getElementById("settings-student-info");
+                const testBanner = document.getElementById("test-list-user-banner");
+
+                if (currentStudent) {
+                    const initials = currentStudent.name.split(/\s+/).map((w) => w[0]).join("").substring(0, 2).toUpperCase();
+                    navName.innerText = currentStudent.name.split(/\s+/)[0];
+                    navAvatar.innerText = initials || "S";
+                    heroTitle.innerText = `Welcome, ${currentStudent.name}!`;
+                    heroSub.innerText = `Logged in as ${currentStudent.studentId} • Aapke har test ka score & rank save hoga.`;
+                    heroBadge.innerText = `Target AIR 1 • ${currentStudent.target}`;
+                    heroCta.innerHTML = `<i class="fa-solid fa-trophy"></i> My Results`;
+                    heroCta.onclick = function() { switchTab("results-tab"); };
+                    sideLabel.innerText = `${currentStudent.name} (Profile)`;
+                    settingsInfo.innerText = `${currentStudent.name} (${currentStudent.studentId}) • ${currentStudent.target}`;
+                    if (testBanner) {
+                        testBanner.innerHTML = `<span class="tag b"><i class="fa-solid fa-circle-check"></i> Logged in: ${escapeHtml(currentStudent.name)}</span>`;
+                    }
+                } else {
+                    navName.innerText = isAdminLoggedIn ? "Admin" : "Login";
+                    navAvatar.innerHTML = `<i class="fa-solid fa-user" style="font-size:11px;"></i>`;
+                    heroTitle.innerText = "Welcome, Future Doctor!";
+                    heroSub.innerText = "Login karein taaki aapke har test ka score, rank, aur detailed progress cloud par safe rahe.";
+                    heroBadge.innerText = "Target AIR 1 • NEET 2027";
+                    heroCta.innerHTML = `<i class="fa-solid fa-right-to-bracket"></i> Student Login`;
+                    heroCta.onclick = function() { openAuthModal("student"); };
+                    sideLabel.innerText = "Student / Admin Login";
+                    settingsInfo.innerText = "Not logged in yet";
+                    if (testBanner) {
+                        testBanner.innerHTML = `<button class="btn btn-outline" style="padding:6px 12px; font-size:12px;" onclick="openAuthModal('student')"><i class="fa-solid fa-user"></i> Login to save scores</button>`;
+                    }
+                }
+                renderResultsAndAnalytics();
+            }
+
+            function verifyAdminPin() {
+                const entered = document.getElementById("admin-pin-input").value.trim();
+                if (entered === ADMIN_PIN) {
+                    isAdminLoggedIn = true;
+                    document.getElementById("side-admin-link").style.display = "flex";
+                    document.getElementById("dnav-admin-tab").style.display = "inline-flex";
+                    closeAuthModal();
+                    updateStudentUI();
+                    showToast("Admin Panel Unlocked!");
+                    switchTab("admin-tab");
+                } else {
+                    showToast("Galat PIN! Default PIN '1234' hai.", "error");
+                }
+            }
+
+            function logoutAdmin() {
+                isAdminLoggedIn = false;
+                document.getElementById("side-admin-link").style.display = "none";
+                document.getElementById("dnav-admin-tab").style.display = "none";
+                updateStudentUI();
+                switchTab("dashboard-tab");
+                showToast("Logged out from Admin Panel.");
+            }
+
+            /* ==========================================
+               5. DATA MERGE & DYNAMIC UI RENDERERS
+               ========================================== */
+            function getMergedTests() {
+                const merged = Object.assign({}, starterTests);
+                if (typeof window.testsDatabase !== "undefined" && window.testsDatabase) {
+                    Object.keys(window.testsDatabase).forEach((tId) => {
+                        if (!merged[tId]) {
+                            merged[tId] = {
+                                title: tId === "test_01" ? "NEET Mixed Practice Test 1" : `Test: ${tId}`,
+                                type: "mock",
+                                subject: "All",
+                                tag: "Local JS",
+                                description: "Loaded from questions.js"
+                            };
+                        }
+                    });
+                }
+                Object.keys(cloudTests).forEach((tId) => {
+                    merged[tId] = cloudTests[tId];
+                });
+                return merged;
+            }
+
+            function getQuestionsForTest(testId) {
+                if (cloudQuestions[testId] && cloudQuestions[testId].length > 0) return cloudQuestions[testId];
+                if (typeof window.testsDatabase !== "undefined" && window.testsDatabase && window.testsDatabase[testId]) {
+                    return window.testsDatabase[testId];
+                }
+                if (demoQuestions[testId]) return demoQuestions[testId];
+                return [];
+            }
+
+            function getAllResults() {
+                const combined = cloudResults.concat(localResults);
+                combined.sort((a, b) => (b.submittedAt || 0) - (a.submittedAt || 0));
+                return combined;
+            }
+
+            function renderAllDynamicUI() {
+                renderMockTestsGrid();
+                renderChaptersGrid(activeSubjectView);
+                populateAdminDropdowns();
+                renderAdminManageList();
+                renderResultsAndAnalytics();
+            }
+
+            function renderMockTestsGrid() {
+                const container = document.getElementById("dynamic-tests-grid");
+                if (!container) return;
+                const allTests = getMergedTests();
+                const allResults = getAllResults();
+                const mockIds = Object.keys(allTests).filter((id) => allTests[id].type !== "chapter");
+
+                if (mockIds.length === 0) {
+                    container.innerHTML = `<div class="card" style="text-align:center; color:var(--text-muted);">No mock tests available yet.</div>`;
+                    return;
+                }
+
+                container.innerHTML = mockIds.map((id) => {
+                    const t = allTests[id];
+                    const qCount = getQuestionsForTest(id).length;
+                    const attempts = allResults.filter((r) => r.testId === id).length;
+                    const badgeClass = t.subject === "Physics" ? "p" : t.subject === "Chemistry" ? "c" : "b";
+                    return `
+                        <div class="card" style="margin-bottom:0; display:flex; flex-direction:column; justify-content:space-between;">
+                            <div>
+                                <div style="display:flex; justify-content:space-between; align-items:start; gap:8px;">
+                                    <h3 style="font-size:17px; font-weight:700;">${escapeHtml(t.title)}</h3>
+                                    <span class="tag ${badgeClass}">${qCount} Qs</span>
+                                </div>
+                                <p style="color:var(--text-muted); font-size:13px; margin:10px 0 14px;">
+                                    ${escapeHtml(t.description || `${t.subject} • ${qCount * 4} Marks`)}
+                                </p>
+                                <div style="font-size:12px; color:var(--text-muted); display:flex; gap:14px; margin-bottom:16px;">
+                                    <span><i class="fa-solid fa-award" style="color:var(--accent);"></i> ${qCount * 4} Marks</span>
+                                    <span><i class="fa-solid fa-users" style="color:var(--secondary);"></i> ${attempts} Attempts</span>
+                                </div>
+                            </div>
+                            <button class="btn" style="width:100%;" onclick="startMockTest('${id}')">
+                                <i class="fa-solid fa-play"></i> Start Test
+                            </button>
+                        </div>`;
+                }).join("");
+            }
+
+            function renderChaptersGrid(subject) {
+                const container = document.getElementById("dynamic-chapters-grid");
+                if (!container) return;
+                const allTests = getMergedTests();
+                const chapterIds = Object.keys(allTests).filter((id) => allTests[id].type === "chapter" && allTests[id].subject === subject);
+                const badgeClass = subject === "Physics" ? "p" : subject === "Chemistry" ? "c" : "b";
+                const btnClass = subject === "Physics" ? "btn-phy" : subject === "Chemistry" ? "btn-chem" : "btn-bio";
+
+                if (chapterIds.length === 0) {
+                    container.innerHTML = `
+                        <div class="card" style="text-align:center; grid-column:1 / -1;">
+                            <i class="fa-solid fa-folder-open" style="font-size:32px; color:var(--text-muted); margin-bottom:10px;"></i>
+                            <h3>No ${escapeHtml(subject)} Chapters Yet</h3>
+                            <p style="color:var(--text-muted); font-size:13px; margin-top:6px;">Open Admin Panel to create ${escapeHtml(subject)} chapters & upload questions.</p>
+                        </div>`;
+                    return;
+                }
+
+                container.innerHTML = chapterIds.map((id) => {
+                    const c = allTests[id];
+                    const qCount = getQuestionsForTest(id).length;
+                    return `
+                        <div class="card" style="margin-bottom:0; display:flex; flex-direction:column; justify-content:space-between;">
+                            <div>
+                                <div style="display:flex; justify-content:space-between; align-items:start; gap:8px;">
+                                    <h3 style="font-size:16px; font-weight:700;">${escapeHtml(c.title)}</h3>
+                                    <span class="tag ${badgeClass}">${escapeHtml(c.tag || subject)}</span>
+                                </div>
+                                <p style="color:var(--text-muted); font-size:12.5px; margin:10px 0 16px;">${qCount} Questions • +4 / -1 Marking</p>
+                            </div>
+                            <button class="btn ${btnClass}" style="width:100%;" onclick="startMockTest('${id}')">
+                                <i class="fa-solid fa-play"></i> Practice Now
+                            </button>
+                        </div>`;
+                }).join("");
+            }
+
+            /* ==========================================
+               6. RESULTS, LEADERBOARD & ADMIN TRACKER
+               ========================================== */
+            function populateResultTestFilters() {
+                const allTests = getMergedTests();
+                const allResults = getAllResults();
+                const map = {};
+                Object.keys(allTests).forEach((id) => { map[id] = allTests[id].title; });
+                allResults.forEach((r) => { if (r.testId && !map[r.testId]) map[r.testId] = r.testTitle || r.testId; });
+
+                const opts = `<option value="ALL">All Tests Combined</option>` +
+                    Object.keys(map).map((id) => `<option value="${id}">${escapeHtml(map[id])}</option>`).join("");
+
+                ["leaderboard-test-filter", "admin-result-test-filter"].forEach((elId) => {
+                    const el = document.getElementById(elId);
+                    if (el) {
+                        const prev = el.value || "ALL";
+                        el.innerHTML = opts;
+                        el.value = prev;
+                    }
+                });
+            }
+
+            function renderResultsAndAnalytics() {
+                populateResultTestFilters();
+                const allResults = getAllResults();
+
+                document.getElementById("kpi-total-attempts").innerText = allResults.length;
+                const myResults = currentStudent
+                    ? allResults.filter((r) => (r.studentId || "").toLowerCase() === currentStudent.studentId.toLowerCase())
+                    : [];
+
+                document.getElementById("kpi-tests-given").innerText = myResults.length;
+                if (myResults.length > 0) {
+                    const avgAcc = Math.round(myResults.reduce((s, r) => s + (r.accuracy || 0), 0) / myResults.length);
+                    const best = myResults.reduce((m, r) => (r.score > m.score ? r : m), myResults[0]);
+                    document.getElementById("kpi-avg-accuracy").innerText = `${avgAcc}%`;
+                    document.getElementById("kpi-best-score").innerText = `${best.score}/${best.totalMarks}`;
+                } else {
+                    document.getElementById("kpi-avg-accuracy").innerText = "0%";
+                    document.getElementById("kpi-best-score").innerText = "--";
+                }
+
+                // Dashboard Recent Activity Feed
+                const feedEl = document.getElementById("dash-recent-feed");
+                if (feedEl) {
+                    if (allResults.length === 0) {
+                        feedEl.innerHTML = `<p style="color:var(--text-muted);">No test attempts yet. Be the first to set a high score!</p>`;
+                    } else {
+                        feedEl.innerHTML = allResults.slice(0, 4).map((r) => `
+                            <div style="display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid var(--border-subtle); gap:10px;">
+                                <div>
+                                    <b style="color:var(--text-main);">${escapeHtml(r.studentName)}</b> completed <span style="color:var(--primary-bright);">${escapeHtml(r.testTitle)}</span>
+                                    <div style="font-size:11px; color:var(--text-muted);">${formatTimeAgo(r.submittedAt)}</div>
+                                </div>
+                                <span class="tag b mono">${r.score}/${r.totalMarks}</span>
+                            </div>`).join("");
+                    }
+                }
+
+                renderMyHistory(myResults);
+                renderLeaderboard();
+                renderAdminResultsTable();
+            }
+
+            function renderMyHistory(myResults) {
+                const container = document.getElementById("my-history-container");
+                const sub = document.getElementById("my-history-sub");
+                if (!container) return;
+
+                if (!currentStudent) {
+                    sub.innerText = "Login with your Name & Email/Mobile to track your test scores.";
+                    container.innerHTML = `
+                        <div style="text-align:center; padding:24px; background:rgba(148,163,184,0.05); border-radius:14px;">
+                            <p style="color:var(--text-muted); margin-bottom:12px;">Aap abhi logged in nahi hain.</p>
+                            <button class="btn" onclick="openAuthModal('student')"><i class="fa-solid fa-right-to-bracket"></i> Student Login Karein</button>
+                        </div>`;
+                    return;
+                }
+
+                sub.innerText = `Showing ${myResults.length} test attempt(s) for ${currentStudent.name} (${currentStudent.studentId})`;
+                if (myResults.length === 0) {
+                    container.innerHTML = `<p style="color:var(--text-muted); font-size:13.5px;">Aapne abhi tak koi test submit nahi kiya hai. Mock Test Arena mein jaakar test dein!</p>`;
+                    return;
+                }
+
+                container.innerHTML = `
+                    <div class="results-table-wrap">
+                        <table class="modern-table">
+                            <thead>
+                                <tr><th>Test Name</th><th>Score</th><th>Accuracy</th><th>C / W / S</th><th>Date</th></tr>
+                            </thead>
+                            <tbody>
+                                ${myResults.map((r) => `
+                                    <tr>
+                                        <td style="font-weight:700;">${escapeHtml(r.testTitle)}</td>
+                                        <td class="mono" style="font-weight:800; color:var(--primary-bright);">${r.score} / ${r.totalMarks}</td>
+                                        <td><span class="tag b">${r.accuracy || 0}%</span></td>
+                                        <td class="mono" style="font-size:12.5px;">
+                                            <span style="color:#10b981;">+${r.correct}</span> /
+                                            <span style="color:#f43f5e;">-${r.wrong}</span> /
+                                            <span style="color:#f59e0b;">${r.skipped}</span>
+                                        </td>
+                                        <td style="font-size:12px; color:var(--text-muted);">${formatDateTime(r.submittedAt)}</td>
+                                    </tr>`).join("")}
+                            </tbody>
+                        </table>
+                    </div>`;
+            }
+
+            function renderLeaderboard() {
+                const container = document.getElementById("leaderboard-container");
+                const filterVal = (document.getElementById("leaderboard-test-filter") || {}).value || "ALL";
+                if (!container) return;
+
+                const allResults = getAllResults();
+                const filtered = filterVal === "ALL" ? allResults.slice() : allResults.filter((r) => r.testId === filterVal);
+                filtered.sort((a, b) => (b.score - a.score) || ((b.accuracy || 0) - (a.accuracy || 0)) || ((a.timeTakenSec || 9999) - (b.timeTakenSec || 9999)));
+
+                if (filtered.length === 0) {
+                    container.innerHTML = `<p style="color:var(--text-muted); font-size:13.5px; text-align:center; padding:18px;">Abhi koi score record nahi hua hai.</p>`;
+                    return;
+                }
+
+                container.innerHTML = `
+                    <div class="results-table-wrap">
+                        <table class="modern-table">
+                            <thead>
+                                <tr><th>Rank</th><th>Student</th><th>Test</th><th>Score</th><th>Accuracy</th><th>Time</th></tr>
+                            </thead>
+                            <tbody>
+                                ${filtered.slice(0, 30).map((r, idx) => {
+                                    const rankClass = idx === 0 ? "rank-1" : idx === 1 ? "rank-2" : idx === 2 ? "rank-3" : "rank-other";
+                                    const isMe = currentStudent && (r.studentId || "").toLowerCase() === currentStudent.studentId.toLowerCase();
+                                    return `
+                                        <tr style="${isMe ? "background:rgba(16,185,129,0.1);" : ""}">
+                                            <td><span class="rank-badge ${rankClass}">#${idx + 1}</span></td>
+                                            <td>
+                                                <div style="font-weight:700;">${escapeHtml(r.studentName)} ${isMe ? '<span class="tag b" style="font-size:10px; padding:2px 6px;">You</span>' : ""}</div>
+                                                <div style="font-size:11px; color:var(--text-muted);">${escapeHtml(r.target || "NEET")}</div>
+                                            </td>
+                                            <td style="font-size:13px;">${escapeHtml(r.testTitle)}</td>
+                                            <td class="mono" style="font-weight:800; color:var(--primary-bright);">${r.score}/${r.totalMarks}</td>
+                                            <td><span class="tag c">${r.accuracy || 0}%</span></td>
+                                            <td class="mono" style="font-size:12px; color:var(--text-muted);">${formatDuration(r.timeTakenSec || 0)}</td>
+                                        </tr>`;
+                                }).join("")}
+                            </tbody>
+                        </table>
+                    </div>`;
+            }
+
+            function renderAdminResultsTable() {
+                const container = document.getElementById("admin-results-table-container");
+                const summaryEl = document.getElementById("admin-results-summary");
+                if (!container || !summaryEl) return;
+
+                const searchQ = ((document.getElementById("admin-result-search") || {}).value || "").trim().toLowerCase();
+                const testFilter = (document.getElementById("admin-result-test-filter") || {}).value || "ALL";
+                const list = getAllResults().filter((r) => {
+                    const matchTest = testFilter === "ALL" || r.testId === testFilter;
+                    const matchSearch = !searchQ ||
+                        (r.studentName || "").toLowerCase().includes(searchQ) ||
+                        (r.studentId || "").toLowerCase().includes(searchQ) ||
+                        (r.testTitle || "").toLowerCase().includes(searchQ);
+                    return matchTest && matchSearch;
+                });
+
+                const uniqueStudents = new Set(list.map((r) => (r.studentId || r.studentName).toLowerCase())).size;
+                const avgAcc = list.length ? Math.round(list.reduce((s, r) => s + (r.accuracy || 0), 0) / list.length) : 0;
+
+                summaryEl.innerHTML = `
+                    <span class="tag b"><i class="fa-solid fa-file-lines"></i> Attempts: ${list.length}</span>
+                    <span class="tag c"><i class="fa-solid fa-users"></i> Unique Students: ${uniqueStudents}</span>
+                    <span class="tag a"><i class="fa-solid fa-bullseye"></i> Avg Accuracy: ${avgAcc}%</span>
+                `;
+
+                if (list.length === 0) {
+                    container.innerHTML = `<p style="color:var(--text-muted); font-size:13.5px; padding:18px; text-align:center; background:rgba(148,163,184,0.05); border-radius:12px;">Abhi koi student result record nahi hai.</p>`;
+                    return;
+                }
+
+                container.innerHTML = `
+                    <div class="results-table-wrap">
+                        <table class="modern-table">
+                            <thead>
+                                <tr><th>Student Name & ID</th><th>Test Given</th><th>Score</th><th>C / W / S</th><th>Submitted On</th><th>Action</th></tr>
+                            </thead>
+                            <tbody>
+                                ${list.map((r) => `
+                                    <tr>
+                                        <td>
+                                            <div style="font-weight:700;">${escapeHtml(r.studentName)}</div>
+                                            <div style="font-size:11.5px; color:var(--text-muted);">${escapeHtml(r.studentId || "Guest")}</div>
+                                        </td>
+                                        <td>
+                                            <div style="font-weight:600;">${escapeHtml(r.testTitle)}</div>
+                                            <div style="font-size:11px; color:var(--text-muted);">Time: ${formatDuration(r.timeTakenSec || 0)}</div>
+                                        </td>
+                                        <td class="mono" style="font-weight:800; color:var(--primary-bright);">${r.score}/${r.totalMarks} (${r.accuracy || 0}%)</td>
+                                        <td class="mono" style="font-size:12px;">
+                                            <span style="color:#10b981;">${r.correct}</span> /
+                                            <span style="color:#f43f5e;">${r.wrong}</span> /
+                                            <span style="color:#f59e0b;">${r.skipped}</span>
+                                        </td>
+                                        <td style="font-size:12px; color:var(--text-muted);">${formatDateTime(r.submittedAt)}</td>
+                                        <td><button class="icon-del-btn" onclick="deleteStudentResult('${r.docId}')"><i class="fa-solid fa-trash"></i></button></td>
+                                    </tr>`).join("")}
+                            </tbody>
+                        </table>
+                    </div>`;
+            }
+
+            function deleteStudentResult(docId) {
+                if (!docId || docId.indexOf("local_") === 0) {
+                    localResults = localResults.filter((r) => r.docId !== docId);
+                    safeSet("neet_ace_local_results", localResults);
+                    renderResultsAndAnalytics();
+                    showToast("Record removed.");
+                    return;
+                }
+                openConfirmModal("Delete Result Record?", "Remove this student's test attempt from Firebase?", async () => {
+                    if (!isFirebaseReady || !db || !fsApi) { showToast("Cloud not connected.", "error"); return; }
+                    try {
+                        await withTimeout(fsApi.deleteDoc(fsApi.doc(db, "results", docId)));
+                        showToast("Result deleted from Cloud.");
+                    } catch (err) { showToast("Error: " + err.message, "error"); }
+                });
+            }
+
+            /* ==========================================
+               7. ADMIN CMS OPERATIONS
+               ========================================== */
+            function populateAdminDropdowns() {
+                const allTests = getMergedTests();
+                const html = Object.keys(allTests).map((id) => {
+                    const t = allTests[id];
+                    return `<option value="${id}">${escapeHtml(t.title)} (${id}) [${getQuestionsForTest(id).length} Qs]</option>`;
+                }).join("");
+                const sq = document.getElementById("sq-test-select");
+                const bulk = document.getElementById("bulk-test-select");
+                if (sq) sq.innerHTML = html;
+                if (bulk) bulk.innerHTML = html;
+            }
+
+            function renderAdminManageList() {
+                const list = document.getElementById("admin-manage-list");
+                if (!list) return;
+                const ids = Object.keys(cloudTests);
+                if (ids.length === 0) {
+                    list.innerHTML = `<p style="color:var(--text-muted); font-size:13.5px;">No tests in Cloud yet. Use "Create Test" or "Import Old questions.js".</p>`;
+                    return;
+                }
+                list.innerHTML = ids.map((id) => {
+                    const t = cloudTests[id];
+                    const qLen = (cloudQuestions[id] || []).length;
+                    return `
+                        <div class="manage-item">
+                            <div>
+                                <div style="font-weight:700; font-size:15px;">${escapeHtml(t.title)} <span style="font-size:12px; color:var(--text-muted);">(${id})</span></div>
+                                <div style="font-size:12px; color:var(--text-muted); margin-top:3px;">
+                                    Type: <b>${t.type}</b> • Subject: <b>${t.subject}</b> • Questions: <b style="color:var(--primary-bright);">${qLen}</b>
+                                </div>
+                            </div>
+                            <div style="display:flex; gap:8px;">
+                                <button class="btn btn-outline" style="padding:6px 12px; font-size:12px;" onclick="startMockTest('${id}')"><i class="fa-solid fa-play"></i> Launch</button>
+                                <button class="btn btn-danger" style="padding:6px 12px; font-size:12px;" onclick="deleteTestFromCloud('${id}')"><i class="fa-solid fa-trash"></i> Delete</button>
+                            </div>
+                        </div>`;
+                }).join("");
+            }
+
+            async function createTestInCloud() {
+                if (!isFirebaseReady || !db || !fsApi) { showToast("Firebase Cloud not connected!", "error"); return; }
+                const rawId = document.getElementById("new-test-id").value.trim().replace(/\s+/g, "_").toLowerCase();
+                const title = document.getElementById("new-test-title").value.trim();
+                const type = document.getElementById("new-test-type").value;
+                const subject = document.getElementById("new-test-subject").value;
+                const tag = document.getElementById("new-test-tag").value.trim() || subject;
+                const description = document.getElementById("new-test-desc").value.trim() || `${subject} Practice`;
+
+                if (!rawId || !title) { showToast("Enter Unique ID and Display Title!", "error"); return; }
+                const btn = document.getElementById("create-test-btn");
+                btn.disabled = true;
+                try {
+                    await withTimeout(fsApi.setDoc(fsApi.doc(db, "tests", rawId), {
+                        title, type, subject, tag, description, createdAt: Date.now()
+                    }));
+                    showToast(`"${title}" saved live to Cloud!`);
+                    ["new-test-id", "new-test-title", "new-test-tag", "new-test-desc"].forEach((i) => { document.getElementById(i).value = ""; });
+                } catch (err) { showToast("Error: " + err.message, "error"); }
+                finally { btn.disabled = false; }
+            }
+
+            async function addSingleQuestionToCloud() {
+                if (!isFirebaseReady || !db || !fsApi) { showToast("Firebase Cloud not connected!", "error"); return; }
+                const testId = document.getElementById("sq-test-select").value;
+                const subject = document.getElementById("sq-subject").value;
+                const text = document.getElementById("sq-text").value.trim();
+                const image = document.getElementById("sq-image").value.trim() || null;
+                const options = [0, 1, 2, 3].map((i) => document.getElementById(`sq-opt-${i}`).value.trim());
+                const correct = parseInt(document.getElementById("sq-correct").value, 10);
+
+                if (!testId || !text || options.some((o) => !o)) { showToast("Fill Question and all 4 Options!", "error"); return; }
+                const btn = document.getElementById("save-sq-btn");
+                btn.disabled = true;
+                try {
+                    if (!cloudTests[testId]) {
+                        const meta = getMergedTests()[testId] || { title: testId, type: "mock", subject, tag: subject, description: "" };
+                        await withTimeout(fsApi.setDoc(fsApi.doc(db, "tests", testId), Object.assign({}, meta, { createdAt: Date.now() })));
+                    }
+                    await withTimeout(fsApi.addDoc(fsApi.collection(db, "questions"), {
+                        testId, subject, text, image, options, correct, createdAt: Date.now()
+                    }));
+                    showToast("Question added to Cloud!");
+                    document.getElementById("sq-text").value = "";
+                    document.getElementById("sq-image").value = "";
+                    [0, 1, 2, 3].forEach((i) => { document.getElementById(`sq-opt-${i}`).value = ""; });
+                } catch (err) { showToast("Error: " + err.message, "error"); }
+                finally { btn.disabled = false; }
+            }
+
+            async function bulkUploadQuestions() {
+                if (!isFirebaseReady || !db || !fsApi) { showToast("Firebase Cloud not connected!", "error"); return; }
+                const testId = document.getElementById("bulk-test-select").value;
+                const rawJson = document.getElementById("bulk-json-input").value.trim();
+                const progressEl = document.getElementById("bulk-progress");
+                if (!testId || !rawJson) { showToast("Select a test and paste JSON array!", "error"); return; }
+
+                let parsed = [];
+                try {
+                    parsed = JSON.parse(rawJson);
+                    if (!Array.isArray(parsed) || parsed.length === 0) throw new Error("Must be a non-empty JSON array.");
+                } catch (err) { showToast("Invalid JSON: " + err.message, "error"); return; }
+
+                const btn = document.getElementById("bulk-upload-btn");
+                btn.disabled = true;
+                progressEl.innerText = `Uploading ${parsed.length} Qs...`;
+                try {
+                    if (!cloudTests[testId]) {
+                        const meta = getMergedTests()[testId] || { title: testId, type: "mock", subject: "Biology", tag: "NEET", description: "" };
+                        await withTimeout(fsApi.setDoc(fsApi.doc(db, "tests", testId), Object.assign({}, meta, { createdAt: Date.now() })));
+                    }
+                    const baseTime = Date.now();
+                    let count = 0;
+                    for (let i = 0; i < parsed.length; i += 400) {
+                        const batch = fsApi.writeBatch(db);
+                        parsed.slice(i, i + 400).forEach((q, idx) => {
+                            if (!q.text || !Array.isArray(q.options)) return;
+                            batch.set(fsApi.doc(fsApi.collection(db, "questions")), {
+                                testId,
+                                subject: q.subject || "Biology",
+                                text: String(q.text),
+                                image: q.image || null,
+                                options: q.options.map(String),
+                                correct: typeof q.correct === "number" ? q.correct : 0,
+                                createdAt: baseTime + i + idx
+                            });
+                            count++;
+                        });
+                        await withTimeout(batch.commit(), 15000);
+                    }
+                    showToast(`${count} questions uploaded live!`);
+                    document.getElementById("bulk-json-input").value = "";
+                    progressEl.innerText = `✅ Uploaded ${count} Qs!`;
+                } catch (err) {
+                    showToast("Upload failed: " + err.message, "error");
+                    progressEl.innerText = "";
+                } finally { btn.disabled = false; }
+            }
+
+            async function migrateLocalQuestionsJs() {
+                if (!isFirebaseReady || !db || !fsApi) { showToast("Firebase Cloud not connected!", "error"); return; }
+                if (typeof window.testsDatabase === "undefined" || !window.testsDatabase) {
+                    showToast("Local questions.js not found.", "warning");
+                    return;
+                }
+                const btn = document.getElementById("migrate-btn");
+                btn.disabled = true;
+                try {
+                    let total = 0;
+                    const base = Date.now();
+                    for (const tId of Object.keys(window.testsDatabase)) {
+                        const arr = window.testsDatabase[tId];
+                        if (!Array.isArray(arr) || !arr.length) continue;
+                        await withTimeout(fsApi.setDoc(fsApi.doc(db, "tests", tId), {
+                            title: tId === "test_02" ? "Biology Mega Test" : `NEET Practice (${tId})`,
+                            type: "mock", subject: "Biology", tag: `${arr.length} Qs`,
+                            description: "Imported from questions.js", createdAt: base
+                        }));
+                        const batch = fsApi.writeBatch(db);
+                        arr.forEach((q, idx) => {
+                            batch.set(fsApi.doc(fsApi.collection(db, "questions")), {
+                                testId: tId, subject: q.subject || "Biology", text: q.text,
+                                image: q.image || null, options: q.options, correct: q.correct, createdAt: base + idx
+                            });
+                            total++;
+                        });
+                        await withTimeout(batch.commit(), 15000);
+                    }
+                    showToast(`Imported ${total} questions to Firebase Cloud!`);
+                } catch (err) { showToast("Import error: " + err.message, "error"); }
+                finally { btn.disabled = false; }
+            }
+
+            function deleteTestFromCloud(testId) {
+                openConfirmModal("Delete Test?", `Permanently delete "${testId}" and all its questions?`, async () => {
+                    if (!isFirebaseReady || !db || !fsApi) return;
+                    try {
+                        await withTimeout(fsApi.deleteDoc(fsApi.doc(db, "tests", testId)));
+                        const qList = cloudQuestions[testId] || [];
+                        if (qList.length) {
+                            const batch = fsApi.writeBatch(db);
+                            qList.forEach((q) => { if (q.docId) batch.delete(fsApi.doc(db, "questions", q.docId)); });
+                            await withTimeout(batch.commit(), 15000);
+                        }
+                        showToast(`Deleted "${testId}".`);
+                    } catch (err) { showToast("Error: " + err.message, "error"); }
+                });
+            }
+
+            function copyGeminiPrompt() {
+                const promptText = `Generate 25 NEET-level NCERT MCQs in Hindi + English terms on [TOPIC]. Return ONLY a valid JSON array: [{"subject":"Biology","text":"Question","image":null,"options":["A","B","C","D"],"correct":0}]`;
+                const ta = document.createElement("textarea");
+                ta.value = promptText;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand("copy");
+                document.body.removeChild(ta);
+                showToast("Gemini Prompt copied!");
+            }
+
+            /* ==========================================
+               8. ROCK-SOLID MOCK TEST ENGINE
+               ========================================== */
+            function togglePallet() { document.getElementById("sliding-pallet").classList.toggle("open"); }
+
+            function startMockTest(testId) {
+                if (!currentStudent) {
+                    pendingTestId = testId;
+                    showToast("Test shuru karne se pehle apna Naam aur ID dalein!", "warning");
+                    openAuthModal("student");
+                    return;
+                }
+
+                const questions = getQuestionsForTest(testId);
+                if (!questions || questions.length === 0) {
+                    showToast("Is test mein abhi koi question nahi hai. Admin Panel se add karein!", "warning");
+                    return;
+                }
+
+                const allTests = getMergedTests();
+                activeTestId = testId;
+                activeTestTitle = (allTests[testId] && allTests[testId].title) ? allTests[testId].title : testId;
+                testStartTime = Date.now();
+                isSubmittingTest = false;
+                currentActiveTab = "tests-tab";
+
+                document.querySelectorAll(".tab-content").forEach((tab) => tab.classList.remove("active"));
+                document.getElementById("tests-tab").classList.add("active");
+                updateNavHighlight("tests-tab");
+
+                document.getElementById("test-list-screen").style.display = "none";
+                document.getElementById("test-result").style.display = "none";
+                document.getElementById("test-engine").style.display = "block";
+                document.getElementById("sliding-pallet").classList.remove("open");
+                document.getElementById("engine-test-title").innerText = activeTestTitle;
+
+                mockQuestions = questions;
+                userResponses = mockQuestions.map(() => ({ selectedOption: null, status: "not-visited" }));
+                currentQIndex = 0;
+
+                buildPallet();
+                loadMockQuestion(0);
+
+                let time = Math.max(60, Math.round(mockQuestions.length * 1.8 * 60));
+                clearInterval(mockTimerInterval);
+                const tick = () => {
+                    const m = Math.floor(time / 60);
+                    const s = time % 60;
+                    document.getElementById("mock-timer").innerText = `${m}:${s < 10 ? "0" : ""}${s}`;
+                };
+                tick();
+                mockTimerInterval = setInterval(() => {
+                    time--;
+                    tick();
+                    if (time <= 0) submitTest();
+                }, 1000);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+
+            function buildPallet() {
+                const grid = document.getElementById("pallet-grid");
+                grid.innerHTML = "";
+                for (let i = 0; i < mockQuestions.length; i++) {
+                    const btn = document.createElement("button");
+                    btn.innerText = String(i + 1);
+                    btn.className = `pallet-btn status-${userResponses[i].status}`;
+                    btn.id = `pallet-btn-${i}`;
+                    btn.onclick = () => {
+                        loadMockQuestion(i);
+                        if (window.innerWidth <= 768) togglePallet();
+                    };
+                    grid.appendChild(btn);
+                }
+            }
+
+            function loadMockQuestion(index) {
+                if (!mockQuestions.length || index < 0 || index >= mockQuestions.length) return;
+                if (userResponses[currentQIndex] && userResponses[currentQIndex].status === "not-visited") {
+                    userResponses[currentQIndex].status = "unanswered";
+                    updatePalletColor(currentQIndex);
+                }
+                currentQIndex = index;
+                const q = mockQuestions[index];
+                const optionsArr = Array.isArray(q.options) ? q.options : [];
+
+                document.getElementById("q-number").innerText = `Question ${index + 1} / ${mockQuestions.length}`;
+                document.getElementById("q-progress-fill").style.width = `${Math.round(((index + 1) / mockQuestions.length) * 100)}%`;
+
+                const prevBtn = document.getElementById("prev-q-btn");
+                if (prevBtn) prevBtn.disabled = index === 0;
+
+                const saveNextBtn = document.getElementById("save-next-btn");
+                if (saveNextBtn) {
+                    if (index === mockQuestions.length - 1) {
+                        saveNextBtn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Save & Submit`;
+                        saveNextBtn.classList.add("btn-danger");
+                    } else {
+                        saveNextBtn.innerHTML = `Save & Next <i class="fa-solid fa-arrow-right"></i>`;
+                        saveNextBtn.classList.remove("btn-danger");
+                    }
+                }
+
+                const subjTag = document.getElementById("q-subject");
+                subjTag.innerText = q.subject || "Biology";
+                subjTag.className = `tag ${q.subject === "Physics" ? "p" : q.subject === "Chemistry" ? "c" : "b"}`;
+                document.getElementById("q-text").innerText = q.text || "";
+
+                const imgEl = document.getElementById("q-image");
+                if (q.image) { imgEl.src = q.image; imgEl.style.display = "block"; }
+                else { imgEl.style.display = "none"; }
+
+                const optContainer = document.getElementById("q-options-container");
+                optContainer.innerHTML = "";
+                const letters = ["A", "B", "C", "D"];
+                optionsArr.forEach((opt, i) => {
+                    const li = document.createElement("li");
+                    if (userResponses[index].selectedOption === i) li.classList.add("selected");
+                    li.innerHTML = `<span class="opt-letter">${letters[i] || i + 1}</span><span>${escapeHtml(opt)}</span>`;
+                    li.onclick = () => {
+                        userResponses[currentQIndex].selectedOption = i;
+                        optContainer.querySelectorAll("li").forEach((el, idx) => el.classList.toggle("selected", idx === i));
+                    };
+                    optContainer.appendChild(li);
+                });
+            }
+
+            function updatePalletColor(index) {
+                const btn = document.getElementById(`pallet-btn-${index}`);
+                if (btn && userResponses[index]) btn.className = `pallet-btn status-${userResponses[index].status}`;
+            }
+
+            function prevQuestion() {
+                if (currentQIndex > 0) loadMockQuestion(currentQIndex - 1);
+            }
+
+            function saveAndNext() {
+                if (!userResponses[currentQIndex]) return;
+                userResponses[currentQIndex].status = userResponses[currentQIndex].selectedOption !== null ? "answered" : "unanswered";
+                updatePalletColor(currentQIndex);
+                if (currentQIndex < mockQuestions.length - 1) {
+                    loadMockQuestion(currentQIndex + 1);
+                } else {
+                    confirmSubmitTest();
+                }
+            }
+
+            function markForReview() {
+                if (!userResponses[currentQIndex]) return;
+                userResponses[currentQIndex].status = "review";
+                updatePalletColor(currentQIndex);
+                if (currentQIndex < mockQuestions.length - 1) loadMockQuestion(currentQIndex + 1);
+                else showToast("Last question marked for review! Click Submit when ready.");
+            }
+
+            function clearResponse() {
+                if (!userResponses[currentQIndex]) return;
+                userResponses[currentQIndex].selectedOption = null;
+                userResponses[currentQIndex].status = "unanswered";
+                updatePalletColor(currentQIndex);
+                loadMockQuestion(currentQIndex);
+            }
+
+            function confirmSubmitTest() {
+                if (isSubmittingTest || !mockQuestions.length) return;
+                if (userResponses[currentQIndex] && userResponses[currentQIndex].selectedOption !== null) {
+                    userResponses[currentQIndex].status = "answered";
+                    updatePalletColor(currentQIndex);
+                }
+                const answeredCount = userResponses.filter((r) => r.selectedOption !== null).length;
+                openConfirmModal(
+                    "Submit Test?",
+                    `Aapne ${mockQuestions.length} mein se ${answeredCount} questions attempt kiye hain. Abhi submit karein?`,
+                    submitTest
+                );
+            }
+
+            function submitTest() {
+                if (isSubmittingTest || !mockQuestions.length) return;
+                isSubmittingTest = true;
+
+                clearInterval(mockTimerInterval);
+                document.getElementById("sliding-pallet").classList.remove("open");
+
+                let score = 0, correct = 0, wrong = 0, skipped = 0;
+                const totalMarks = mockQuestions.length * 4;
+                const timeTakenSec = Math.max(1, Math.round((Date.now() - (testStartTime || Date.now())) / 1000));
+
+                let reviewHTML = `<h3 style="margin-top:16px; color:var(--primary-bright); text-align:left; border-bottom:1px solid var(--border-subtle); padding-bottom:10px;">Detailed Solution Analysis</h3><div style="text-align:left; max-height:420px; overflow-y:auto; padding-right:6px; margin-top:14px;">`;
+
+                userResponses.forEach((resp, i) => {
+                    const q = mockQuestions[i] || { text: "", options: [], correct: 0 };
+                    const opts = Array.isArray(q.options) ? q.options : [];
+                    let color = "#f59e0b", ansText = "Skipped";
+                    if (resp.selectedOption !== null && opts[resp.selectedOption] !== undefined) {
+                        if (resp.selectedOption === q.correct) {
+                            score += 4; correct++; color = "#10b981"; ansText = opts[resp.selectedOption];
+                        } else {
+                            score -= 1; wrong++; color = "#f43f5e"; ansText = opts[resp.selectedOption];
+                        }
+                    } else { skipped++; }
+
+                    reviewHTML += `
+                        <div style="background:rgba(148,163,184,0.06); padding:14px; margin-bottom:10px; border-left:4px solid ${color}; border-radius:10px;">
+                            <p style="font-weight:600; margin-bottom:6px; font-size:14px; white-space:pre-line;">Q${i + 1}: ${escapeHtml(q.text)}</p>
+                            <p style="font-size:13px; color:var(--text-muted); margin-bottom:3px;">Your Answer: <b style="color:${color};">${escapeHtml(ansText)}</b></p>
+                            <p style="font-size:13px; color:#10b981;">Correct Answer: <b>${escapeHtml(opts[q.correct] !== undefined ? opts[q.correct] : "N/A")}</b></p>
+                        </div>`;
+                });
+                reviewHTML += "</div>";
+
+                const attempted = correct + wrong;
+                const accuracy = attempted > 0 ? Math.round((correct / attempted) * 100) : 0;
+                const clientSubmissionId = `sub_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+                const resultPayload = {
+                    clientSubmissionId: clientSubmissionId,
+                    studentName: currentStudent ? currentStudent.name : "Guest Student",
+                    studentId: currentStudent ? currentStudent.studentId : "guest",
+                    target: currentStudent ? currentStudent.target : "NEET",
+                    testId: activeTestId,
+                    testTitle: activeTestTitle,
+                    score: score,
+                    totalMarks: totalMarks,
+                    accuracy: accuracy,
+                    correct: correct,
+                    wrong: wrong,
+                    skipped: skipped,
+                    timeTakenSec: timeTakenSec,
+                    submittedAt: Date.now()
+                };
+
+                // 1) IMMEDIATELY show result screen
+                document.getElementById("test-engine").style.display = "none";
+                document.getElementById("test-result").style.display = "block";
+                document.getElementById("result-student-meta").innerHTML = `
+                    <b>${escapeHtml(resultPayload.studentName)}</b> • ${escapeHtml(activeTestTitle)} • Time: ${formatDuration(timeTakenSec)}
+                    • <span id="result-sync-status" style="color:var(--accent);"><i class="fa-solid fa-spinner fa-spin"></i> Syncing...</span>
+                `;
+                document.getElementById("final-score").innerText = `${score} / ${totalMarks}`;
+                document.getElementById("score-analysis").innerHTML = `
+                    <span class="tag b">Correct: ${correct} (+${correct * 4})</span>
+                    <span class="tag p">Wrong: ${wrong} (-${wrong})</span>
+                    <span class="tag a">Skipped: ${skipped}</span>
+                    <span class="tag c">Accuracy: ${accuracy}%</span>
+                `;
+                document.getElementById("detailed-analysis-container").innerHTML = reviewHTML;
+                window.scrollTo({ top: 0, behavior: "smooth" });
+                showToast("Test Submitted Successfully!");
+
+                // 2) Save locally so History & Leaderboard update right away
+                localResults.unshift(Object.assign({ docId: `local_${clientSubmissionId}` }, resultPayload));
+                safeSet("neet_ace_local_results", localResults.slice(0, 100));
+                renderResultsAndAnalytics();
+
+                // 3) Sync to Firebase Cloud in background
+                if (isFirebaseReady && db && fsApi) {
+                    withTimeout(fsApi.addDoc(fsApi.collection(db, "results"), resultPayload), 8000)
+                        .then(() => {
+                            const statusEl = document.getElementById("result-sync-status");
+                            if (statusEl) {
+                                statusEl.style.color = "#10b981";
+                                statusEl.innerHTML = `<i class="fa-solid fa-cloud-check"></i> Saved to Cloud`;
+                            }
+                        })
+                        .catch((err) => {
+                            console.warn("Cloud result save warning:", err.message);
+                            const statusEl = document.getElementById("result-sync-status");
+                            if (statusEl) {
+                                statusEl.style.color = "#f59e0b";
+                                statusEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> Saved Locally`;
+                            }
+                        })
+                        .finally(() => { isSubmittingTest = false; });
+                } else {
+                    const statusEl = document.getElementById("result-sync-status");
+                    if (statusEl) {
+                        statusEl.style.color = "#10b981";
+                        statusEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> Saved Locally`;
+                    }
+                    isSubmittingTest = false;
+                }
+            }
+
+            /* ==========================================
+               9. NAVIGATION, SUBJECTS, THEME, GOALS & TIMERS
+               ========================================== */
+            function toggleMenu() {
+                document.getElementById("side-menu").classList.toggle("open");
+                document.getElementById("menu-overlay").classList.toggle("active");
+            }
+
+            function updateNavHighlight(tabId) {
+                document.querySelectorAll(".side-menu a").forEach((a) => a.classList.remove("active-side"));
+                const sideLink = document.getElementById(`snav-${tabId}`);
+                if (sideLink) sideLink.classList.add("active-side");
+
+                document.querySelectorAll(".desktop-nav button, .mobile-dock button").forEach((b) => b.classList.remove("active"));
+                const dBtn = document.getElementById(`dnav-${tabId}`);
+                const mBtn = document.getElementById(`mnav-${tabId}`);
+                if (dBtn) dBtn.classList.add("active");
+                if (mBtn) mBtn.classList.add("active");
+            }
+
+            function switchTab(tabId) {
+                if (tabId !== "chapter-list-screen") {
+                    currentActiveTab = tabId;
+                }
+                updateNavHighlight(tabId);
+                document.querySelectorAll(".tab-content").forEach((t) => t.classList.remove("active"));
+                const target = document.getElementById(tabId);
+                if (target) target.classList.add("active");
+
+                if (tabId === "tests-tab") {
+                    document.getElementById("test-list-screen").style.display = "block";
+                    document.getElementById("test-engine").style.display = "none";
+                    document.getElementById("test-result").style.display = "none";
+                    clearInterval(mockTimerInterval);
+                }
+                if (document.getElementById("side-menu").classList.contains("open")) toggleMenu();
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+
+            function switchAdminSection(sectionId, btnEl) {
+                document.querySelectorAll(".admin-section").forEach((el) => el.classList.remove("active"));
+                document.querySelectorAll(".admin-tab-btn").forEach((el) => el.classList.remove("active"));
+                const sec = document.getElementById(sectionId);
+                if (sec) sec.classList.add("active");
+                if (btnEl) btnEl.classList.add("active");
+            }
+
+            function openSubject(subject) {
+                activeSubjectView = subject;
+                document.getElementById("chapter-subject-title").innerText = `${subject} Chapter Practice`;
+                const iconEl = document.getElementById("chapter-subject-icon");
+                const boxEl = document.getElementById("chapter-icon-box");
+                if (subject === "Physics") {
+                    iconEl.className = "fa-solid fa-magnet";
+                    boxEl.style.color = "var(--physics-color)";
+                    boxEl.style.background = "rgba(244,63,94,0.16)";
+                } else if (subject === "Chemistry") {
+                    iconEl.className = "fa-solid fa-flask";
+                    boxEl.style.color = "var(--chemistry-color)";
+                    boxEl.style.background = "rgba(56,189,248,0.16)";
+                } else {
+                    iconEl.className = "fa-solid fa-dna";
+                    boxEl.style.color = "var(--biology-color)";
+                    boxEl.style.background = "rgba(16,185,129,0.16)";
+                }
+                renderChaptersGrid(subject);
+                switchTab("chapter-list-screen");
+            }
+
+            function toggleTheme() {
+                const isLight = document.body.classList.toggle("light-mode");
+                safeSet("neet_ace_theme", isLight ? "light" : "dark");
+                const btn = document.getElementById("theme-toggle-btn");
+                if (btn) btn.innerHTML = isLight ? '<i class="fa-solid fa-moon"></i> Dark Mode' : '<i class="fa-solid fa-sun"></i> Light Mode';
+            }
+
+            // NEET 2027 Countdown (Instant + Every Second)
+            const countDownDate = new Date("May 2, 2027 14:00:00").getTime();
+            function updateCountdown() {
+                const dist = Math.max(0, countDownDate - Date.now());
+                document.getElementById("cd-days").innerText = Math.floor(dist / 86400000);
+                document.getElementById("cd-hours").innerText = Math.floor((dist % 86400000) / 3600000);
+                document.getElementById("cd-minutes").innerText = Math.floor((dist % 3600000) / 60000);
+                document.getElementById("cd-seconds").innerText = Math.floor((dist % 60000) / 1000);
+            }
+
+            // Study Goals (Saved safely)
+            let goalsData = safeGet("neet_ace_goals", [
+                { text: "Read NCERT Biology (1 Chapter)", done: false },
+                { text: "Attempt 1 Live Mock Test", done: false }
+            ]);
+            function renderGoals() {
+                const list = document.getElementById("goal-list");
+                if (!list) return;
+                if (goalsData.length === 0) {
+                    list.innerHTML = `<p style="font-size:13px; color:var(--text-muted); text-align:center; padding:10px;">No goals yet. Add one above!</p>`;
+                    return;
+                }
+                list.innerHTML = goalsData.map((g, idx) => `
+                    <div class="checklist-item ${g.done ? "done" : ""}">
+                        <div class="check-left">
+                            <input type="checkbox" ${g.done ? "checked" : ""} onchange="toggleGoalDone(${idx}, this.checked)">
+                            <span class="task-text" contenteditable="true" onblur="editGoalText(${idx}, this.innerText)">${escapeHtml(g.text)}</span>
+                        </div>
+                        <button class="icon-del-btn" onclick="deleteGoalItem(${idx})"><i class="fa-solid fa-trash"></i></button>
+                    </div>`).join("");
+            }
+            function addGoal() {
+                const input = document.getElementById("goal-input");
+                const val = input.value.trim();
+                if (!val) return;
+                goalsData.unshift({ text: val, done: false });
+                safeSet("neet_ace_goals", goalsData);
+                input.value = "";
+                renderGoals();
+            }
+            function toggleGoalDone(idx, checked) {
+                if (goalsData[idx]) { goalsData[idx].done = checked; safeSet("neet_ace_goals", goalsData); renderGoals(); }
+            }
+            function editGoalText(idx, text) {
+                if (goalsData[idx]) { goalsData[idx].text = text.trim() || goalsData[idx].text; safeSet("neet_ace_goals", goalsData); }
+            }
+            function deleteGoalItem(idx) {
+                goalsData.splice(idx, 1);
+                safeSet("neet_ace_goals", goalsData);
+                renderGoals();
+            }
+
+            // Focus Hub Timer
+            let bgTimerInterval = null, targetTimestamp = 0;
+            function quickStartTimer(mins) {
+                document.getElementById("bg-timer-input").value = mins;
+                startBgTimer();
+            }
+            function startBgTimer() {
+                const mins = parseInt(document.getElementById("bg-timer-input").value, 10);
+                if (isNaN(mins) || mins <= 0) { showToast("Enter valid minutes!", "error"); return; }
+                const bell = document.getElementById("timer-bell");
+                if (bell) { bell.play().catch(() => {}); bell.pause(); bell.currentTime = 0; }
+                targetTimestamp = Date.now() + mins * 60000;
+                clearInterval(bgTimerInterval);
+                updateTimerUI();
+                bgTimerInterval = setInterval(updateTimerUI, 1000);
+                document.getElementById("bg-timer-input").value = "";
+                showToast(`Deep Focus started for ${mins} mins!`);
+            }
+            function updateTimerUI() {
+                const left = Math.floor((targetTimestamp - Date.now()) / 1000);
+                if (left <= 0) {
+                    clearInterval(bgTimerInterval);
+                    document.getElementById("bg-timer-display").innerText = "00:00";
+                    const bell = document.getElementById("timer-bell");
+                    if (bell) { bell.loop = true; bell.play().catch(() => {}); }
+                    document.getElementById("timer-popup").classList.add("open");
+                    return;
+                }
+                const m = String(Math.floor(left / 60)).padStart(2, "0");
+                const s = String(left % 60).padStart(2, "0");
+                document.getElementById("bg-timer-display").innerText = `${m}:${s}`;
+            }
+            function stopBgTimer() {
+                clearInterval(bgTimerInterval);
+                document.getElementById("bg-timer-display").innerText = "00:00";
+                showToast("Focus timer stopped.", "warning");
+            }
+            function closeTimerPopup() {
+                const bell = document.getElementById("timer-bell");
+                if (bell) { bell.pause(); bell.currentTime = 0; }
+                document.getElementById("timer-popup").classList.remove("open");
+            }
+
+            /* ==========================================
+               10. UTILITIES (Toast, Confirm, Formatters)
+               ========================================== */
+            function showToast(msg, type) {
+                const container = document.getElementById("toast-container");
+                if (!container) return;
+                const tType = type || "success";
+                const toast = document.createElement("div");
+                toast.className = `toast ${tType}`;
+                const icon = tType === "error" ? "fa-circle-xmark" : tType === "warning" ? "fa-triangle-exclamation" : "fa-circle-check";
+                toast.innerHTML = `<i class="fa-solid ${icon}"></i><span>${escapeHtml(msg)}</span>`;
+                container.appendChild(toast);
+                setTimeout(() => toast.remove(), 3600);
+            }
+
+            function openConfirmModal(title, msg, onConfirm) {
+                document.getElementById("confirm-title").innerText = title;
+                document.getElementById("confirm-msg").innerText = msg;
+                confirmCallback = onConfirm;
+                document.getElementById("confirm-modal").classList.add("open");
+            }
+            function closeConfirmModal(ok) {
+                document.getElementById("confirm-modal").classList.remove("open");
+                const cb = confirmCallback;
+                confirmCallback = null;
+                if (ok && typeof cb === "function") cb();
+            }
+
+            function formatDuration(sec) {
+                const m = Math.floor(sec / 60);
+                const s = sec % 60;
+                return m > 0 ? `${m}m ${s}s` : `${s}s`;
+            }
+            function formatDateTime(ts) {
+                if (!ts) return "--";
+                return new Date(ts).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+            }
+            function formatTimeAgo(ts) {
+                const diffMin = Math.floor((Date.now() - (ts || Date.now())) / 60000);
+                if (diffMin < 1) return "Just now";
+                if (diffMin < 60) return `${diffMin}m ago`;
+                if (diffMin < 1440) return `${Math.floor(diffMin / 60)}h ago`;
+                return formatDateTime(ts);
+            }
+            function escapeHtml(str) {
+                return String(str === undefined || str === null ? "" : str)
+                    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+            }
+
+            /* ==========================================
+               11. EXPOSE ALL HANDLERS GLOBALLY & BOOT APP
+               ========================================== */
+            Object.assign(window, {
+                toggleMenu, switchTab, switchAdminSection, openSubject, toggleTheme,
+                openAuthModal, closeAuthModal, switchAuthMode, loginStudent, logoutStudent,
+                verifyAdminPin, logoutAdmin, closeConfirmModal,
+                startMockTest, togglePallet, prevQuestion, saveAndNext, markForReview, clearResponse, confirmSubmitTest,
+                renderLeaderboard, renderAdminResultsTable, deleteStudentResult,
+                createTestInCloud, addSingleQuestionToCloud, bulkUploadQuestions, migrateLocalQuestionsJs, deleteTestFromCloud, copyGeminiPrompt,
+                addGoal, toggleGoalDone, editGoalText, deleteGoalItem,
+                quickStartTimer, startBgTimer, stopBgTimer, closeTimerPopup, showToast
+            });
+
+            // Keyboard Shortcuts
+            document.getElementById("student-name-input").addEventListener("keypress", (e) => { if (e.key === "Enter") loginStudent(); });
+            document.getElementById("student-id-input").addEventListener("keypress", (e) => { if (e.key === "Enter") loginStudent(); });
+            document.getElementById("admin-pin-input").addEventListener("keypress", (e) => { if (e.key === "Enter") verifyAdminPin(); });
+            document.getElementById("goal-input").addEventListener("keypress", (e) => { if (e.key === "Enter") addGoal(); });
+
+            // Instant Boot (Never waits for external network)
+            if (safeGet("neet_ace_theme", "dark") === "light") {
+                document.body.classList.add("light-mode");
+                const btn = document.getElementById("theme-toggle-btn");
+                if (btn) btn.innerHTML = '<i class="fa-solid fa-moon"></i> Dark Mode';
+            }
+
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+            renderGoals();
+            updateStudentUI();
+            renderAllDynamicUI();
+
+            // Connect Firebase Cloud in background
+            initFirebaseCloud();
+        })();
+    </script>
+</body>
+</html>

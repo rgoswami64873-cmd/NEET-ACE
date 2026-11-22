@@ -506,18 +506,18 @@
                 </p>
                 <div class="form-group">
                     <label>Full Name</label>
-                    <input type="text" id="student-name-input" class="input-field" placeholder="e.g. Ravi Goswami ">
+                    <input type="text" id="student-name-input" class="input-field" placeholder="e.g. Rahul Sharma">
                 </div>
                 <div class="form-group">
                     <label>Email or Mobile Number (Unique ID)</label>
-                    <input type="text" id="student-id-input" class="input-field" placeholder="e.g. ravi@gmail.com or 9876543210">
+                    <input type="text" id="student-id-input" class="input-field" placeholder="e.g. rahul@gmail.com or 9876543210">
                 </div>
                 <div class="form-group">
                     <label>Target Exam</label>
                     <select id="student-target-input">
                         <option value="NEET 2027">NEET 2027</option>
-                        <option value="NEET 2028">NEET 2028</option>
-                        <option value="NEET 2029">NEET 2029</option>
+                        <option value="NEET 2026">NEET 2026</option>
+                        <option value="NEET Dropper">NEET Dropper Batch</option>
                     </select>
                 </div>
                 <button class="btn" id="student-login-submit-btn" style="width:100%; padding:12px;" onclick="loginStudent()">
@@ -554,6 +554,110 @@
                 <button class="btn btn-outline" onclick="closeConfirmModal(false)" style="min-width:100px;">Cancel</button>
                 <button class="btn btn-danger" onclick="closeConfirmModal(true)" style="min-width:110px;">Confirm</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Edit Test / Chapter Modal -->
+    <div id="edit-test-modal" class="modal-backdrop">
+        <div class="modal-box" style="max-width:480px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                <h3 style="font-size:18px; font-weight:800;"><i class="fa-solid fa-pen-to-square" style="color:var(--primary-bright);"></i> Edit Test / Chapter</h3>
+                <button onclick="closeEditTestModal()" style="background:none; border:none; color:var(--text-muted); font-size:20px; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <input type="hidden" id="edit-test-id">
+            <div class="form-group">
+                <label>Display Title</label>
+                <input type="text" id="edit-test-title" class="input-field">
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="edit-test-type">
+                        <option value="mock">Mock Test</option>
+                        <option value="chapter">Chapter Practice</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Subject</label>
+                    <select id="edit-test-subject">
+                        <option value="Biology">Biology</option>
+                        <option value="Physics">Physics</option>
+                        <option value="Chemistry">Chemistry</option>
+                        <option value="All">All Subjects</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Short Tag</label>
+                <input type="text" id="edit-test-tag" class="input-field">
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" id="edit-test-desc" class="input-field">
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:16px;">
+                <button class="btn btn-outline" onclick="closeEditTestModal()">Cancel</button>
+                <button class="btn" id="save-edit-test-btn" onclick="saveEditedTest()"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manage & Edit Questions Modal -->
+    <div id="manage-questions-modal" class="modal-backdrop">
+        <div class="modal-box" style="max-width:680px; max-height:88vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; position:sticky; top:0; background:var(--bg-solid); padding-bottom:10px; border-bottom:1px solid var(--border-subtle); z-index:5;">
+                <div>
+                    <h3 id="mq-modal-title" style="font-size:17px; font-weight:800;"><i class="fa-solid fa-list-check" style="color:var(--primary-bright);"></i> Manage Questions</h3>
+                    <p id="mq-modal-sub" style="font-size:12px; color:var(--text-muted);"></p>
+                </div>
+                <button onclick="closeManageQuestionsModal()" style="background:none; border:none; color:var(--text-muted); font-size:22px; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <!-- Inline Question Editor -->
+            <div id="mq-editor-box" style="display:none; background:rgba(16,185,129,0.08); border:1px solid var(--border-glow); border-radius:14px; padding:14px; margin-bottom:16px;">
+                <h4 style="font-size:14px; color:var(--primary-bright); margin-bottom:10px;">Edit Question</h4>
+                <input type="hidden" id="eq-doc-id">
+                <div class="form-group"><label>Question Text</label><textarea id="eq-text" rows="2"></textarea></div>
+                <div class="form-group">
+                    <label>Diagram Image URL or Pick Photo (Optional)</label>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <input type="text" id="eq-image" class="input-field" placeholder="https://... ya bagal se photo chunein" style="flex:1; min-width:160px;">
+                        <label class="btn btn-outline" style="cursor:pointer; padding:8px 12px; font-size:12px;">
+                            <i class="fa-solid fa-image"></i> Photo
+                            <input type="file" accept="image/*" style="display:none;" onchange="handleEditDiagramUpload(event)">
+                        </label>
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group"><label>Option A</label><input type="text" id="eq-opt-0" class="input-field"></div>
+                    <div class="form-group"><label>Option B</label><input type="text" id="eq-opt-1" class="input-field"></div>
+                    <div class="form-group"><label>Option C</label><input type="text" id="eq-opt-2" class="input-field"></div>
+                    <div class="form-group"><label>Option D</label><input type="text" id="eq-opt-3" class="input-field"></div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Correct Option</label>
+                        <select id="eq-correct">
+                            <option value="0">Option A</option>
+                            <option value="1">Option B</option>
+                            <option value="2">Option C</option>
+                            <option value="3">Option D</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Subject</label>
+                        <select id="eq-subject">
+                            <option value="Biology">Biology</option>
+                            <option value="Physics">Physics</option>
+                            <option value="Chemistry">Chemistry</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display:flex; gap:8px; justify-content:flex-end;">
+                    <button class="btn btn-outline" style="padding:7px 14px;" onclick="document.getElementById('mq-editor-box').style.display='none'">Cancel</button>
+                    <button class="btn" id="save-eq-btn" style="padding:7px 14px;" onclick="saveEditedQuestion()"><i class="fa-solid fa-check"></i> Update Question</button>
+                </div>
+            </div>
+            <div id="mq-questions-list"></div>
         </div>
     </div>
 
@@ -887,7 +991,7 @@
         <div id="focus-tab" class="tab-content">
             <div class="card" style="max-width: 540px; margin: 0 auto; text-align:center;">
                 <h2 style="font-size:21px; font-weight:800; margin-bottom:6px;"><i class="fa-solid fa-stopwatch" style="color:var(--primary-bright);"></i> Deep Focus Hub</h2>
-                <p style="font-size:13px; color:var(--text-muted); margin-bottom:22px;">Distraction-free Pomodoro timer for NCERT study & mock practice.</p>
+                <p style="font-size:13px; color:var(--text-muted); margin-bottom:22px;">Distraction-free Pomodoro timer with Loud Siren & Background Lock-Screen Alert.</p>
                 
                 <div style="background: var(--input-bg); border: 1px solid var(--border-glow); padding: 32px 18px; border-radius: 20px;">
                     <div id="bg-timer-display" class="mono" style="font-size: 60px; font-weight: 700; color: var(--primary-bright); margin-bottom: 22px;">00:00</div>
@@ -898,10 +1002,14 @@
                         <button class="btn btn-outline" style="padding:6px 13px; font-size:12px;" onclick="quickStartTimer(180)">180m</button>
                     </div>
                     <input type="number" id="bg-timer-input" class="input-field" placeholder="Or custom minutes (e.g. 50)" style="max-width: 250px; margin: 0 auto 18px; text-align: center;">
-                    <div style="display: flex; gap: 10px; justify-content: center;">
+                    <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
                         <button class="btn" onclick="startBgTimer()" style="min-width: 115px;"><i class="fa-solid fa-play"></i> Start</button>
                         <button class="btn btn-danger" onclick="stopBgTimer()" style="min-width: 115px;"><i class="fa-solid fa-stop"></i> Stop</button>
+                        <button class="btn btn-outline" onclick="testAlarmSound()" style="font-size:12.5px;"><i class="fa-solid fa-volume-high"></i> Test Loud Alarm</button>
                     </div>
+                    <p id="alarm-bg-status" style="font-size:11.5px; color:var(--text-muted); margin-top:14px;">
+                        <i class="fa-solid fa-bell" style="color:var(--accent);"></i> Start dabane par Notification permission "Allow" karein taaki screen lock ya home screen par bhi loud alarm alert aaye.
+                    </p>
                 </div>
             </div>
         </div>
@@ -952,7 +1060,7 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:18px;">
                     <div>
                         <h2 style="color:var(--accent); font-size:21px; font-weight:800;"><i class="fa-solid fa-crown"></i> NEET Ace Admin Panel</h2>
-                        <p style="font-size:13px; color:var(--text-muted);">Create tests, bulk upload questions, and track every student's test results.</p>
+                        <p style="font-size:13px; color:var(--text-muted);">Create/Edit tests, bulk upload questions with diagrams, and track every student's test results.</p>
                     </div>
                     <button class="btn btn-danger" onclick="logoutAdmin()" style="padding:8px 14px; font-size:12.5px;"><i class="fa-solid fa-right-from-bracket"></i> Logout Admin</button>
                 </div>
@@ -962,6 +1070,7 @@
                     <button class="admin-tab-btn" onclick="switchAdminSection('admin-add-test', this)"><i class="fa-solid fa-folder-plus"></i> Create Test</button>
                     <button class="admin-tab-btn" onclick="switchAdminSection('admin-add-single', this)"><i class="fa-solid fa-circle-plus"></i> Add 1 Q</button>
                     <button class="admin-tab-btn" onclick="switchAdminSection('admin-bulk-upload', this)"><i class="fa-solid fa-bolt"></i> Bulk JSON</button>
+                    <button class="admin-tab-btn" onclick="switchAdminSection('admin-pdf-tool', this)"><i class="fa-solid fa-file-pdf"></i> PDF → JSON</button>
                     <button class="admin-tab-btn" onclick="switchAdminSection('admin-manage', this)"><i class="fa-solid fa-list-ul"></i> Manage DB</button>
                 </div>
 
@@ -1035,7 +1144,17 @@
                         </div>
                     </div>
                     <div class="form-group"><label>Question Text</label><textarea id="sq-text" rows="3" placeholder="Enter question text..."></textarea></div>
-                    <div class="form-group"><label>Diagram Image URL (Optional)</label><input type="text" id="sq-image" class="input-field" placeholder="https://..."></div>
+                    <div class="form-group">
+                        <label>Diagram Image URL or Upload from Phone (Optional)</label>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <input type="text" id="sq-image" class="input-field" placeholder="https://... ya bagal se photo chunein" style="flex:1; min-width:180px;">
+                            <label class="btn btn-outline" style="cursor:pointer; padding:9px 14px;">
+                                <i class="fa-solid fa-image"></i> Pick Photo
+                                <input type="file" accept="image/*" style="display:none;" onchange="handleSingleDiagramUpload(event)">
+                            </label>
+                        </div>
+                        <img id="sq-image-preview" style="display:none; max-height:130px; margin-top:8px; border-radius:10px; border:1px solid var(--border-subtle);" alt="Preview">
+                    </div>
                     <div class="form-grid">
                         <div class="form-group"><label>Option A</label><input type="text" id="sq-opt-0" class="input-field" placeholder="Option A"></div>
                         <div class="form-group"><label>Option B</label><input type="text" id="sq-opt-1" class="input-field" placeholder="Option B"></div>
@@ -1072,10 +1191,84 @@
                     <span id="bulk-progress" style="margin-left:12px; font-size:13px; color:var(--primary-bright);"></span>
                 </div>
 
+                <!-- SUB-TAB 4.5: PDF TO JSON GENERATOR -->
+                <div id="admin-pdf-tool" class="admin-section">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+                        <div>
+                            <h3 style="color:var(--primary-bright);"><i class="fa-solid fa-wand-magic-sparkles"></i> PDF / Notes → Auto JSON Generator</h3>
+                            <p style="font-size:12.5px; color:var(--text-muted);">Koi bhi PDF upload karein, apna manchaha count (10, 25, 31, 100, 180...) dalein — AI diagrams sahit JSON bana dega!</p>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>1. Upload PDF File (.pdf)</label>
+                            <input type="file" id="pdf-file-input" accept="application/pdf" class="input-field" onchange="handlePdfFileSelect(event)" style="padding:9px;">
+                        </div>
+                        <div class="form-group">
+                            <label>2. Subject & Question Count (1 to 300)</label>
+                            <div style="display:flex; gap:8px;">
+                                <select id="pdf-subject-select" style="flex:1;">
+                                    <option value="Biology">Biology</option>
+                                    <option value="Physics">Physics</option>
+                                    <option value="Chemistry">Chemistry</option>
+                                    <option value="All">All Subjects</option>
+                                </select>
+                                <input type="number" id="pdf-q-count" class="input-field mono" value="20" min="1" max="300" placeholder="e.g. 180" style="max-width:115px; text-align:center;" title="Enter any number like 10, 31, 100, 180">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="display:flex; align-items:center; gap:10px; background:rgba(16,185,129,0.08); padding:10px 14px; border-radius:12px; border:1px solid var(--border-glow);">
+                        <input type="checkbox" id="pdf-include-diagrams" checked style="width:18px; height:18px; accent-color:var(--primary); cursor:pointer;">
+                        <label for="pdf-include-diagrams" style="margin:0; cursor:pointer; font-size:13px; color:var(--text-main);">
+                            <b><i class="fa-solid fa-image" style="color:var(--primary-bright);"></i> AI Diagram Reader (Auto-Crop):</b> PDF ke diagrams ko AI dekh kar crop karega aur JSON ke <code class="mono">"image"</code> mein daal dega!
+                        </label>
+                    </div>
+
+                    <div id="pdf-extract-status" style="font-size:12.5px; color:var(--secondary); margin-bottom:10px; display:none;"></div>
+
+                    <div class="form-group">
+                        <label>Extracted PDF Text (Ya seedha yahan koi bhi Notes / MCQ text paste karein):</label>
+                        <textarea id="pdf-extracted-text" rows="5" class="input-field" placeholder="PDF upload karte hi uska text yahan aa jayega... ya aap direct copy-paste bhi kar sakte hain."></textarea>
+                    </div>
+
+                    <div class="form-group" style="background:rgba(148,163,184,0.06); padding:12px 14px; border-radius:12px; border:1px solid var(--border-subtle);">
+                        <label style="display:flex; justify-content:space-between; align-items:center;">
+                            <span>Free Gemini API Key (Auto AI Generation ke liye)</span>
+                            <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--primary-bright); font-size:11.5px; text-decoration:underline;">Get Free Key ↗</a>
+                        </label>
+                        <input type="password" id="gemini-api-key-input" class="input-field mono" placeholder="AIzaSy... or AQ... (Ek baar dalein, save rahegi)" onchange="saveGeminiKey(this.value)">
+                    </div>
+
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
+                        <button class="btn" id="ai-generate-json-btn" onclick="generateJsonFromPdfWithAI()">
+                            <i class="fa-solid fa-robot"></i> Generate JSON with AI
+                        </button>
+                        <button class="btn btn-outline" onclick="parseMcqsOffline()">
+                            <i class="fa-solid fa-code"></i> Smart Format Existing MCQs (No Key)
+                        </button>
+                        <button class="btn btn-outline" onclick="copyPdfPromptForChat()">
+                            <i class="fa-solid fa-copy"></i> Copy Prompt + Text
+                        </button>
+                    </div>
+
+                    <div id="pdf-output-box" style="display:none; border-top:1px solid var(--border-subtle); padding-top:16px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+                            <h4 style="color:var(--primary-bright); font-size:15px;"><i class="fa-solid fa-circle-check"></i> Generated JSON (<span id="pdf-gen-count">0</span> Questions)</h4>
+                            <div style="display:flex; gap:8px;">
+                                <button class="btn btn-outline" style="padding:6px 12px; font-size:12px;" onclick="copyGeneratedJson()"><i class="fa-solid fa-copy"></i> Copy JSON</button>
+                                <button class="btn btn-accent" style="padding:6px 12px; font-size:12px;" onclick="sendJsonToBulkUploader()"><i class="fa-solid fa-arrow-right"></i> Send to Bulk Uploader</button>
+                            </div>
+                        </div>
+                        <textarea id="pdf-generated-json" rows="7" class="mono input-field" style="font-size:12px;"></textarea>
+                    </div>
+                </div>
+
                 <!-- SUB-TAB 5: MANAGE DB -->
                 <div id="admin-manage" class="admin-section">
                     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
-                        <h3 style="color:var(--primary-bright);">Live Cloud Tests & Chapters</h3>
+                        <h3 style="color:var(--primary-bright);">Live Cloud Tests & Chapters (Edit / Delete)</h3>
                         <button class="btn btn-accent" id="migrate-btn" onclick="migrateLocalQuestionsJs()" style="font-size:12.5px; padding:8px 14px;">
                             <i class="fa-solid fa-upload"></i> Import Old questions.js
                         </button>
@@ -1100,11 +1293,18 @@
         <p>&copy; NEET Ace Portal | JAY SHRI RAM &#128681;</p>
     </footer>
 
-    <!-- Optional Fallback for local questions.js (works on GitHub Pages if file exists) -->
+    <!-- Optional Fallback for local questions.js -->
     <script src="questions.js?v=4" onerror="console.log('Running without local questions.js')"></script>
+    <!-- PDF.js for client-side PDF text & diagram extraction -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        if (window.pdfjsLib) {
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+        }
+    </script>
 
     <!-- ==========================================
-         BUG-PROOF CORE ENGINE (Zero Blocking Imports)
+         VERIFIED ZERO-ERROR CORE ENGINE
          ========================================== -->
     <script>
         (function() {
@@ -1122,7 +1322,7 @@
                 appId: "1:1098024797220:web:e5b9c10ae7cbc6afbb84b1",
                 measurementId: "G-531GJCEQ37"
             };
-            const ADMIN_PIN = "@Ravi18#1#22#9";
+            const ADMIN_PIN = "1234";
 
             function safeGet(key, fallback) {
                 try {
@@ -1147,13 +1347,16 @@
                2. APP STATE & STARTER DATA
                ========================================== */
             let db = null;
-            let fsApi = null; // Dynamically loaded Firestore functions
+            let fsApi = null;
             let isFirebaseReady = false;
 
             let cloudTests = {};
             let cloudQuestions = {};
             let cloudResults = [];
             let localResults = safeGet("neet_ace_local_results", []);
+            let deletedStarterTests = safeGet("neet_ace_deleted_starters", []);
+            let pdfPageImages = {};
+            let activeManageTestId = null;
 
             let currentStudent = safeGet("neet_ace_student", null);
             let isAdminLoggedIn = false;
@@ -1171,6 +1374,13 @@
             let currentQIndex = 0;
             let mockTimerInterval = null;
             let isSubmittingTest = false;
+
+            // Focus Hub Timer State (Declared ONCE)
+            let bgTimerInterval = null;
+            let targetTimestamp = 0;
+            let alarmAudioCtx = null;
+            let alarmLoopInterval = null;
+            let wakeLockSentinel = null;
 
             const starterTests = {
                 test_02: {
@@ -1335,13 +1545,13 @@
                             cloudQuestions[tId].sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
                         });
                         renderAllDynamicUI();
+                        if (activeManageTestId) renderManageQuestionsList();
                     }, (err) => { console.warn("Questions sync error:", err.message); });
 
                     // 3. Live Results Listener
                     fsApi.onSnapshot(fsApi.collection(db, "results"), (snap) => {
                         cloudResults = [];
                         snap.forEach((d) => { cloudResults.push(Object.assign({ docId: d.id }, d.data())); });
-                        // Remove duplicates from localResults already synced to cloud
                         if (localResults.length > 0) {
                             localResults = localResults.filter((lr) =>
                                 !cloudResults.some((cr) => cr.clientSubmissionId && cr.clientSubmissionId === lr.clientSubmissionId)
@@ -1428,12 +1638,10 @@
                 currentStudent = { name: name, studentId: rawId, target: target };
                 safeSet("neet_ace_student", currentStudent);
 
-                // Close modal & confirm immediately
                 closeAuthModal();
                 updateStudentUI();
                 showToast(`Login Successful! Welcome, ${name}!`);
 
-                // Background Firestore sync
                 if (isFirebaseReady && db && fsApi) {
                     const safeDocId = rawId.replace(/[^a-z0-9@._-]/g, "_");
                     withTimeout(fsApi.setDoc(fsApi.doc(db, "students", safeDocId), {
@@ -1444,7 +1652,6 @@
                     }, { merge: true }), 7000).catch((err) => console.warn("Profile cloud sync skipped:", err.message));
                 }
 
-                // Redirect to pending test OR back to previous page (Home / Test Arena / Notes)
                 if (testToLaunch) {
                     startMockTest(testToLaunch);
                 } else {
@@ -1530,10 +1737,13 @@
                5. DATA MERGE & DYNAMIC UI RENDERERS
                ========================================== */
             function getMergedTests() {
-                const merged = Object.assign({}, starterTests);
+                const merged = {};
+                Object.keys(starterTests).forEach((tId) => {
+                    if (!deletedStarterTests.includes(tId)) merged[tId] = starterTests[tId];
+                });
                 if (typeof window.testsDatabase !== "undefined" && window.testsDatabase) {
                     Object.keys(window.testsDatabase).forEach((tId) => {
-                        if (!merged[tId]) {
+                        if (!merged[tId] && !deletedStarterTests.includes(tId)) {
                             merged[tId] = {
                                 title: tId === "test_01" ? "NEET Mixed Practice Test 1" : `Test: ${tId}`,
                                 type: "mock",
@@ -1692,7 +1902,6 @@
                     document.getElementById("kpi-best-score").innerText = "--";
                 }
 
-                // Dashboard Recent Activity Feed
                 const feedEl = document.getElementById("dash-recent-feed");
                 if (feedEl) {
                     if (allResults.length === 0) {
@@ -1880,7 +2089,7 @@
             }
 
             /* ==========================================
-               7. ADMIN CMS OPERATIONS
+               7. ADMIN CMS OPERATIONS (EDIT + DELETE)
                ========================================== */
             function populateAdminDropdowns() {
                 const allTests = getMergedTests();
@@ -1897,28 +2106,223 @@
             function renderAdminManageList() {
                 const list = document.getElementById("admin-manage-list");
                 if (!list) return;
-                const ids = Object.keys(cloudTests);
+                const allTests = getMergedTests();
+                const ids = Object.keys(allTests);
                 if (ids.length === 0) {
-                    list.innerHTML = `<p style="color:var(--text-muted); font-size:13.5px;">No tests in Cloud yet. Use "Create Test" or "Import Old questions.js".</p>`;
+                    list.innerHTML = `<p style="color:var(--text-muted); font-size:13.5px;">No tests or chapters yet. Use "Create Test" to add one.</p>`;
                     return;
                 }
                 list.innerHTML = ids.map((id) => {
-                    const t = cloudTests[id];
-                    const qLen = (cloudQuestions[id] || []).length;
+                    const t = allTests[id];
+                    const isCloud = Boolean(cloudTests[id]);
+                    const qLen = getQuestionsForTest(id).length;
                     return `
                         <div class="manage-item">
                             <div>
-                                <div style="font-weight:700; font-size:15px;">${escapeHtml(t.title)} <span style="font-size:12px; color:var(--text-muted);">(${id})</span></div>
+                                <div style="font-weight:700; font-size:15px;">
+                                    ${escapeHtml(t.title)}
+                                    <span style="font-size:11.5px; color:var(--text-muted);">(${id})</span>
+                                    ${isCloud ? '<span class="tag b" style="font-size:10px; padding:2px 6px;">Cloud</span>' : '<span class="tag a" style="font-size:10px; padding:2px 6px;">Starter</span>'}
+                                </div>
                                 <div style="font-size:12px; color:var(--text-muted); margin-top:3px;">
                                     Type: <b>${t.type}</b> • Subject: <b>${t.subject}</b> • Questions: <b style="color:var(--primary-bright);">${qLen}</b>
                                 </div>
                             </div>
-                            <div style="display:flex; gap:8px;">
-                                <button class="btn btn-outline" style="padding:6px 12px; font-size:12px;" onclick="startMockTest('${id}')"><i class="fa-solid fa-play"></i> Launch</button>
-                                <button class="btn btn-danger" style="padding:6px 12px; font-size:12px;" onclick="deleteTestFromCloud('${id}')"><i class="fa-solid fa-trash"></i> Delete</button>
+                            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                                <button class="btn btn-outline" style="padding:6px 11px; font-size:12px;" onclick="openEditTestModal('${id}')"><i class="fa-solid fa-pen"></i> Edit</button>
+                                <button class="btn btn-outline" style="padding:6px 11px; font-size:12px; color:var(--secondary); border-color:rgba(6,182,212,0.35);" onclick="openManageQuestionsModal('${id}')"><i class="fa-solid fa-list"></i> Qs (${qLen})</button>
+                                <button class="btn btn-outline" style="padding:6px 11px; font-size:12px;" onclick="startMockTest('${id}')"><i class="fa-solid fa-play"></i> Launch</button>
+                                <button class="btn btn-danger" style="padding:6px 11px; font-size:12px;" onclick="deleteTestFromCloud('${id}')"><i class="fa-solid fa-trash"></i> Delete</button>
                             </div>
                         </div>`;
                 }).join("");
+            }
+
+            function openEditTestModal(testId) {
+                const t = getMergedTests()[testId];
+                if (!t) return;
+                document.getElementById("edit-test-id").value = testId;
+                document.getElementById("edit-test-title").value = t.title || "";
+                document.getElementById("edit-test-type").value = t.type || "mock";
+                document.getElementById("edit-test-subject").value = t.subject || "Biology";
+                document.getElementById("edit-test-tag").value = t.tag || "";
+                document.getElementById("edit-test-desc").value = t.description || "";
+                document.getElementById("edit-test-modal").classList.add("open");
+            }
+
+            function closeEditTestModal() {
+                document.getElementById("edit-test-modal").classList.remove("open");
+            }
+
+            async function saveEditedTest() {
+                const testId = document.getElementById("edit-test-id").value;
+                const title = document.getElementById("edit-test-title").value.trim();
+                const type = document.getElementById("edit-test-type").value;
+                const subject = document.getElementById("edit-test-subject").value;
+                const tag = document.getElementById("edit-test-tag").value.trim() || subject;
+                const description = document.getElementById("edit-test-desc").value.trim() || `${subject} Practice`;
+
+                if (!testId || !title) { showToast("Title cannot be empty!", "error"); return; }
+                const btn = document.getElementById("save-edit-test-btn");
+                btn.disabled = true;
+                try {
+                    if (isFirebaseReady && db && fsApi) {
+                        await withTimeout(fsApi.setDoc(fsApi.doc(db, "tests", testId), {
+                            title, type, subject, tag, description, updatedAt: Date.now()
+                        }, { merge: true }));
+                        showToast(`"${title}" updated in Cloud!`);
+                    } else {
+                        starterTests[testId] = { title, type, subject, tag, description };
+                        renderAllDynamicUI();
+                        showToast(`"${title}" updated locally!`);
+                    }
+                    closeEditTestModal();
+                } catch (err) {
+                    showToast("Update failed: " + err.message, "error");
+                } finally { btn.disabled = false; }
+            }
+
+            function openManageQuestionsModal(testId) {
+                activeManageTestId = testId;
+                const t = getMergedTests()[testId];
+                document.getElementById("mq-modal-title").innerHTML = `<i class="fa-solid fa-list-check" style="color:var(--primary-bright);"></i> ${escapeHtml(t ? t.title : testId)}`;
+                document.getElementById("mq-editor-box").style.display = "none";
+                renderManageQuestionsList();
+                document.getElementById("manage-questions-modal").classList.add("open");
+            }
+
+            function closeManageQuestionsModal() {
+                document.getElementById("manage-questions-modal").classList.remove("open");
+                activeManageTestId = null;
+            }
+
+            function renderManageQuestionsList() {
+                const listEl = document.getElementById("mq-questions-list");
+                const subEl = document.getElementById("mq-modal-sub");
+                if (!listEl || !activeManageTestId) return;
+                const qList = cloudQuestions[activeManageTestId] || [];
+                const fallbackList = getQuestionsForTest(activeManageTestId);
+
+                if (qList.length === 0 && fallbackList.length > 0) {
+                    subEl.innerText = `${fallbackList.length} built-in demo questions (Cloud mein upload karne par edit/delete honge)`;
+                } else {
+                    subEl.innerText = `${qList.length} Cloud question(s) in this test`;
+                }
+
+                if (qList.length === 0) {
+                    listEl.innerHTML = `<p style="color:var(--text-muted); font-size:13px; text-align:center; padding:18px;">No editable Cloud questions in this test yet. Add via "Add 1 Q" or "Bulk JSON".</p>`;
+                    return;
+                }
+
+                const letters = ["A", "B", "C", "D"];
+                listEl.innerHTML = qList.map((q, idx) => `
+                    <div class="manage-item" style="align-items:flex-start;">
+                        <div style="flex:1; min-width:200px;">
+                            <div style="font-size:13.5px; font-weight:600; margin-bottom:5px;">
+                                <span style="color:var(--primary-bright);">Q${idx + 1}.</span> ${escapeHtml(q.text)}
+                            </div>
+                            ${q.image ? `<img src="${q.image}" style="max-height:70px; border-radius:6px; margin:4px 0; background:#fff; padding:2px;" alt="Diagram">` : ""}
+                            <div style="font-size:12px; color:var(--text-muted);">
+                                Ans: <b style="color:#10b981;">(${letters[q.correct] || "A"}) ${escapeHtml((q.options && q.options[q.correct]) || "")}</b> • ${escapeHtml(q.subject || "")}
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:6px; flex-shrink:0;">
+                            <button class="btn btn-outline" style="padding:5px 10px; font-size:11.5px;" onclick="editSingleQuestion('${q.docId}')"><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn btn-danger" style="padding:5px 10px; font-size:11.5px;" onclick="deleteSingleQuestion('${q.docId}')"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>`).join("");
+            }
+
+            function editSingleQuestion(docId) {
+                const qList = cloudQuestions[activeManageTestId] || [];
+                const q = qList.find((item) => item.docId === docId);
+                if (!q) return;
+                document.getElementById("eq-doc-id").value = docId;
+                document.getElementById("eq-text").value = q.text || "";
+                document.getElementById("eq-image").value = q.image || "";
+                [0, 1, 2, 3].forEach((i) => {
+                    document.getElementById(`eq-opt-${i}`).value = (q.options && q.options[i]) || "";
+                });
+                document.getElementById("eq-correct").value = String(typeof q.correct === "number" ? q.correct : 0);
+                document.getElementById("eq-subject").value = q.subject || "Biology";
+                const box = document.getElementById("mq-editor-box");
+                box.style.display = "block";
+                box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            }
+
+            async function saveEditedQuestion() {
+                if (!isFirebaseReady || !db || !fsApi) { showToast("Cloud not connected!", "error"); return; }
+                const docId = document.getElementById("eq-doc-id").value;
+                const text = document.getElementById("eq-text").value.trim();
+                const image = document.getElementById("eq-image").value.trim() || null;
+                const options = [0, 1, 2, 3].map((i) => document.getElementById(`eq-opt-${i}`).value.trim());
+                const correct = parseInt(document.getElementById("eq-correct").value, 10);
+                const subject = document.getElementById("eq-subject").value;
+
+                if (!docId || !text || options.some((o) => !o)) { showToast("Fill Question & all 4 options!", "error"); return; }
+                const btn = document.getElementById("save-eq-btn");
+                btn.disabled = true;
+                try {
+                    await withTimeout(fsApi.setDoc(fsApi.doc(db, "questions", docId), {
+                        text, image, options, correct, subject, updatedAt: Date.now()
+                    }, { merge: true }));
+                    document.getElementById("mq-editor-box").style.display = "none";
+                    showToast("Question updated in Cloud!");
+                } catch (err) {
+                    showToast("Error: " + err.message, "error");
+                } finally { btn.disabled = false; }
+            }
+
+            function deleteSingleQuestion(docId) {
+                openConfirmModal("Delete Question?", "Remove this question permanently from Cloud?", async () => {
+                    if (!isFirebaseReady || !db || !fsApi) return;
+                    try {
+                        await withTimeout(fsApi.deleteDoc(fsApi.doc(db, "questions", docId)));
+                        showToast("Question deleted!");
+                    } catch (err) { showToast("Error: " + err.message, "error"); }
+                });
+            }
+
+            function compressImageFile(file, callback) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement("canvas");
+                        const maxDim = 640;
+                        let w = img.width, h = img.height;
+                        if (w > maxDim || h > maxDim) {
+                            const scale = maxDim / Math.max(w, h);
+                            w = Math.round(w * scale);
+                            h = Math.round(h * scale);
+                        }
+                        canvas.width = w; canvas.height = h;
+                        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+                        callback(canvas.toDataURL("image/jpeg", 0.72));
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            function handleSingleDiagramUpload(event) {
+                const file = event.target.files && event.target.files[0];
+                if (!file) return;
+                compressImageFile(file, (compressed) => {
+                    document.getElementById("sq-image").value = compressed;
+                    const prev = document.getElementById("sq-image-preview");
+                    if (prev) { prev.src = compressed; prev.style.display = "block"; }
+                    showToast("Diagram image ready!");
+                });
+            }
+
+            function handleEditDiagramUpload(event) {
+                const file = event.target.files && event.target.files[0];
+                if (!file) return;
+                compressImageFile(file, (compressed) => {
+                    document.getElementById("eq-image").value = compressed;
+                    showToast("Diagram photo attached!");
+                });
             }
 
             async function createTestInCloud() {
@@ -1966,6 +2370,8 @@
                     showToast("Question added to Cloud!");
                     document.getElementById("sq-text").value = "";
                     document.getElementById("sq-image").value = "";
+                    const prev = document.getElementById("sq-image-preview");
+                    if (prev) prev.style.display = "none";
                     [0, 1, 2, 3].forEach((i) => { document.getElementById(`sq-opt-${i}`).value = ""; });
                 } catch (err) { showToast("Error: " + err.message, "error"); }
                 finally { btn.disabled = false; }
@@ -2055,18 +2461,26 @@
             }
 
             function deleteTestFromCloud(testId) {
-                openConfirmModal("Delete Test?", `Permanently delete "${testId}" and all its questions?`, async () => {
-                    if (!isFirebaseReady || !db || !fsApi) return;
-                    try {
-                        await withTimeout(fsApi.deleteDoc(fsApi.doc(db, "tests", testId)));
-                        const qList = cloudQuestions[testId] || [];
-                        if (qList.length) {
-                            const batch = fsApi.writeBatch(db);
-                            qList.forEach((q) => { if (q.docId) batch.delete(fsApi.doc(db, "questions", q.docId)); });
-                            await withTimeout(batch.commit(), 15000);
-                        }
-                        showToast(`Deleted "${testId}".`);
-                    } catch (err) { showToast("Error: " + err.message, "error"); }
+                openConfirmModal("Delete Test / Chapter?", `Permanently delete "${testId}" and all its questions?`, async () => {
+                    if (starterTests[testId] && !deletedStarterTests.includes(testId)) {
+                        deletedStarterTests.push(testId);
+                        safeSet("neet_ace_deleted_starters", deletedStarterTests);
+                    }
+                    if (isFirebaseReady && db && fsApi) {
+                        try {
+                            await withTimeout(fsApi.deleteDoc(fsApi.doc(db, "tests", testId)));
+                            const qList = cloudQuestions[testId] || [];
+                            for (let i = 0; i < qList.length; i += 400) {
+                                const batch = fsApi.writeBatch(db);
+                                qList.slice(i, i + 400).forEach((q) => { if (q.docId) batch.delete(fsApi.doc(db, "questions", q.docId)); });
+                                await withTimeout(batch.commit(), 15000);
+                            }
+                            showToast(`Deleted "${testId}" successfully.`);
+                        } catch (err) { showToast("Error: " + err.message, "error"); }
+                    } else {
+                        showToast(`Removed "${testId}".`);
+                    }
+                    renderAllDynamicUI();
                 });
             }
 
@@ -2079,6 +2493,306 @@
                 document.execCommand("copy");
                 document.body.removeChild(ta);
                 showToast("Gemini Prompt copied!");
+            }
+
+            /* ==========================================
+               7.5 PDF / NOTES TO JSON GENERATOR TOOL
+               ========================================== */
+            function saveGeminiKey(val) {
+                safeSet("neet_ace_gemini_key", (val || "").trim());
+                if ((val || "").trim()) showToast("Gemini API Key saved in this browser!");
+            }
+
+            async function handlePdfFileSelect(event) {
+                const file = event.target.files && event.target.files[0];
+                if (!file) return;
+                const statusEl = document.getElementById("pdf-extract-status");
+                const textArea = document.getElementById("pdf-extracted-text");
+                const includeDiagrams = document.getElementById("pdf-include-diagrams") && document.getElementById("pdf-include-diagrams").checked;
+
+                if (!window.pdfjsLib) {
+                    showToast("PDF reader library loading... thodi der baad try karein.", "warning");
+                    return;
+                }
+
+                pdfPageImages = {};
+                statusEl.style.display = "block";
+                statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Reading "${escapeHtml(file.name)}"...`;
+
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    const maxPages = Math.min(pdf.numPages, 60);
+                    const maxDiagramPages = Math.min(pdf.numPages, 12);
+                    let fullText = "";
+
+                    for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
+                        statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Extracting page ${pageNum} of ${maxPages}${includeDiagrams && pageNum <= maxDiagramPages ? " (+ Diagrams)" : ""}...`;
+                        const page = await pdf.getPage(pageNum);
+                        const content = await page.getTextContent();
+                        const pageText = content.items.map((item) => item.str).join(" ");
+                        fullText += `\n--- Page ${pageNum} ---\n` + pageText;
+
+                        if (includeDiagrams && pageNum <= maxDiagramPages) {
+                            const viewport = page.getViewport({ scale: 1.15 });
+                            const canvas = document.createElement("canvas");
+                            const maxW = 820;
+                            const scaleFactor = viewport.width > maxW ? (maxW / viewport.width) : 1;
+                            canvas.width = Math.round(viewport.width * scaleFactor);
+                            canvas.height = Math.round(viewport.height * scaleFactor);
+                            const ctx = canvas.getContext("2d");
+                            await page.render({ canvasContext: ctx, viewport: page.getViewport({ scale: 1.15 * scaleFactor }) }).promise;
+                            const dataUrl = canvas.toDataURL("image/jpeg", 0.62);
+                            pdfPageImages[pageNum] = {
+                                dataUrl: dataUrl,
+                                base64: dataUrl.split(",")[1],
+                                width: canvas.width,
+                                height: canvas.height
+                            };
+                        }
+                    }
+
+                    textArea.value = fullText.trim();
+                    const diagCount = Object.keys(pdfPageImages).length;
+                    statusEl.innerHTML = `<i class="fa-solid fa-circle-check" style="color:#10b981;"></i> Extracted ${maxPages} page(s)${diagCount ? ` + ${diagCount} visual page(s) for AI diagrams` : ""} from "${escapeHtml(file.name)}"!`;
+                    showToast("PDF ready! Ab apna desired count (10, 31, 100, 180...) daal kar Generate dabayein.");
+                } catch (err) {
+                    statusEl.innerHTML = `<span style="color:#f43f5e;">PDF read error: ${escapeHtml(err.message)}</span>`;
+                    showToast("PDF read failed: " + err.message, "error");
+                }
+            }
+
+            function cropDiagramFromPage(pageNum, box) {
+                return new Promise((resolve) => {
+                    const pageImg = pdfPageImages[pageNum];
+                    if (!pageImg || !Array.isArray(box) || box.length !== 4) { resolve(null); return; }
+                    const img = new Image();
+                    img.onload = function() {
+                        const ymin = Math.max(0, Math.min(1000, Number(box[0]) || 0)) / 1000;
+                        const xmin = Math.max(0, Math.min(1000, Number(box[1]) || 0)) / 1000;
+                        const ymax = Math.max(0, Math.min(1000, Number(box[2]) || 0)) / 1000;
+                        const xmax = Math.max(0, Math.min(1000, Number(box[3]) || 0)) / 1000;
+                        const sx = Math.floor(xmin * img.width);
+                        const sy = Math.floor(ymin * img.height);
+                        const sw = Math.max(40, Math.floor((xmax - xmin) * img.width));
+                        const sh = Math.max(40, Math.floor((ymax - ymin) * img.height));
+
+                        const canvas = document.createElement("canvas");
+                        const maxOut = 540;
+                        const scale = Math.max(sw, sh) > maxOut ? (maxOut / Math.max(sw, sh)) : 1;
+                        canvas.width = Math.round(sw * scale);
+                        canvas.height = Math.round(sh * scale);
+                        canvas.getContext("2d").drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL("image/jpeg", 0.72));
+                    };
+                    img.onerror = function() { resolve(null); };
+                    img.src = pageImg.dataUrl;
+                });
+            }
+
+            async function generateJsonFromPdfWithAI() {
+                const rawText = document.getElementById("pdf-extracted-text").value.trim();
+                const subject = document.getElementById("pdf-subject-select").value;
+                const totalWanted = Math.max(1, Math.min(300, parseInt(document.getElementById("pdf-q-count").value, 10) || 20));
+                const includeDiagrams = document.getElementById("pdf-include-diagrams") && document.getElementById("pdf-include-diagrams").checked;
+                const savedKey = safeGet("neet_ace_gemini_key", "");
+                const inputKey = document.getElementById("gemini-api-key-input").value.trim();
+                const apiKey = inputKey || savedKey || "";
+
+                if (!rawText || rawText.length < 30) {
+                    showToast("Pehle koi PDF upload karein ya notes text paste karein!", "error");
+                    return;
+                }
+
+                const btn = document.getElementById("ai-generate-json-btn");
+                btn.disabled = true;
+
+                const batchSize = 30;
+                const numBatches = Math.ceil(totalWanted / batchSize);
+                const textChunkSize = Math.ceil(rawText.length / numBatches);
+                const allGenerated = [];
+                const pageNumsAvailable = Object.keys(pdfPageImages).map(Number).sort((a, b) => a - b);
+
+                try {
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${encodeURIComponent(apiKey)}`;
+
+                    for (let b = 0; b < numBatches; b++) {
+                        const remaining = totalWanted - allGenerated.length;
+                        const currentBatchCount = Math.min(batchSize, remaining);
+                        if (currentBatchCount <= 0) break;
+
+                        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Batch ${b + 1}/${numBatches} (${allGenerated.length}/${totalWanted} Qs)...`;
+
+                        const chunkStart = b * textChunkSize;
+                        const clippedText = rawText.slice(chunkStart, chunkStart + Math.max(textChunkSize, 18000)).slice(0, 26000);
+
+                        const parts = [];
+                        let attachedPages = [];
+                        if (includeDiagrams && pageNumsAvailable.length > 0) {
+                            const pagesPerBatch = Math.max(1, Math.ceil(pageNumsAvailable.length / numBatches));
+                            attachedPages = pageNumsAvailable.slice(b * pagesPerBatch, (b + 1) * pagesPerBatch).slice(0, 4);
+                        }
+
+                        const diagramRule = attachedPages.length > 0
+                            ? `You are ALSO given images of PDF pages [${attachedPages.join(", ")}]. If a question uses a diagram/figure/circuit visible on one of those pages, include "diagramPage": <pageNumber> and "diagramBox": [ymin, xmin, ymax, xmax] (integer bounding box on 0-1000 scale around ONLY the diagram). If no diagram is needed, set "diagramPage": null and "diagramBox": null.`
+                            : `Set "image": null.`;
+
+                        const prompt = `You are an expert NEET exam question creator. Based ONLY on the study material below, create EXACTLY ${currentBatchCount} distinct high-yield NEET-level MCQs in clear Hindi + English scientific terms (avoid duplicating previous questions).
+Subject: "${subject === "All" ? "Biology / Physics / Chemistry (detect per question)" : subject}".
+${diagramRule}
+Return ONLY a valid JSON array (no markdown backticks) matching this exact schema:
+[{"subject":"Biology","text":"Question text","image":null,"diagramPage":null,"diagramBox":null,"options":["Option A","Option B","Option C","Option D"],"correct":0}]
+where "correct" is 0, 1, 2, or 3.
+
+Study Material (Part ${b + 1}/${numBatches}):
+${clippedText}`;
+
+                        parts.push({ text: prompt });
+                        attachedPages.forEach((pNum) => {
+                            parts.push({ text: `--- Image of PDF Page ${pNum} ---` });
+                            parts.push({ inlineData: { mimeType: "image/jpeg", data: pdfPageImages[pNum].base64 } });
+                        });
+
+                        const response = await withTimeout(fetch(apiUrl, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                contents: [{ parts: parts }],
+                                generationConfig: { responseMimeType: "application/json" }
+                            })
+                        }), 60000);
+
+                        const data = await response.json();
+                        if (!response.ok) {
+                            throw new Error((data.error && data.error.message) || "API Key required or quota exceeded");
+                        }
+
+                        const rawOutput = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+                        const cleanJson = rawOutput.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
+                        const parsed = JSON.parse(cleanJson);
+                        if (!Array.isArray(parsed)) continue;
+
+                        for (const q of parsed) {
+                            let imgVal = q.image || null;
+                            if (!imgVal && q.diagramPage && Array.isArray(q.diagramBox) && pdfPageImages[q.diagramPage]) {
+                                imgVal = await cropDiagramFromPage(q.diagramPage, q.diagramBox);
+                            }
+                            allGenerated.push({
+                                subject: q.subject || (subject === "All" ? "Biology" : subject),
+                                text: String(q.text || ""),
+                                image: imgVal,
+                                options: Array.isArray(q.options) ? q.options.map(String) : ["A", "B", "C", "D"],
+                                correct: typeof q.correct === "number" ? q.correct : 0
+                            });
+                        }
+                    }
+
+                    if (allGenerated.length === 0) throw new Error("No questions generated.");
+                    displayGeneratedPdfJson(allGenerated);
+                    const withDiagrams = allGenerated.filter((q) => q.image).length;
+                    showToast(`${allGenerated.length} Questions taiyar hain${withDiagrams ? ` (${withDiagrams} diagrams auto-cropped!)` : ""}!`);
+                } catch (err) {
+                    if (allGenerated.length > 0) {
+                        displayGeneratedPdfJson(allGenerated);
+                        showToast(`Partial success: ${allGenerated.length} Qs bane (${err.message})`, "warning");
+                    } else {
+                        showToast("AI Error: " + err.message, "warning");
+                    }
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = `<i class="fa-solid fa-robot"></i> Generate JSON with AI`;
+                }
+            }
+
+            function parseMcqsOffline() {
+                const rawText = document.getElementById("pdf-extracted-text").value.trim();
+                const subject = document.getElementById("pdf-subject-select").value === "All" ? "Biology" : document.getElementById("pdf-subject-select").value;
+                const maxWanted = Math.max(1, Math.min(300, parseInt(document.getElementById("pdf-q-count").value, 10) || 300));
+                if (!rawText) {
+                    showToast("Pehle PDF upload karein ya MCQ text paste karein!", "error");
+                    return;
+                }
+
+                const cleaned = rawText.replace(/---\s*Page\s*\d+\s*---/gi, "\n");
+                const blocks = cleaned.split(/(?=(?:^|\n|\s)(?:Q\.?\s*\d+|\d+\s*[.)]))/gi).map((b) => b.trim()).filter((b) => b.length > 15);
+                const results = [];
+
+                for (const block of blocks) {
+                    if (results.length >= maxWanted) break;
+                    const match = block.match(/^(?:Q\.?\s*\d+[.)]?|\d+[.)])\s*([\s\S]*?)(?:\(A\)|A[.)])\s*([\s\S]*?)(?:\(B\)|B[.)])\s*([\s\S]*?)(?:\(C\)|C[.)])\s*([\s\S]*?)(?:\(D\)|D[.)])\s*([\s\S]*)$/i);
+                    if (!match) continue;
+
+                    const qText = match[1].replace(/\s+/g, " ").trim();
+                    const optA = match[2].replace(/\s+/g, " ").trim();
+                    const optB = match[3].replace(/\s+/g, " ").trim();
+                    const optC = match[4].replace(/\s+/g, " ").trim();
+                    let optDRaw = match[5].replace(/\s+/g, " ").trim();
+
+                    let correctIdx = 0;
+                    const ansMatch = optDRaw.match(/(?:Ans(?:wer)?|Correct)\s*[:\-]?\s*\(?([A-D])\)?/i);
+                    if (ansMatch) {
+                        correctIdx = ["A", "B", "C", "D"].indexOf(ansMatch[1].toUpperCase());
+                        if (correctIdx < 0) correctIdx = 0;
+                        optDRaw = optDRaw.slice(0, ansMatch.index).trim();
+                    }
+
+                    if (qText && optA && optB && optC && optDRaw) {
+                        results.push({
+                            subject: subject,
+                            text: qText,
+                            image: null,
+                            options: [optA, optB, optC, optDRaw],
+                            correct: correctIdx
+                        });
+                    }
+                }
+
+                if (results.length === 0) {
+                    showToast("Standard (A)(B)(C)(D) pattern nahi mila. AI button ya Copy Prompt use karein.", "warning");
+                    return;
+                }
+                displayGeneratedPdfJson(results);
+                showToast(`${results.length} MCQs bina API key ke JSON mein convert ho gaye!`);
+            }
+
+            function copyPdfPromptForChat() {
+                const rawText = document.getElementById("pdf-extracted-text").value.trim();
+                const subject = document.getElementById("pdf-subject-select").value;
+                const count = document.getElementById("pdf-q-count").value || "20";
+                if (!rawText) {
+                    showToast("Pehle PDF upload karein ya text dalein!", "error");
+                    return;
+                }
+                const combined = `Create ${count} NEET-level NCERT MCQs (in Hindi + English terms) from the text below for Subject "${subject}". Return ONLY a valid JSON array in this exact format:\n[{"subject":"${subject}","text":"Question text","image":null,"options":["A","B","C","D"],"correct":0}]\n\nText:\n${rawText.slice(0, 20000)}`;
+                const ta = document.createElement("textarea");
+                ta.value = combined;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand("copy");
+                document.body.removeChild(ta);
+                showToast("Prompt + PDF Text copied! Gemini chat mein paste karke JSON le lein.");
+            }
+
+            function displayGeneratedPdfJson(arr) {
+                document.getElementById("pdf-output-box").style.display = "block";
+                document.getElementById("pdf-gen-count").innerText = arr.length;
+                document.getElementById("pdf-generated-json").value = JSON.stringify(arr, null, 2);
+            }
+
+            function copyGeneratedJson() {
+                const ta = document.getElementById("pdf-generated-json");
+                ta.select();
+                document.execCommand("copy");
+                showToast("Generated JSON copied!");
+            }
+
+            function sendJsonToBulkUploader() {
+                const jsonStr = document.getElementById("pdf-generated-json").value.trim();
+                if (!jsonStr) return;
+                document.getElementById("bulk-json-input").value = jsonStr;
+                const bulkBtn = document.querySelector(".admin-tab-btn[onclick*='admin-bulk-upload']");
+                switchAdminSection("admin-bulk-upload", bulkBtn);
+                showToast("JSON Bulk Uploader mein bhej diya gaya! Test chunein aur Upload dabayein.");
             }
 
             /* ==========================================
@@ -2312,7 +3026,6 @@
                     submittedAt: Date.now()
                 };
 
-                // 1) IMMEDIATELY show result screen
                 document.getElementById("test-engine").style.display = "none";
                 document.getElementById("test-result").style.display = "block";
                 document.getElementById("result-student-meta").innerHTML = `
@@ -2330,12 +3043,10 @@
                 window.scrollTo({ top: 0, behavior: "smooth" });
                 showToast("Test Submitted Successfully!");
 
-                // 2) Save locally so History & Leaderboard update right away
                 localResults.unshift(Object.assign({ docId: `local_${clientSubmissionId}` }, resultPayload));
                 safeSet("neet_ace_local_results", localResults.slice(0, 100));
                 renderResultsAndAnalytics();
 
-                // 3) Sync to Firebase Cloud in background
                 if (isFirebaseReady && db && fsApi) {
                     withTimeout(fsApi.addDoc(fsApi.collection(db, "results"), resultPayload), 8000)
                         .then(() => {
@@ -2365,7 +3076,7 @@
             }
 
             /* ==========================================
-               9. NAVIGATION, SUBJECTS, THEME, GOALS & TIMERS
+               9. NAVIGATION, SUBJECTS, THEME, GOALS & LOUD FOCUS ALARM
                ========================================== */
             function toggleMenu() {
                 document.getElementById("side-menu").classList.toggle("open");
@@ -2440,7 +3151,7 @@
                 if (btn) btn.innerHTML = isLight ? '<i class="fa-solid fa-moon"></i> Dark Mode' : '<i class="fa-solid fa-sun"></i> Light Mode';
             }
 
-            // NEET 2027 Countdown (Instant + Every Second)
+            // NEET 2027 Countdown
             const countDownDate = new Date("May 2, 2027 14:00:00").getTime();
             function updateCountdown() {
                 const dist = Math.max(0, countDownDate - Date.now());
@@ -2450,7 +3161,7 @@
                 document.getElementById("cd-seconds").innerText = Math.floor((dist % 60000) / 1000);
             }
 
-            // Study Goals (Saved safely)
+            // Study Goals
             let goalsData = safeGet("neet_ace_goals", [
                 { text: "Read NCERT Biology (1 Chapter)", done: false },
                 { text: "Attempt 1 Live Mock Test", done: false }
@@ -2492,31 +3203,121 @@
                 renderGoals();
             }
 
-            // Focus Hub Timer
-            let bgTimerInterval = null, targetTimestamp = 0;
+            // Loud Focus Hub Alarm + System Notification + Wake Lock
+            function ensureAudioCtx() {
+                if (!alarmAudioCtx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) alarmAudioCtx = new AudioCtx();
+                }
+                if (alarmAudioCtx && alarmAudioCtx.state === "suspended") {
+                    alarmAudioCtx.resume().catch(() => {});
+                }
+            }
+
+            function playAlarmBeepBurst() {
+                ensureAudioCtx();
+                if (!alarmAudioCtx) return;
+                const now = alarmAudioCtx.currentTime;
+                [0, 0.16, 0.32].forEach((offset, idx) => {
+                    const osc = alarmAudioCtx.createOscillator();
+                    const gain = alarmAudioCtx.createGain();
+                    osc.type = "square";
+                    osc.frequency.setValueAtTime(idx % 2 === 0 ? 1150 : 1480, now + offset);
+                    gain.gain.setValueAtTime(0.45, now + offset);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + offset + 0.13);
+                    osc.connect(gain);
+                    gain.connect(alarmAudioCtx.destination);
+                    osc.start(now + offset);
+                    osc.stop(now + offset + 0.14);
+                });
+            }
+
+            function startLoudAlarm() {
+                stopLoudAlarm();
+                playAlarmBeepBurst();
+                alarmLoopInterval = setInterval(playAlarmBeepBurst, 750);
+                if (navigator.vibrate) {
+                    try { navigator.vibrate([400, 150, 400, 150, 600]); } catch (e) {}
+                }
+                const bell = document.getElementById("timer-bell");
+                if (bell) { bell.volume = 1.0; bell.loop = true; bell.play().catch(() => {}); }
+
+                if ("Notification" in window && Notification.permission === "granted") {
+                    try {
+                        new Notification("⏰ NEET Ace Focus Alarm!", {
+                            body: "Aapka Focus study session complete ho gaya hai!",
+                            requireInteraction: true,
+                            vibrate: [400, 200, 400]
+                        });
+                    } catch (e) {}
+                }
+            }
+
+            function stopLoudAlarm() {
+                clearInterval(alarmLoopInterval);
+                alarmLoopInterval = null;
+                if (navigator.vibrate) { try { navigator.vibrate(0); } catch (e) {} }
+                const bell = document.getElementById("timer-bell");
+                if (bell) { bell.pause(); bell.currentTime = 0; }
+            }
+
+            function testAlarmSound() {
+                playAlarmBeepBurst();
+                if (navigator.vibrate) { try { navigator.vibrate([200, 100, 200]); } catch (e) {} }
+                showToast("Loud Alarm Tested! Volume full rakhein.");
+            }
+
+            async function requestWakeLock() {
+                if ("wakeLock" in navigator) {
+                    try { wakeLockSentinel = await navigator.wakeLock.request("screen"); } catch (e) {}
+                }
+            }
+
+            function releaseWakeLock() {
+                if (wakeLockSentinel) {
+                    wakeLockSentinel.release().catch(() => {});
+                    wakeLockSentinel = null;
+                }
+            }
+
             function quickStartTimer(mins) {
                 document.getElementById("bg-timer-input").value = mins;
                 startBgTimer();
             }
+
             function startBgTimer() {
                 const mins = parseInt(document.getElementById("bg-timer-input").value, 10);
                 if (isNaN(mins) || mins <= 0) { showToast("Enter valid minutes!", "error"); return; }
+
+                ensureAudioCtx();
+                if ("Notification" in window && Notification.permission === "default") {
+                    Notification.requestPermission().catch(() => {});
+                }
+                requestWakeLock();
+
                 const bell = document.getElementById("timer-bell");
                 if (bell) { bell.play().catch(() => {}); bell.pause(); bell.currentTime = 0; }
+
                 targetTimestamp = Date.now() + mins * 60000;
+                safeSet("neet_ace_focus_target", targetTimestamp);
                 clearInterval(bgTimerInterval);
                 updateTimerUI();
-                bgTimerInterval = setInterval(updateTimerUI, 1000);
+                bgTimerInterval = setInterval(updateTimerUI, 500);
                 document.getElementById("bg-timer-input").value = "";
-                showToast(`Deep Focus started for ${mins} mins!`);
+                showToast(`Deep Focus started for ${mins} mins! (Background alert active)`);
             }
+
             function updateTimerUI() {
-                const left = Math.floor((targetTimestamp - Date.now()) / 1000);
+                if (!targetTimestamp) return;
+                const left = Math.ceil((targetTimestamp - Date.now()) / 1000);
                 if (left <= 0) {
                     clearInterval(bgTimerInterval);
+                    bgTimerInterval = null;
+                    targetTimestamp = 0;
+                    safeRemove("neet_ace_focus_target");
+                    releaseWakeLock();
                     document.getElementById("bg-timer-display").innerText = "00:00";
-                    const bell = document.getElementById("timer-bell");
-                    if (bell) { bell.loop = true; bell.play().catch(() => {}); }
+                    startLoudAlarm();
                     document.getElementById("timer-popup").classList.add("open");
                     return;
                 }
@@ -2524,16 +3325,28 @@
                 const s = String(left % 60).padStart(2, "0");
                 document.getElementById("bg-timer-display").innerText = `${m}:${s}`;
             }
+
             function stopBgTimer() {
                 clearInterval(bgTimerInterval);
+                bgTimerInterval = null;
+                targetTimestamp = 0;
+                safeRemove("neet_ace_focus_target");
+                releaseWakeLock();
+                stopLoudAlarm();
                 document.getElementById("bg-timer-display").innerText = "00:00";
                 showToast("Focus timer stopped.", "warning");
             }
+
             function closeTimerPopup() {
-                const bell = document.getElementById("timer-bell");
-                if (bell) { bell.pause(); bell.currentTime = 0; }
+                stopLoudAlarm();
                 document.getElementById("timer-popup").classList.remove("open");
             }
+
+            document.addEventListener("visibilitychange", () => {
+                if (document.visibilityState === "visible" && targetTimestamp) {
+                    updateTimerUI();
+                }
+            });
 
             /* ==========================================
                10. UTILITIES (Toast, Confirm, Formatters)
@@ -2594,8 +3407,12 @@
                 startMockTest, togglePallet, prevQuestion, saveAndNext, markForReview, clearResponse, confirmSubmitTest,
                 renderLeaderboard, renderAdminResultsTable, deleteStudentResult,
                 createTestInCloud, addSingleQuestionToCloud, bulkUploadQuestions, migrateLocalQuestionsJs, deleteTestFromCloud, copyGeminiPrompt,
+                openEditTestModal, closeEditTestModal, saveEditedTest,
+                openManageQuestionsModal, closeManageQuestionsModal, editSingleQuestion, saveEditedQuestion, deleteSingleQuestion,
+                handleSingleDiagramUpload, handleEditDiagramUpload,
+                saveGeminiKey, handlePdfFileSelect, generateJsonFromPdfWithAI, parseMcqsOffline, copyPdfPromptForChat, copyGeneratedJson, sendJsonToBulkUploader,
                 addGoal, toggleGoalDone, editGoalText, deleteGoalItem,
-                quickStartTimer, startBgTimer, stopBgTimer, closeTimerPopup, showToast
+                quickStartTimer, startBgTimer, stopBgTimer, closeTimerPopup, testAlarmSound, showToast
             });
 
             // Keyboard Shortcuts
@@ -2604,7 +3421,7 @@
             document.getElementById("admin-pin-input").addEventListener("keypress", (e) => { if (e.key === "Enter") verifyAdminPin(); });
             document.getElementById("goal-input").addEventListener("keypress", (e) => { if (e.key === "Enter") addGoal(); });
 
-            // Instant Boot (Never waits for external network)
+            // Instant Boot
             if (safeGet("neet_ace_theme", "dark") === "light") {
                 document.body.classList.add("light-mode");
                 const btn = document.getElementById("theme-toggle-btn");
@@ -2613,9 +3430,23 @@
 
             updateCountdown();
             setInterval(updateCountdown, 1000);
+            const savedGeminiKey = safeGet("neet_ace_gemini_key", "");
+            if (savedGeminiKey && document.getElementById("gemini-api-key-input")) {
+                document.getElementById("gemini-api-key-input").value = savedGeminiKey;
+            }
             renderGoals();
             updateStudentUI();
             renderAllDynamicUI();
+
+            // Resume Focus Timer if active
+            const savedTarget = safeGet("neet_ace_focus_target", 0);
+            if (savedTarget && savedTarget > 0) {
+                targetTimestamp = savedTarget;
+                updateTimerUI();
+                if (targetTimestamp > Date.now()) {
+                    bgTimerInterval = setInterval(updateTimerUI, 500);
+                }
+            }
 
             // Connect Firebase Cloud in background
             initFirebaseCloud();

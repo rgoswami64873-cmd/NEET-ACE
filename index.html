@@ -98,7 +98,7 @@
         <!-- Cloud Status Pill -->
         <div id="cloudStatusBadge" title="Cloud Sync Status" class="px-2.5 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 flex items-center gap-1.5 text-xs font-semibold text-amber-500">
           <span id="cloudStatusDot" class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
-          <span id="cloudStatusText" class="hidden sm:inline">Local</span>
+          <span id="cloudStatusText" class="hidden sm:inline">Connecting...</span>
         </div>
 
         <!-- Auth / User Pill -->
@@ -451,7 +451,7 @@
             <i class="fa-solid fa-database text-emerald-500"></i> Cloud Database
           </div>
           <div id="settingsCloudDetail" class="text-xs text-slate-500 dark:text-slate-400">
-            Checking cloud connection...
+            Connecting to neet-ace-portal...
           </div>
         </div>
 
@@ -825,26 +825,26 @@
               <i class="fa-solid fa-cloud text-emerald-500"></i> Firebase Cloud Sync Setup
             </h3>
             <p class="text-xs text-slate-400 mt-1">
-              GitHub Pages par apna Firebase database connect karne ke liye apna Firebase Config JSON yahan paste karein ya code mein <code class="text-emerald-400">CUSTOM_FIREBASE_CONFIG</code> mein dalein.
+              Aapka <code class="text-emerald-400">neet-ace-portal</code> Firebase config permanently pre-loaded hai!
             </p>
           </div>
           <span id="adminCloudBadge" class="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-400 shrink-0">Checking...</span>
         </div>
 
         <div class="p-3.5 rounded-2xl bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-white/10 text-xs space-y-1.5 text-slate-400">
-          <div class="font-bold text-slate-200">How to keep Cloud Live permanently on GitHub Pages:</div>
-          <div>1. Firebase Console → Project Settings → Your apps → Web app config copy karein.</div>
-          <div>2. <code class="text-emerald-400">index.html</code> ke bilkul neeche <code class="text-emerald-400">CUSTOM_FIREBASE_CONFIG</code> mein paste karke GitHub par save kar dein.</div>
+          <div class="font-bold text-slate-200">Important Firestore Check (Agar kabhi Permission Error aaye):</div>
+          <div>1. Firebase Console → <strong>Firestore Database</strong> → <strong>Rules</strong> tab kholein.</div>
+          <div>2. Confirm karein ki rule mein <code class="text-emerald-400">allow read, write: if true;</code> set ho aur <strong>Publish</strong> dabaya ho.</div>
           <div>3. 180-Question + HD Diagram tests ke liye <strong>Auto-Chunked Cloud Save</strong> enabled hai (1MB Firestore limit error kabhi nahi aayega!).</div>
         </div>
 
         <div>
-          <label class="text-xs font-bold text-slate-400 block mb-1">Connect Firebase Config JSON (Saves in Browser):</label>
-          <textarea id="firebaseConfigPasteInput" rows="6" placeholder='{"apiKey":"AIzaSy...","authDomain":"neet-ace-portal.firebaseapp.com","projectId":"neet-ace-portal","storageBucket":"...","messagingSenderId":"...","appId":"..."}' class="w-full p-3 rounded-xl bg-slate-100 dark:bg-navy-950 border border-slate-200 dark:border-white/10 text-xs font-mono"></textarea>
+          <label class="text-xs font-bold text-slate-400 block mb-1">Custom Firebase Config JSON (Optional Override):</label>
+          <textarea id="firebaseConfigPasteInput" rows="6" placeholder='{"apiKey":"AIzaSy...","authDomain":"neet-ace-portal.firebaseapp.com","projectId":"neet-ace-portal",...}' class="w-full p-3 rounded-xl bg-slate-100 dark:bg-navy-950 border border-slate-200 dark:border-white/10 text-xs font-mono"></textarea>
         </div>
 
         <button onclick="connectCustomFirebaseFromUi()" class="w-full py-3 rounded-xl bg-emerald-500 text-navy-950 font-extrabold text-sm active:scale-95 transition">
-          <i class="fa-solid fa-plug mr-1.5"></i> Connect Firebase Cloud Now
+          <i class="fa-solid fa-plug mr-1.5"></i> Reconnect Firebase Cloud Now
         </button>
       </div>
     </section>
@@ -2019,7 +2019,7 @@
 
       appState.submissions.unshift(submission);
       if (appState.cloudApi && appState.cloudApi.saveSubmission) {
-        appState.cloudApi.saveSubmission(submission);
+        try { await appState.cloudApi.saveSubmission(submission); } catch (e) { console.warn("Cloud sub save:", e.message); }
       }
 
       document.getElementById("resTestTitle").textContent = runner.test.title;
@@ -2333,9 +2333,7 @@
         };
         localStorage.setItem("neet_ace_extract_draft", JSON.stringify(payload));
         checkSavedDraftBanner();
-      } catch (_) {
-        // Ignore quota error if HD images make draft too large for localStorage
-      }
+      } catch (_) {}
     }
 
     function checkSavedDraftBanner() {
@@ -2653,7 +2651,6 @@
       for (let round = 0; round < maxRounds; round++) {
         if (pdfEngine.abortRequested) throw new Error("Stopped by user");
 
-        // Pick next available non-dead, non-cooldown key via round-robin
         const now = Date.now();
         let chosenIdx = -1;
         let earliestCooldown = Infinity;
@@ -2671,7 +2668,6 @@
           }
         }
 
-        // If all live keys are in 429 cooldown, auto-wait with countdown!
         if (chosenIdx === -1) {
           if (earliestCooldown === Infinity) {
             throw new Error("Sabhi API keys invalid hain. 'Test All Keys' dabakar check karein.");
@@ -2686,7 +2682,6 @@
 
         const activeKey = keys[chosenIdx];
         const keyTag = `Key #${chosenIdx + 1}`;
-        // Advance cursor so next batch automatically spreads load to next key
         pdfEngine.keyCursor = (chosenIdx + 1) % keys.length;
 
         for (const model of models) {
@@ -2701,11 +2696,10 @@
             });
 
             if (res.status === 429) {
-              // Mark this key in 35s cooldown and immediately rotate to next key!
               pdfEngine.keyCooldowns[activeKey] = Date.now() + 35000;
               appendExtractLog(`${keyTag} hit 429 rate limit → Rotating to next key...`, "warn");
               lastErr = new Error(`${keyTag}: 429 Rate Limit`);
-              break; // Break model loop -> immediately try next key in outer loop!
+              break;
             }
 
             if (res.status === 401 || res.status === 403) {
@@ -2927,7 +2921,6 @@ ${batchText}`;
             renderExtractedPreview();
 
             if (bIdx < batches.length - 1 && !pdfEngine.abortRequested) {
-              // Shorter delay if multiple keys are rotating, polite delay if single key
               const delayMs = keysList.length >= 2 ? 700 : 1800;
               await sleepInterruptible(delayMs);
             }
@@ -3240,7 +3233,11 @@ ${chunks[c]}`;
       }
 
       if (appState.cloudApi && appState.cloudApi.saveTest) {
-        await appState.cloudApi.saveTest(targetTest);
+        try {
+          await appState.cloudApi.saveTest(targetTest);
+        } catch (e) {
+          showToast("Cloud Save Warning: " + e.message, "warn");
+        }
       }
 
       document.getElementById("bulkJsonInput").value = "";
@@ -3306,7 +3303,7 @@ ${chunks[c]}`;
         image: singleDiagramBase64
       });
       if (appState.cloudApi && appState.cloudApi.saveTest) {
-        await appState.cloudApi.saveTest(test);
+        try { await appState.cloudApi.saveTest(test); } catch (e) { showToast("Cloud Warning: " + e.message, "warn"); }
       }
 
       document.getElementById("singleQText").value = "";
@@ -3336,7 +3333,7 @@ ${chunks[c]}`;
       t.tag = document.getElementById("editTestTag").value.trim();
 
       if (appState.cloudApi && appState.cloudApi.saveTest) {
-        await appState.cloudApi.saveTest(t);
+        try { await appState.cloudApi.saveTest(t); } catch (e) { showToast("Cloud Warning: " + e.message, "warn"); }
       }
       closeModal("editTestModal");
       refreshAdminDropdownsAndDb();
@@ -3350,7 +3347,7 @@ ${chunks[c]}`;
       openConfirm("Delete Test?", `"${t.title}" aur iske saare questions permanently delete ho jayenge.`, async () => {
         appState.tests = appState.tests.filter(x => x.id !== testId);
         if (appState.cloudApi && appState.cloudApi.deleteTest) {
-          await appState.cloudApi.deleteTest(testId);
+          try { await appState.cloudApi.deleteTest(testId); } catch (e) { showToast("Cloud Warning: " + e.message, "warn"); }
         }
         refreshAdminDropdownsAndDb();
         renderTestsList();
@@ -3419,7 +3416,7 @@ ${chunks[c]}`;
       };
 
       if (appState.cloudApi && appState.cloudApi.saveTest) {
-        await appState.cloudApi.saveTest(t);
+        try { await appState.cloudApi.saveTest(t); } catch (e) { showToast("Cloud Warning: " + e.message, "warn"); }
       }
       closeModal("editSingleQModal");
       openManageQsModal(testId);
@@ -3433,7 +3430,7 @@ ${chunks[c]}`;
         if (!t) return;
         t.questions.splice(qIdx, 1);
         if (appState.cloudApi && appState.cloudApi.saveTest) {
-          await appState.cloudApi.saveTest(t);
+          try { await appState.cloudApi.saveTest(t); } catch (e) { showToast("Cloud Warning: " + e.message, "warn"); }
         }
         openManageQsModal(testId);
         refreshAdminDropdownsAndDb();
@@ -3471,15 +3468,19 @@ ${chunks[c]}`;
     import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, collection, doc, setDoc, getDocs, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // GITHUB PAGES CLOUD CONFIG: Apna Firebase Web Config yahan paste karein!
+    // PERMANENTLY PRE-LOADED: Aapka apna neet-ace-portal Firebase Config!
     const CUSTOM_FIREBASE_CONFIG = {
-      apiKey: "",
-      authDomain: "",
-      projectId: "",
-      storageBucket: "",
-      messagingSenderId: "",
-      appId: ""
+      apiKey: "AIzaSyAfjBdGyktTMAYR9vPn83xwbzPYM3Iowqs",
+      authDomain: "neet-ace-portal.firebaseapp.com",
+      projectId: "neet-ace-portal",
+      storageBucket: "neet-ace-portal.firebasestorage.app",
+      messagingSenderId: "1098024797220",
+      appId: "1:1098024797220:web:e5b9c10ae7cbc6afbb84b1",
+      measurementId: "G-531GJCEQ37"
     };
+
+    let activeUnsubTests = null;
+    let activeUnsubSubs = null;
 
     async function connectFirebase(firebaseConfig, appId = "neet-ace-portal") {
       const badge = document.getElementById("cloudStatusBadge");
@@ -3488,21 +3489,32 @@ ${chunks[c]}`;
       const detail = document.getElementById("settingsCloudDetail");
       const adminBadge = document.getElementById("adminCloudBadge");
 
-      const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
-      const auth = getAuth(app);
+      if (activeUnsubTests) { try { activeUnsubTests(); } catch (_) {} activeUnsubTests = null; }
+      if (activeUnsubSubs) { try { activeUnsubSubs(); } catch (_) {} activeUnsubSubs = null; }
+
+      const appName = "neet-cloud-" + (firebaseConfig.projectId || "default");
+      const existing = getApps().find(a => a.name === appName);
+      const app = existing || initializeApp(firebaseConfig, appName);
       const db = getFirestore(app);
 
-      if (typeof __initial_auth_token !== "undefined" && __initial_auth_token) {
-        await signInWithCustomToken(auth, __initial_auth_token);
-      } else {
-        await signInAnonymously(auth);
+      // Non-blocking Auth: Agar Anonymous Auth Console mein OFF ho tab bhi Firestore Test Mode 100% chalega!
+      try {
+        const auth = getAuth(app);
+        if (typeof __initial_auth_token !== "undefined" && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+      } catch (authErr) {
+        console.warn("Firebase Auth optional skip (Test Mode active):", authErr.message);
       }
-
-      if (!auth.currentUser) throw new Error("Firebase Anonymous Auth failed");
 
       const testsCol = collection(db, "artifacts", appId, "public", "data", "neet_tests");
       const chunksCol = collection(db, "artifacts", appId, "public", "data", "neet_test_chunks");
       const subsCol = collection(db, "artifacts", appId, "public", "data", "neet_submissions");
+
+      // Quick connectivity check to verify Firestore Database & Rules are live
+      await getDocs(testsCol);
 
       async function loadFullTests(docsSnap) {
         const metaTests = [];
@@ -3542,11 +3554,11 @@ ${chunks[c]}`;
         }
       }
 
-      onSnapshot(testsCol, (snap) => {
+      activeUnsubTests = onSnapshot(testsCol, (snap) => {
         loadFullTests(snap).catch(err => console.warn("Chunk load warning:", err.message));
       }, (err) => console.warn("Tests sync warning:", err.message));
 
-      onSnapshot(subsCol, (snap) => {
+      activeUnsubSubs = onSnapshot(subsCol, (snap) => {
         const cloudSubs = [];
         snap.forEach((d) => cloudSubs.push({ id: d.id, ...d.data() }));
         cloudSubs.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
@@ -3557,7 +3569,6 @@ ${chunks[c]}`;
       window.appState.cloudConnected = true;
       window.appState.cloudApi = {
         saveTest: async (testObj) => {
-          if (!auth.currentUser) return;
           const payloadSize = new Blob([JSON.stringify(testObj)]).size;
           if (payloadSize < 650000) {
             await setDoc(doc(db, "artifacts", appId, "public", "data", "neet_tests", testObj.id), {
@@ -3605,11 +3616,9 @@ ${chunks[c]}`;
           }
         },
         deleteTest: async (testId) => {
-          if (!auth.currentUser) return;
           await deleteDoc(doc(db, "artifacts", appId, "public", "data", "neet_tests", testId));
         },
         saveSubmission: async (subObj) => {
-          if (!auth.currentUser) return;
           await setDoc(doc(db, "artifacts", appId, "public", "data", "neet_submissions", subObj.id), subObj);
         }
       };
@@ -3626,14 +3635,12 @@ ${chunks[c]}`;
 
     window.connectCustomFirebaseFromUi = async function () {
       const raw = document.getElementById("firebaseConfigPasteInput").value.trim();
-      if (!raw) {
-        window.showToast("Please paste your Firebase Config JSON!", "error");
-        return;
-      }
       try {
-        const cfg = JSON.parse(raw);
+        const cfg = raw ? JSON.parse(raw) : CUSTOM_FIREBASE_CONFIG;
         if (!cfg.apiKey || !cfg.projectId) throw new Error("apiKey & projectId are required");
-        try { localStorage.setItem("neet_ace_fb_cfg", JSON.stringify(cfg)); } catch (_) {}
+        if (raw) {
+          try { localStorage.setItem("neet_ace_fb_cfg", JSON.stringify(cfg)); } catch (_) {}
+        }
         await connectFirebase(cfg, cfg.projectId || "neet-ace-portal");
         window.showToast(`Firebase Connected: ${cfg.projectId}!`, "success");
       } catch (e) {
@@ -3644,8 +3651,28 @@ ${chunks[c]}`;
     async function initCloudSync() {
       const detail = document.getElementById("settingsCloudDetail");
       const adminBadge = document.getElementById("adminCloudBadge");
+      const pasteEl = document.getElementById("firebaseConfigPasteInput");
 
       try {
+        // Priority 1: User's own saved override in browser
+        const savedCfg = localStorage.getItem("neet_ace_fb_cfg");
+        if (savedCfg) {
+          const parsed = JSON.parse(savedCfg);
+          if (parsed && parsed.apiKey && parsed.projectId) {
+            if (pasteEl) pasteEl.value = JSON.stringify(parsed, null, 2);
+            await connectFirebase(parsed, parsed.projectId);
+            return;
+          }
+        }
+
+        // Priority 2: Pre-loaded neet-ace-portal config (Works on GitHub Pages + Preview!)
+        if (CUSTOM_FIREBASE_CONFIG && CUSTOM_FIREBASE_CONFIG.apiKey && CUSTOM_FIREBASE_CONFIG.projectId) {
+          if (pasteEl) pasteEl.value = JSON.stringify(CUSTOM_FIREBASE_CONFIG, null, 2);
+          await connectFirebase(CUSTOM_FIREBASE_CONFIG, CUSTOM_FIREBASE_CONFIG.projectId);
+          return;
+        }
+
+        // Priority 3: Fallback environment config
         if (typeof __firebase_config !== "undefined" && __firebase_config) {
           const firebaseConfig = JSON.parse(__firebase_config);
           const appId = typeof __app_id !== "undefined" ? __app_id : "neet-ace-portal";
@@ -3653,27 +3680,15 @@ ${chunks[c]}`;
           return;
         }
 
-        if (CUSTOM_FIREBASE_CONFIG && CUSTOM_FIREBASE_CONFIG.apiKey && CUSTOM_FIREBASE_CONFIG.projectId) {
-          await connectFirebase(CUSTOM_FIREBASE_CONFIG, CUSTOM_FIREBASE_CONFIG.projectId);
-          return;
-        }
-
-        const savedCfg = localStorage.getItem("neet_ace_fb_cfg");
-        if (savedCfg) {
-          const parsed = JSON.parse(savedCfg);
-          if (parsed && parsed.apiKey && parsed.projectId) {
-            document.getElementById("firebaseConfigPasteInput").value = JSON.stringify(parsed, null, 2);
-            await connectFirebase(parsed, parsed.projectId);
-            return;
-          }
-        }
-
-        if (detail) detail.textContent = "Local Session Active • Admin → Cloud Setup mein Firebase config dalein (GitHub Pages ke liye).";
+        if (detail) detail.textContent = "Local Session Active";
         if (adminBadge) adminBadge.textContent = "Local Mode";
       } catch (e) {
         console.warn("Cloud init fallback:", e.message);
-        if (detail) detail.textContent = "Running in fast Local Session mode (" + e.message + ")";
-        if (adminBadge) adminBadge.textContent = "Local Mode";
+        if (detail) detail.textContent = "Cloud Error: " + e.message + " (Firestore Rules mein 'allow read, write: if true;' check karein)";
+        if (adminBadge) {
+          adminBadge.className = "px-3 py-1 rounded-full text-xs font-bold bg-rose-500/15 text-rose-400 shrink-0";
+          adminBadge.textContent = "Check Rules";
+        }
       }
     }
 

@@ -1,0 +1,2981 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>NEET Ace Studio Pro • India's #1 Admin Panel</title>
+
+  <!-- Google Fonts & Font Awesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          colors: {
+            navy: {
+              950: '#050b14',
+              900: '#0a1220',
+              850: '#0f1a2e',
+              800: '#162238',
+              700: '#1e2f4d'
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- PDF.js (Stable 3.11.174) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+  <!-- Fallback & Core Styling (Prevents unstyled white screen even on slow mobile 4G) -->
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #050b14;
+      color: #e2e8f0;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .glass-panel {
+      background: rgba(15, 26, 46, 0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0a1220; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 999px; }
+    canvas.snip-canvas { touch-action: none; cursor: crosshair; }
+    @keyframes pulseDot {
+      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+    .pulse-green { animation: pulseDot 2s infinite; }
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fadeSlide 0.2s ease-out; }
+  </style>
+</head>
+<body class="bg-navy-950 text-slate-100 min-h-screen flex flex-col">
+
+  <!-- ==================== TOAST NOTIFICATIONS ==================== -->
+  <div id="toastContainer" class="fixed top-4 right-4 z-[120] flex flex-col gap-2 max-w-sm w-[calc(100%-2rem)] pointer-events-none"></div>
+
+  <!-- ==================== CUSTOM CONFIRM MODAL ==================== -->
+  <div id="confirmModal" class="fixed inset-0 z-[110] hidden items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+    <div class="bg-navy-900 border border-slate-700 rounded-2xl max-w-md w-full p-5 shadow-2xl">
+      <div class="flex items-start gap-3">
+        <div class="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center shrink-0">
+          <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+        </div>
+        <div class="flex-1">
+          <h3 id="confirmTitle" class="text-base font-extrabold text-white">Confirm Action</h3>
+          <p id="confirmMessage" class="text-xs text-slate-300 mt-1 leading-relaxed"></p>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 mt-5">
+        <button id="confirmCancelBtn" class="px-4 py-2 rounded-xl bg-navy-800 hover:bg-navy-700 text-slate-200 text-xs font-bold">Cancel</button>
+        <button id="confirmOkBtn" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-navy-950 text-xs font-extrabold">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== OPTIONAL PIN LOCK OVERLAY ==================== -->
+  <div id="pinModal" class="fixed inset-0 z-[105] hidden items-center justify-center bg-navy-950/95 backdrop-blur-md p-4">
+    <div class="bg-navy-900 border border-slate-700 rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl space-y-4">
+      <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 text-navy-950 flex items-center justify-center text-2xl font-black shadow-lg shadow-emerald-500/20">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+      <div>
+        <h2 class="text-xl font-black text-white">NEET Ace Studio Pro</h2>
+        <p class="text-xs text-slate-400 mt-1">Enter Admin PIN (Default: 1234)</p>
+      </div>
+      <input id="pinInput" type="password" inputmode="numeric" maxlength="8" placeholder="••••"
+        class="w-full text-center tracking-[0.5em] text-xl font-black bg-navy-950 border border-slate-700 focus:border-emerald-400 rounded-xl py-3 text-white outline-none" />
+      <p id="pinError" class="text-xs text-rose-400 hidden">Incorrect PIN. Default is 1234.</p>
+      <button id="pinUnlockBtn" class="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-navy-950 font-extrabold text-sm shadow-lg shadow-emerald-500/20">
+        <i class="fa-solid fa-lock-open mr-2"></i>Unlock Admin Panel
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== HD LIGHTBOX MODAL ==================== -->
+  <div id="lightboxModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/85 backdrop-blur-sm p-4" onclick="closeLightbox()">
+    <div class="relative max-w-3xl w-full bg-white rounded-2xl p-3 shadow-2xl" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between mb-2 px-1">
+        <span id="lightboxCaption" class="text-xs font-extrabold text-slate-800">HD Diagram Preview</span>
+        <button onclick="closeLightbox()" class="w-8 h-8 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-800 flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <img id="lightboxImg" src="" alt="Diagram" class="w-full max-h-[75vh] object-contain rounded-xl bg-white" />
+    </div>
+  </div>
+
+  <!-- ==================== MANUAL HD SNIP TOOL MODAL ==================== -->
+  <div id="snipModal" class="fixed inset-0 z-[95] hidden flex-col bg-navy-950/95 backdrop-blur-md">
+    <div class="flex flex-wrap items-center justify-between gap-2 px-4 py-3 bg-navy-900 border-b border-slate-800">
+      <div class="flex items-center gap-2.5">
+        <span class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
+          <i class="fa-solid fa-crop-simple"></i>
+        </span>
+        <div>
+          <h3 class="text-sm font-extrabold text-white">Manual HD Diagram Snipper</h3>
+          <p id="snipSubtitle" class="text-[11px] text-slate-400">Drag box across any diagram (or 2–4 option figures together)</p>
+        </div>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <label class="flex items-center gap-1.5 text-[11px] font-bold text-emerald-300 bg-navy-950 px-2.5 py-1.5 rounded-lg border border-slate-700 cursor-pointer">
+          <input id="snipCleanWm" type="checkbox" checked class="accent-emerald-500" />
+          Clean Watermark
+        </label>
+        <div class="flex items-center gap-1">
+          <button onclick="changeSnipPage(-1)" class="px-2.5 py-1.5 rounded-lg bg-navy-800 hover:bg-navy-700 text-xs font-bold text-white"><i class="fa-solid fa-chevron-left"></i></button>
+          <span id="snipPageLabel" class="text-xs font-extrabold text-emerald-400 min-w-[66px] text-center">Page 1</span>
+          <button onclick="changeSnipPage(1)" class="px-2.5 py-1.5 rounded-lg bg-navy-800 hover:bg-navy-700 text-xs font-bold text-white"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+        <button onclick="saveCurrentSnip()" id="snipSaveBtn" disabled
+          class="px-3.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 text-navy-950 text-xs font-extrabold">
+          <i class="fa-solid fa-check mr-1"></i>Save Snip
+        </button>
+        <button onclick="closeSnipModal()" class="px-3 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs font-bold">Close</button>
+      </div>
+    </div>
+    <div class="flex-1 overflow-auto flex items-start justify-center p-4 bg-navy-950">
+      <div class="relative inline-block shadow-2xl border border-slate-700 rounded-xl overflow-hidden bg-white">
+        <canvas id="snipCanvas" class="snip-canvas block max-w-full h-auto"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== INLINE QUESTION EDITOR / MANUAL INSERT MODAL ==================== -->
+  <div id="editQModal" class="fixed inset-0 z-[90] hidden items-center justify-center bg-black/80 backdrop-blur-sm p-3 sm:p-5">
+    <div class="bg-navy-900 border border-slate-700 rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-800">
+        <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
+          <i class="fa-solid fa-pen-to-square text-emerald-400"></i>
+          <span id="editQModalTitle">Edit Question</span>
+        </h3>
+        <button onclick="closeEditQModal()" class="w-8 h-8 rounded-lg bg-navy-800 hover:bg-navy-700 text-slate-300 flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="p-5 overflow-y-auto space-y-4">
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="text-[11px] font-bold text-slate-400 uppercase">Serial Q Number</label>
+            <input id="editQNum" type="number" min="1" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-3 py-2 text-sm font-extrabold text-emerald-300 outline-none focus:border-emerald-400" />
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-slate-400 uppercase">Question Type</label>
+            <select id="editQType" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-white outline-none focus:border-emerald-400">
+              <option value="Single Choice">Single Choice</option>
+              <option value="Assertion-Reason">Assertion-Reason</option>
+              <option value="Statement I & II">Statement I & II</option>
+              <option value="Match the Following">Match the Following</option>
+              <option value="Diagram Based">Diagram Based</option>
+              <option value="Numerical">Numerical</option>
+              <option value="Incorrect / NOT Type">Incorrect / NOT Type</option>
+            </select>
+          </div>
+          <div class="col-span-2 sm:col-span-1">
+            <label class="text-[11px] font-bold text-slate-400 uppercase">Correct Answer</label>
+            <select id="editQAns" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-3 py-2 text-sm font-extrabold text-emerald-400 outline-none focus:border-emerald-400">
+              <option value="0">Option A (1)</option>
+              <option value="1">Option B (2)</option>
+              <option value="2">Option C (3)</option>
+              <option value="3">Option D (4)</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="text-[11px] font-bold text-slate-400 uppercase">Question Statement</label>
+          <textarea id="editQText" rows="3" placeholder="Enter question text..." class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none focus:border-emerald-400"></textarea>
+        </div>
+
+        <!-- Match the Following Editor (List-I | List-II) -->
+        <div class="bg-navy-950/80 border border-slate-800 rounded-xl p-3 space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="text-[11px] font-extrabold text-amber-300 uppercase flex items-center gap-1.5">
+              <i class="fa-solid fa-table-columns"></i> Match the Following Pairs (Optional — 1 row per line: Left | Right)
+            </label>
+            <button type="button" onclick="insertSampleMatchPairs()" class="text-[10px] font-bold text-cyan-400 hover:underline">+ Template</button>
+          </div>
+          <textarea id="editQMatchPairs" rows="3" placeholder="(A) Item 1 | (i) Match 1&#10;(B) Item 2 | (ii) Match 2&#10;(C) Item 3 | (iii) Match 3&#10;(D) Item 4 | (iv) Match 4"
+            class="w-full bg-navy-900 border border-slate-700 rounded-lg p-2.5 text-xs font-mono text-amber-100 outline-none focus:border-amber-400"></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div>
+            <label class="text-[11px] font-bold text-slate-400 uppercase">Option A (1)</label>
+            <input id="editQOpt0" type="text" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-emerald-400" />
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-slate-400 uppercase">Option B (2)</label>
+            <input id="editQOpt1" type="text" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-emerald-400" />
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-slate-400 uppercase">Option C (3)</label>
+            <input id="editQOpt2" type="text" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-emerald-400" />
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-slate-400 uppercase">Option D (4)</label>
+            <input id="editQOpt3" type="text" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-emerald-400" />
+          </div>
+        </div>
+        <div>
+          <label class="text-[11px] font-bold text-slate-400 uppercase">NCERT Explanation / Solution</label>
+          <textarea id="editQExp" rows="2" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none focus:border-emerald-400"></textarea>
+        </div>
+        <div>
+          <label class="text-[11px] font-bold text-slate-400 uppercase">Attach Diagram (Pool / Upload)</label>
+          <div class="mt-1 flex flex-wrap items-center gap-2">
+            <select id="editQDiagramSelect" class="flex-1 min-w-[180px] bg-navy-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none">
+              <option value="">-- Select From Cropped Pool --</option>
+            </select>
+            <label class="px-3 py-2 rounded-xl bg-navy-800 hover:bg-navy-700 text-xs font-bold text-slate-200 cursor-pointer">
+              <i class="fa-solid fa-upload mr-1"></i>Upload
+              <input id="editQImgFile" type="file" accept="image/*" class="hidden" onchange="handleEditQImgUpload(event)" />
+            </label>
+            <button onclick="clearEditQImg()" class="px-3 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-xs font-bold text-rose-300">Remove</button>
+          </div>
+          <div id="editQImgPreviewWrap" class="mt-2 hidden bg-white rounded-xl p-2 inline-block">
+            <img id="editQImgPreview" src="" alt="Preview" class="max-h-40 object-contain rounded" />
+          </div>
+        </div>
+      </div>
+      <div class="px-5 py-3.5 border-t border-slate-800 flex justify-end gap-2">
+        <button onclick="closeEditQModal()" class="px-4 py-2 rounded-xl bg-navy-800 hover:bg-navy-700 text-xs font-bold text-slate-300">Cancel</button>
+        <button onclick="saveEditQModal()" id="editQSaveBtn" class="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-navy-950 text-xs font-extrabold">Save Question</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== STICKY TOP HEADER ==================== -->
+  <header class="sticky top-0 z-40 glass-panel border-b border-slate-800/90">
+    <div class="max-w-7xl mx-auto px-3 sm:px-5 py-3 flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 text-navy-950 flex items-center justify-center text-lg font-black shadow-lg shadow-emerald-500/25 shrink-0">
+          <i class="fa-solid fa-stethoscope"></i>
+        </div>
+        <div class="leading-tight">
+          <div class="flex items-center gap-1.5">
+            <h1 class="text-sm sm:text-base font-black text-white tracking-tight">NEET Ace Studio</h1>
+            <span class="px-1.5 py-0.5 text-[10px] font-black uppercase rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">INDIA PRO</span>
+          </div>
+          <p class="text-[11px] text-slate-400 hidden sm:block">Synced Live with Student Portal (neet-ace-portal)</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <div id="cloudStatusBadge" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-navy-800 border border-slate-700 text-[11px] font-bold text-slate-300">
+          <span id="cloudDot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+          <span id="cloudStatusText">Connecting...</span>
+        </div>
+        <button onclick="openStudentPortal()" title="Open Student Portal (index.html)" class="w-9 h-9 rounded-xl bg-navy-800 hover:bg-navy-700 text-emerald-300 text-xs flex items-center justify-center transition">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i>
+        </button>
+        <button onclick="lockStudio()" title="Lock Studio" class="w-9 h-9 rounded-xl bg-navy-800 hover:bg-navy-700 text-slate-300 text-xs flex items-center justify-center transition">
+          <i class="fa-solid fa-lock"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="max-w-7xl mx-auto px-3 sm:px-5 pb-2.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+      <button onclick="switchTab('studio')" data-tab="studio" class="tab-btn px-3.5 py-2 rounded-xl text-xs font-extrabold whitespace-nowrap transition flex items-center gap-1.5 bg-emerald-500 text-navy-950">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> PDF → Test Studio
+      </button>
+      <button onclick="switchTab('publisher')" data-tab="publisher" class="tab-btn px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 bg-navy-800 text-slate-300">
+        <i class="fa-solid fa-cloud-arrow-up"></i> Bulk Publisher
+        <span id="pubCountPill" class="hidden px-1.5 py-0.5 rounded-full bg-emerald-500 text-navy-950 text-[10px] font-black">0</span>
+      </button>
+      <button onclick="switchTab('manage')" data-tab="manage" class="tab-btn px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 bg-navy-800 text-slate-300">
+        <i class="fa-solid fa-database"></i> Cloud Tests
+        <span id="cloudTestsCount" class="px-1.5 py-0.5 rounded-full bg-navy-950 text-emerald-300 text-[10px] font-black">0</span>
+      </button>
+      <button onclick="switchTab('single')" data-tab="single" class="tab-btn px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 bg-navy-800 text-slate-300">
+        <i class="fa-solid fa-plus-circle"></i> Add 1 Q
+      </button>
+      <button onclick="switchTab('analytics')" data-tab="analytics" class="tab-btn px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 bg-navy-800 text-slate-300">
+        <i class="fa-solid fa-chart-line"></i> Analytics & Sync
+      </button>
+    </div>
+  </header>
+
+  <!-- ==================== MAIN WORKSPACE ==================== -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-5 py-5 space-y-5">
+
+    <!-- ===================================================================== -->
+    <!-- TAB 1: PDF -> TEST STUDIO                                             -->
+    <!-- ===================================================================== -->
+    <section id="tab-studio" class="tab-panel space-y-5 fade-in">
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <!-- STEP 1: PDF UPLOAD & PAGE SETUP -->
+        <div class="glass-panel rounded-2xl p-4 sm:p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-extrabold text-white flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs font-black">1</span>
+              Upload NEET PDF & Layout
+            </h2>
+            <span id="pdfPageBadge" class="hidden px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 text-[11px] font-extrabold">0 Pages</span>
+          </div>
+
+          <label class="block border-2 border-dashed border-emerald-500/35 hover:border-emerald-400 rounded-2xl p-5 text-center cursor-pointer transition bg-navy-950/60">
+            <input id="pdfFileInput" type="file" accept="application/pdf" class="hidden" onchange="handlePdfSelect(event)" />
+            <div class="w-11 h-11 mx-auto rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center text-xl mb-2">
+              <i class="fa-solid fa-file-pdf"></i>
+            </div>
+            <p id="pdfFileName" class="text-sm font-extrabold text-white">Tap to Select NEET PDF Paper</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">Allen, Aakash, New Light, PW, NCERT & Bilingual Papers</p>
+          </label>
+
+          <div class="grid grid-cols-3 gap-2.5">
+            <div>
+              <label class="text-[11px] font-bold text-slate-400">Start Page</label>
+              <input id="startPage" type="number" min="1" value="1" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-3 py-2 text-sm font-bold text-white outline-none focus:border-emerald-400" />
+            </div>
+            <div>
+              <label class="text-[11px] font-bold text-slate-400">End Page</label>
+              <input id="endPage" type="number" min="1" value="1" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-3 py-2 text-sm font-bold text-white outline-none focus:border-emerald-400" />
+            </div>
+            <div>
+              <label class="text-[11px] font-bold text-slate-400">Pages / Batch</label>
+              <select id="pagesPerBatch" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-2.5 py-2 text-xs font-bold text-white outline-none focus:border-emerald-400">
+                <option value="2">2 Pages (Max Accuracy)</option>
+                <option value="3" selected>3 Pages (Balanced)</option>
+                <option value="4">4 Pages (Fast)</option>
+                <option value="5">5 Pages (Turbo)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div>
+              <label class="text-[11px] font-bold text-slate-400">PDF Column Layout</label>
+              <select id="columnLayout" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-white outline-none focus:border-emerald-400">
+                <option value="left_only" selected>Left Column Only (Bilingual English)</option>
+                <option value="right_only">Right Column Only (Bilingual Hindi)</option>
+                <option value="two_col">2-Column Full Page (Left + Right)</option>
+                <option value="single_col">Single Column (NCERT / Notes)</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[11px] font-bold text-slate-400">Question Limit (Dynamic)</label>
+              <div class="mt-1 flex items-center gap-1.5">
+                <select id="targetLimitSelect" onchange="syncTargetLimit()" class="flex-1 bg-navy-950 border border-slate-700 rounded-xl px-2.5 py-2 text-xs font-extrabold text-emerald-300 outline-none focus:border-emerald-400">
+                  <option value="0" selected>All Questions (Auto)</option>
+                  <option value="20">20 Questions</option>
+                  <option value="30">30 Questions</option>
+                  <option value="45">45 Questions (1 Subject)</option>
+                  <option value="90">90 Questions (Biology)</option>
+                  <option value="180">180 Questions (Full Mock)</option>
+                  <option value="custom">Custom...</option>
+                </select>
+                <input id="customTargetLimit" type="number" min="1" max="300" placeholder="Qty" oninput="updateDynamicButtons()"
+                  class="hidden w-16 bg-navy-950 border border-emerald-500 rounded-xl px-2 py-2 text-xs font-bold text-white text-center outline-none" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2: 3-IN-1 DIAGRAM CROPPING ENGINE -->
+        <div class="glass-panel rounded-2xl p-4 sm:p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-extrabold text-white flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs font-black">2</span>
+              Diagram Cropping Engine
+            </h2>
+            <span id="pyStatusPill" class="px-2.5 py-1 rounded-full bg-navy-800 text-slate-400 text-[10px] font-bold">Python Ready</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <button type="button" onclick="setDiagramMode('ai_vision')" id="dmode-ai_vision" class="dmode-btn text-left p-3 rounded-xl border-2 border-emerald-400 bg-emerald-500/10 transition">
+              <div class="flex items-center justify-between">
+                <span class="text-base">👁️</span>
+                <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300">Best</span>
+              </div>
+              <p class="text-xs font-extrabold text-white mt-1.5">AI Vision Crop</p>
+              <p class="text-[10px] text-slate-400 mt-0.5 leading-snug">Smart crop for 1 to 4 option diagrams/Q</p>
+            </button>
+
+            <button type="button" onclick="setDiagramMode('python_cv')" id="dmode-python_cv" class="dmode-btn text-left p-3 rounded-xl border border-slate-800 bg-navy-950/70 transition">
+              <div class="flex items-center justify-between">
+                <span class="text-base">🐍</span>
+                <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300">0 API</span>
+              </div>
+              <p class="text-xs font-extrabold text-white mt-1.5">Python CV Pro</p>
+              <p class="text-[10px] text-slate-400 mt-0.5 leading-snug">Watermark Killer + Multi-Fig Merger</p>
+            </button>
+
+            <button type="button" onclick="setDiagramMode('hybrid')" id="dmode-hybrid" class="dmode-btn text-left p-3 rounded-xl border border-slate-800 bg-navy-950/70 transition">
+              <div class="flex items-center justify-between">
+                <span class="text-base">⚡</span>
+                <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300">Groq+Py</span>
+              </div>
+              <p class="text-xs font-extrabold text-white mt-1.5">Hybrid Auto</p>
+              <p class="text-[10px] text-slate-400 mt-0.5 leading-snug">Auto-Python Crop + Fast Text LLM</p>
+            </button>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3 bg-navy-950/70 border border-slate-800 rounded-xl p-3">
+            <label class="flex items-center gap-2 text-xs font-semibold text-slate-200 cursor-pointer">
+              <input id="optWatermarkKiller" type="checkbox" checked class="w-4 h-4 accent-emerald-500 rounded" />
+              <span>Watermark Killer</span>
+            </label>
+            <label class="flex items-center gap-2 text-xs font-semibold text-slate-200 cursor-pointer">
+              <input id="optMergeMultiFig" type="checkbox" checked class="w-4 h-4 accent-emerald-500 rounded" />
+              <span>Merge 3–4 Figs / Q</span>
+            </label>
+            <div class="ml-auto flex items-center gap-1.5">
+              <span class="text-[11px] text-slate-400 font-semibold">Quality:</span>
+              <select id="imgQualitySelect" class="bg-navy-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] font-bold text-white outline-none">
+                <option value="hd" selected>HD Crisp (800px)</option>
+                <option value="balanced">Balanced (640px)</option>
+                <option value="compact">Compact (500px)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="runPythonAutoCutter(true)" id="btnPreviewPyCrop"
+              class="flex-1 min-w-[150px] py-2.5 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/35 text-amber-300 text-xs font-extrabold transition flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-scissors"></i> Run Python Auto-Cutter
+            </button>
+            <button onclick="openSnipModal(null)"
+              class="py-2.5 px-3.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/35 text-cyan-300 text-xs font-extrabold transition flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-crop-simple"></i> + Manual Snip
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CROPPED DIAGRAMS POOL -->
+      <div id="diagramPoolSection" class="hidden glass-panel rounded-2xl p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xs font-extrabold text-amber-300 flex items-center gap-2">
+            <i class="fa-solid fa-images"></i> Cropped Diagrams Pool (<span id="diagramPoolCount">0</span>)
+          </h3>
+          <div class="flex items-center gap-3">
+            <button onclick="openSnipModal(null)" class="text-[11px] font-bold text-cyan-400 hover:underline">+ Manual Snip</button>
+            <button onclick="clearDiagramPool()" class="text-[11px] font-bold text-rose-400 hover:underline">Clear All</button>
+          </div>
+        </div>
+        <div id="diagramPoolGrid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2.5 max-h-60 overflow-y-auto pr-1"></div>
+      </div>
+
+      <!-- STEP 3: AI ENGINE & EXTRACTION RUNNER -->
+      <div class="glass-panel rounded-2xl p-4 sm:p-5 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h2 class="text-sm font-extrabold text-white flex items-center gap-2">
+            <span class="w-6 h-6 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs font-black">3</span>
+            Extraction Mode & AI Provider
+          </h2>
+          <div class="flex items-center gap-1.5 bg-navy-950 p-1 rounded-xl border border-slate-800">
+            <button type="button" onclick="setExtractType('paper')" id="etype-paper" class="etype-btn px-3 py-1.5 rounded-lg text-[11px] font-extrabold bg-emerald-500 text-navy-950 transition">📄 Test Paper</button>
+            <button type="button" onclick="setExtractType('ncert')" id="etype-ncert" class="etype-btn px-3 py-1.5 rounded-lg text-[11px] font-bold text-slate-400 transition">📚 Book / NCERT</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div>
+            <label class="text-[11px] font-bold text-slate-400">Subject Tag</label>
+            <select id="extractSubject" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs font-bold text-white outline-none focus:border-emerald-400">
+              <option value="Full Mock" selected>Full Mock (Bio + Phy + Chem)</option>
+              <option value="Biology">Biology</option>
+              <option value="Physics">Physics</option>
+              <option value="Chemistry">Chemistry</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-slate-400">Output Language</label>
+            <select id="extractLanguage" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs font-bold text-white outline-none focus:border-emerald-400">
+              <option value="English" selected>English Only</option>
+              <option value="Hindi">Hindi Only</option>
+              <option value="Bilingual">Bilingual (Eng + Hin)</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-slate-400">AI Provider Source</label>
+            <select id="aiProviderMode" onchange="toggleCustomKeyBox()" class="mt-1 w-full bg-navy-950 border border-emerald-500/50 rounded-xl px-3 py-2.5 text-xs font-extrabold text-emerald-300 outline-none">
+              <option value="builtin" selected>✨ Built-in Preview AI (No Key)</option>
+              <option value="custom">🔑 Custom Keys (Gemini / Groq / OpenRouter)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Built-in Preview AI Bar -->
+        <div id="builtinAiBar" class="flex flex-wrap items-center justify-between gap-2 bg-emerald-500/10 border border-emerald-500/25 rounded-xl px-3.5 py-2.5">
+          <p id="builtinTestStatus" class="text-xs text-emerald-200 font-medium">
+            <i class="fa-solid fa-sparkles text-emerald-400 mr-1.5"></i>
+            Built-in Gemini Vision & Text Engine — works inside Preview with zero API key!
+          </p>
+          <button onclick="testBuiltinAI()" class="px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-extrabold shrink-0">
+            <i class="fa-solid fa-bolt mr-1"></i>Test Preview AI
+          </button>
+        </div>
+
+        <!-- Custom Key Pool Box -->
+        <div id="customKeyBox" class="hidden bg-navy-950/80 border border-slate-800 rounded-xl p-3.5 space-y-2.5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-extrabold text-white"><i class="fa-solid fa-key text-amber-400 mr-1"></i>Universal Key Pool</span>
+              <span id="detectedKeysPill" class="px-2 py-0.5 rounded-full bg-navy-800 text-slate-400 text-[10px] font-bold">0 Keys</span>
+            </div>
+            <div class="flex items-center gap-3 text-[11px] font-bold">
+              <a href="https://aistudio.google.com/apikey" target="_blank" class="text-emerald-400 hover:underline">Free Gemini Key ↗</a>
+              <a href="https://console.groq.com/keys" target="_blank" class="text-cyan-400 hover:underline">Free Groq Key ↗</a>
+            </div>
+          </div>
+          <textarea id="apiKeysInput" rows="2" oninput="saveCustomKeys(this.value)"
+            placeholder="Paste 1 or multiple keys separated by comma or new line (AIza... Gemini Vision, gsk_... Groq Fast Text, sk-or-... OpenRouter)"
+            class="w-full bg-navy-900 border border-slate-700 rounded-xl p-2.5 text-xs font-mono text-emerald-200 outline-none focus:border-emerald-400"></textarea>
+          <div class="flex items-center justify-between gap-2">
+            <p id="keyTestStatus" class="text-[11px] text-slate-400">Groq auto-discovers live models & auto-pairs with Python CV Crop!</p>
+            <button onclick="testAllKeys()" id="btnTestKeys" class="px-3.5 py-1.5 rounded-lg bg-navy-800 hover:bg-navy-700 text-xs font-extrabold text-cyan-300 shrink-0">
+              <i class="fa-solid fa-plug-circle-check mr-1"></i>Test Keys
+            </button>
+          </div>
+        </div>
+
+        <!-- Dynamic Extraction Buttons -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+          <button onclick="startAIExtraction()" id="btnStartAI"
+            class="py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:brightness-110 text-navy-950 font-black text-sm shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-rocket"></i>
+            <span id="btnStartAILabel">Extract All Qs (AI Vision Crop)</span>
+          </button>
+          <button onclick="startZeroAIPythonExtraction()" id="btnStartZeroAI"
+            class="py-3.5 px-4 rounded-xl bg-navy-800 hover:bg-navy-700 border border-amber-500/40 text-amber-300 font-extrabold text-sm transition flex items-center justify-center gap-2">
+            <i class="fa-brands fa-python text-base"></i>
+            <span id="btnStartZeroAILabel">Zero-AI Python Extract (All Qs)</span>
+          </button>
+        </div>
+
+        <button onclick="stopExtraction()" id="btnStopExtract" class="hidden w-full py-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-300 text-xs font-extrabold">
+          <i class="fa-solid fa-stop mr-1.5"></i>Stop Extraction & Keep Extracted Questions
+        </button>
+
+        <!-- Progress & Live Log -->
+        <div id="progressCard" class="hidden bg-navy-950 border border-slate-800 rounded-xl p-3.5 space-y-2.5">
+          <div class="flex items-center justify-between text-xs font-bold">
+            <span id="progressTitle" class="text-emerald-400">Initializing...</span>
+            <span id="progressCount" class="text-slate-300">0 Qs • 0 Diagrams</span>
+          </div>
+          <div class="w-full h-2.5 bg-navy-800 rounded-full overflow-hidden">
+            <div id="progressBar" class="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 transition-all duration-300" style="width: 0%"></div>
+          </div>
+          <div id="liveLogBox" class="max-h-36 overflow-y-auto bg-navy-900 rounded-lg p-2.5 font-mono text-[11px] text-slate-300 space-y-1"></div>
+        </div>
+      </div>
+
+      <!-- MISSING QUESTION GAP DETECTOR -->
+      <div id="gapDetectorBanner" class="hidden bg-amber-500/10 border border-amber-500/35 rounded-2xl p-4 space-y-2.5">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-start gap-2.5">
+            <i class="fa-solid fa-magnifying-glass-chart text-amber-400 text-lg mt-0.5"></i>
+            <div>
+              <h4 class="text-xs font-extrabold text-amber-300">Missing Question Numbers Detected (Original Serial Numbers Preserved!)</h4>
+              <p id="gapDetectorText" class="text-xs text-slate-300 mt-0.5"></p>
+            </div>
+          </div>
+          <button onclick="document.getElementById('gapDetectorBanner').classList.add('hidden')" class="px-3 py-1.5 rounded-lg bg-navy-800 text-slate-300 text-xs font-bold">Dismiss</button>
+        </div>
+        <div id="gapQuickButtons" class="flex flex-wrap gap-1.5"></div>
+      </div>
+
+      <!-- STEP 4: EXTRACTED QUESTIONS REVIEW WORKSPACE -->
+      <div id="reviewSection" class="hidden glass-panel rounded-2xl p-4 sm:p-5 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-sm font-extrabold text-white flex items-center gap-2">
+              <i class="fa-solid fa-list-check text-emerald-400"></i>
+              Review Workspace (<span id="reviewTotalCount">0</span> Questions)
+            </h2>
+            <p id="reviewSubStats" class="text-[11px] text-slate-400 mt-0.5">0 with diagrams</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="openInsertManualQModal(null)" class="px-3 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/35 text-amber-300 text-xs font-extrabold">
+              <i class="fa-solid fa-plus mr-1"></i>Add Manual Q#
+            </button>
+            <button onclick="autoFillSolutionsWithAI()" id="btnAutoSolutions" class="px-3 py-2 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 text-purple-300 text-xs font-bold">
+              <i class="fa-solid fa-sparkles mr-1"></i>AI Solutions
+            </button>
+            <button onclick="copyExtractedJSON()" class="px-3 py-2 rounded-xl bg-navy-800 hover:bg-navy-700 text-slate-200 text-xs font-bold">
+              <i class="fa-solid fa-copy mr-1"></i>Copy JSON
+            </button>
+            <button onclick="sendToPublisher()" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-navy-950 text-xs font-black shadow-lg shadow-emerald-500/20">
+              Publish to Cloud <i class="fa-solid fa-arrow-right ml-1"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Bulk Answer Key Matcher -->
+        <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 flex flex-col sm:flex-row gap-2">
+          <input id="bulkAnswerKeyInput" type="text" placeholder="Paste Answer Key: 1.(3) 2.(1) 3.(4) OR 1-A 2-C 3-B..."
+            class="flex-1 bg-navy-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-white outline-none focus:border-amber-400" />
+          <button onclick="applyManualAnswerKey()" class="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-navy-950 font-extrabold text-xs shrink-0">
+            Apply Answer Key
+          </button>
+        </div>
+
+        <!-- Search & Filter -->
+        <div class="flex flex-wrap items-center gap-2">
+          <input id="reviewSearch" type="text" oninput="renderReviewList()" placeholder="Search question text or Q#..."
+            class="flex-1 min-w-[180px] bg-navy-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-emerald-400" />
+          <select id="reviewFilter" onchange="renderReviewList()" class="bg-navy-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-200 outline-none">
+            <option value="all">All Questions (+ Missing Slots)</option>
+            <option value="missing_only">Missing / Skipped Slots Only</option>
+            <option value="with_img">With Diagram Only</option>
+            <option value="no_img">Without Diagram</option>
+          </select>
+        </div>
+
+        <div id="reviewList" class="space-y-3 max-h-[65vh] overflow-y-auto pr-1"></div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- TAB 2: BULK PUBLISHER (AUTO-CHUNKED FOR 180Q + HD DIAGRAMS!)          -->
+    <!-- ===================================================================== -->
+    <section id="tab-publisher" class="tab-panel hidden space-y-5 fade-in">
+      <div class="glass-panel rounded-2xl p-4 sm:p-6 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 class="text-base font-extrabold text-white flex items-center gap-2">
+              <i class="fa-solid fa-cloud-arrow-up text-emerald-400"></i>
+              Cloud Bulk Test Publisher
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5">Auto-Chunked Cloud Save — supports 180Q + HD Diagrams without Firestore 1MB errors!</p>
+          </div>
+          <div class="flex items-center gap-1.5 bg-navy-950 p-1 rounded-xl border border-slate-800">
+            <button type="button" onclick="setPublishMode('new')" id="pmode-new" class="pmode-btn px-3 py-1.5 rounded-lg text-xs font-extrabold bg-emerald-500 text-navy-950">New Test</button>
+            <button type="button" onclick="setPublishMode('append')" id="pmode-append" class="pmode-btn px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400">Append</button>
+          </div>
+        </div>
+
+        <div id="appendTestWrap" class="hidden">
+          <label class="text-xs font-bold text-amber-300">Append Into Existing Cloud Test</label>
+          <select id="appendTestSelect" class="mt-1 w-full bg-navy-950 border border-amber-500/40 rounded-xl px-3.5 py-2.5 text-sm font-bold text-white outline-none"></select>
+        </div>
+
+        <div id="newTestMetaWrap" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="text-xs font-bold text-slate-400">Test / Chapter Title</label>
+            <input id="pubTitle" type="text" placeholder="e.g., NEET 2027 Full Mock Test 01"
+              class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:border-emerald-400" />
+          </div>
+          <div>
+            <label class="text-xs font-bold text-slate-400">Subject (Matches index.html)</label>
+            <select id="pubSubject" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-bold text-white outline-none focus:border-emerald-400">
+              <option value="Full Mock">Full Mock</option>
+              <option value="Biology">Biology</option>
+              <option value="Physics">Physics</option>
+              <option value="Chemistry">Chemistry</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-bold text-slate-400">Tag / Badge</label>
+            <input id="pubTag" type="text" value="NEET 2027" placeholder="e.g., NCERT Line-by-Line"
+              class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:border-emerald-400" />
+          </div>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-xs font-bold text-slate-400">Questions JSON Array</label>
+            <span id="pubJsonStats" class="text-[11px] font-bold text-emerald-400">0 questions • 0 KB</span>
+          </div>
+          <textarea id="pubJsonInput" rows="10" oninput="updatePubJsonStats()"
+            placeholder='[{"qNum":1,"question":"...","options":["A","B","C","D"],"answer":0,"explanation":"...","image":""}]'
+            class="w-full bg-navy-950 border border-slate-700 rounded-xl p-3 text-xs font-mono text-emerald-200 outline-none focus:border-emerald-400"></textarea>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <button onclick="formatPubJson()" class="px-4 py-2.5 rounded-xl bg-navy-800 hover:bg-navy-700 text-xs font-bold text-slate-200">
+            <i class="fa-solid fa-code mr-1.5"></i>Validate JSON
+          </button>
+          <button onclick="publishToCloud()" id="btnPublishCloud"
+            class="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:brightness-110 text-navy-950 text-sm font-black shadow-lg shadow-emerald-500/25 transition flex items-center gap-2">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <span id="btnPublishLabel">Publish Live to Student Portal</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- TAB 3: MANAGE CLOUD TESTS                                             -->
+    <!-- ===================================================================== -->
+    <section id="tab-manage" class="tab-panel hidden space-y-4 fade-in">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="text-base font-extrabold text-white">Live Cloud Tests</h2>
+          <p class="text-xs text-slate-400">Directly synced with <code class="text-emerald-400">index.html</code> (neet_tests)</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <input id="manageSearch" type="text" oninput="renderCloudTests()" placeholder="Search tests..."
+            class="bg-navy-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-emerald-400" />
+          <button onclick="exportAllTestsBackup()" class="px-3.5 py-2 rounded-xl bg-navy-800 hover:bg-navy-700 text-xs font-bold text-cyan-300">
+            <i class="fa-solid fa-file-export mr-1"></i>Backup All
+          </button>
+        </div>
+      </div>
+      <div id="cloudTestsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- TAB 4: ADD SINGLE QUESTION                                            -->
+    <!-- ===================================================================== -->
+    <section id="tab-single" class="tab-panel hidden fade-in">
+      <div class="glass-panel rounded-2xl p-4 sm:p-6 max-w-3xl mx-auto space-y-4">
+        <h2 class="text-base font-extrabold text-white flex items-center gap-2">
+          <i class="fa-solid fa-plus-circle text-emerald-400"></i>
+          Add 1 Question to Cloud Test
+        </h2>
+        <div>
+          <label class="text-xs font-bold text-slate-400">Target Cloud Test</label>
+          <select id="singleTargetTest" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm font-bold text-white outline-none"></select>
+        </div>
+        <div>
+          <label class="text-xs font-bold text-slate-400">Question Statement</label>
+          <textarea id="singleQuestion" rows="3" placeholder="Type full NEET question..." class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none focus:border-emerald-400"></textarea>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <input id="singleOpt0" type="text" placeholder="Option A (1)" class="bg-navy-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-emerald-400" />
+          <input id="singleOpt1" type="text" placeholder="Option B (2)" class="bg-navy-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-emerald-400" />
+          <input id="singleOpt2" type="text" placeholder="Option C (3)" class="bg-navy-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-emerald-400" />
+          <input id="singleOpt3" type="text" placeholder="Option D (4)" class="bg-navy-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-emerald-400" />
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs font-bold text-slate-400">Correct Answer</label>
+            <select id="singleAns" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm font-bold text-emerald-400 outline-none">
+              <option value="0">Option A (1)</option>
+              <option value="1">Option B (2)</option>
+              <option value="2">Option C (3)</option>
+              <option value="3">Option D (4)</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-bold text-slate-400">Optional Diagram Image</label>
+            <input id="singleImgFile" type="file" accept="image/*" onchange="handleSingleImgUpload(event)" class="mt-1 w-full text-xs text-slate-300 file:mr-2 file:py-2 file:px-3 file:rounded-xl file:border-0 file:bg-navy-800 file:text-emerald-300 file:font-bold" />
+          </div>
+        </div>
+        <div>
+          <label class="text-xs font-bold text-slate-400">NCERT Explanation</label>
+          <textarea id="singleExp" rows="2" placeholder="Optional explanation..." class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none focus:border-emerald-400"></textarea>
+        </div>
+        <button onclick="saveSingleQuestionToCloud()" class="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-navy-950 font-black text-sm transition">
+          <i class="fa-solid fa-plus mr-1.5"></i>Append Question to Cloud Test
+        </button>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- TAB 5: ANALYTICS & CLOUD SYNC                                         -->
+    <!-- ===================================================================== -->
+    <section id="tab-analytics" class="tab-panel hidden space-y-5 fade-in">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="glass-panel rounded-2xl p-4">
+          <p class="text-[11px] font-bold text-slate-400 uppercase">Cloud Tests</p>
+          <p id="statTotalTests" class="text-2xl font-black text-white mt-1">0</p>
+        </div>
+        <div class="glass-panel rounded-2xl p-4">
+          <p class="text-[11px] font-bold text-slate-400 uppercase">Total Questions</p>
+          <p id="statTotalQs" class="text-2xl font-black text-emerald-400 mt-1">0</p>
+        </div>
+        <div class="glass-panel rounded-2xl p-4">
+          <p class="text-[11px] font-bold text-slate-400 uppercase">Student Attempts</p>
+          <p id="statTotalAttempts" class="text-2xl font-black text-cyan-400 mt-1">0</p>
+        </div>
+        <div class="glass-panel rounded-2xl p-4">
+          <p class="text-[11px] font-bold text-slate-400 uppercase">Project</p>
+          <p class="text-sm font-black text-emerald-300 mt-2 truncate">neet-ace-portal</p>
+        </div>
+      </div>
+
+      <div class="glass-panel rounded-2xl p-4 sm:p-5 space-y-3">
+        <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
+          <i class="fa-solid fa-trophy text-amber-400"></i> Live Student Scores (Synced with index.html)
+        </h3>
+        <div id="analyticsAttemptsList" class="space-y-2 text-xs text-slate-300">
+          <p class="text-slate-500">Loading student attempts...</p>
+        </div>
+      </div>
+
+      <div class="glass-panel rounded-2xl p-4 sm:p-5 space-y-2">
+        <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
+          <i class="fa-solid fa-server text-emerald-400"></i> Shared Cloud Database Path
+        </h3>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Connected to <span class="text-emerald-300 font-mono font-bold">neet-ace-portal</span> using exact collection path
+          <code class="text-cyan-300">artifacts/neet-ace-portal/public/data/neet_tests</code> (+ auto-chunking via <code class="text-cyan-300">neet_test_chunks</code>).
+          Any test you publish here appears instantly on your student portal (<code class="text-white">index.html</code>).
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="py-4 text-center text-[11px] font-semibold text-slate-500 border-t border-slate-900">
+    © NEET Ace Studio Pro • India Edition | JAY SHRI RAM 🚩
+  </footer>
+
+  <!-- ==================== CORE APPLICATION MODULE ==================== -->
+  <script type="module">
+    import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, doc, setDoc, getDocs, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    if (typeof pdfjsLib !== "undefined") {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    }
+
+    // =========================================================================
+    // 1. EXACT SHARED FIREBASE CONFIG & COLLECTIONS (100% MATCH WITH index.html)
+    // =========================================================================
+    const CUSTOM_FIREBASE_CONFIG = {
+      apiKey: "AIzaSyAfjBdGyktTMAYR9vPn83xwbzPYM3Iowqs",
+      authDomain: "neet-ace-portal.firebaseapp.com",
+      projectId: "neet-ace-portal",
+      storageBucket: "neet-ace-portal.firebasestorage.app",
+      messagingSenderId: "1098024797220",
+      appId: "1:1098024797220:web:e5b9c10ae7cbc6afbb84b1",
+      measurementId: "G-531GJCEQ37"
+    };
+
+    const CLOUD_APP_ID = "neet-ace-portal";
+    let db = null;
+
+    const state = {
+      pdfDoc: null,
+      pdfName: "",
+      totalPages: 0,
+      diagramMode: "ai_vision", // 'ai_vision' | 'python_cv' | 'hybrid'
+      extractType: "paper",     // 'paper' | 'ncert'
+      publishMode: "new",       // 'new' | 'append'
+      extractedDiagrams: [],    // [{ id, page, col, qNum, yPct, dataUrl }]
+      extractedQuestions: [],   // [{ qNum, page, question, qType, matchPairs, options, answer, explanation, image }]
+      cloudTests: [],
+      cloudSubmissions: [],
+      isRunning: false,
+      stopRequested: false,
+      pyodide: null,
+      pyLoading: false,
+      groqModelsCache: null,
+      keyCursor: 0,
+      editQIndex: null,         // null means INSERT NEW manual question
+      editQTempImg: "",
+      singleTempImg: "",
+      snipPageNum: 1,
+      snipTargetQIndex: null,
+      snipSelection: null,
+      snipDragging: false,
+      snipStart: null,
+      snipBaseCanvas: null
+    };
+
+    // =========================================================================
+    // 2. CLOUD SYNC (EXACTLY MATCHES index.html CHUNKING & COLLECTIONS!)
+    // =========================================================================
+    async function initCloud() {
+      try {
+        const appName = "neet-studio-cloud";
+        const existing = getApps().find((a) => a.name === appName);
+        const app = existing || initializeApp(CUSTOM_FIREBASE_CONFIG, appName);
+        db = getFirestore(app);
+
+        try {
+          const auth = getAuth(app);
+          if (typeof __initial_auth_token !== "undefined" && __initial_auth_token) {
+            await signInWithCustomToken(auth, __initial_auth_token);
+          } else {
+            await signInAnonymously(auth);
+          }
+        } catch (authErr) {
+          console.info("Auth skip (Firestore Test Rules active):", authErr.code || authErr.message);
+        }
+
+        const testsCol = collection(db, "artifacts", CLOUD_APP_ID, "public", "data", "neet_tests");
+        const chunksCol = collection(db, "artifacts", CLOUD_APP_ID, "public", "data", "neet_test_chunks");
+        const subsCol = collection(db, "artifacts", CLOUD_APP_ID, "public", "data", "neet_submissions");
+
+        async function loadFullTests(snap) {
+          const metaTests = [];
+          snap.forEach((d) => metaTests.push({ id: d.id, ...d.data() }));
+
+          let chunkMap = {};
+          if (metaTests.some((t) => t.isChunked)) {
+            const allChunks = await getDocs(chunksCol);
+            allChunks.forEach((cd) => {
+              const cData = cd.data();
+              if (!chunkMap[cData.testId]) chunkMap[cData.testId] = [];
+              chunkMap[cData.testId].push(cData);
+            });
+          }
+
+          const assembled = metaTests.map((t) => {
+            if (t.isChunked) {
+              const parts = (chunkMap[t.id] || []).sort((a, b) => a.chunkIndex - b.chunkIndex);
+              const mergedQs = [];
+              parts.forEach((p) => {
+                try {
+                  const arr = typeof p.questionsJson === "string" ? JSON.parse(p.questionsJson) : (p.questions || []);
+                  mergedQs.push(...arr);
+                } catch (_) {}
+              });
+              return { ...t, questions: mergedQs };
+            }
+            return t;
+          });
+
+          assembled.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+          state.cloudTests = assembled;
+          updateCloudStatusUI(true);
+          renderCloudTests();
+          refreshTestDropdowns();
+          updateAnalyticsStats();
+        }
+
+        onSnapshot(
+          testsCol,
+          (snap) => { loadFullTests(snap).catch((e) => console.warn("Load chunks warning:", e.message)); },
+          (err) => {
+            console.error("Firestore error:", err);
+            updateCloudStatusUI(false, "Check Rules");
+            showToast("Firestore Permission Error: Rules mein 'allow read, write: if true;' check karein!", "error");
+          }
+        );
+
+        onSnapshot(
+          subsCol,
+          (snap) => {
+            const subs = [];
+            snap.forEach((d) => subs.push({ id: d.id, ...d.data() }));
+            subs.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            state.cloudSubmissions = subs;
+            updateAnalyticsStats();
+          },
+          () => {}
+        );
+      } catch (e) {
+        console.error("Firebase init failed:", e);
+        updateCloudStatusUI(false, "Offline");
+      }
+    }
+
+    async function saveTestToCloudChunked(testObj) {
+      if (!db) throw new Error("Cloud DB not ready");
+      const payloadSize = new Blob([JSON.stringify(testObj)]).size;
+      const testRef = doc(db, "artifacts", CLOUD_APP_ID, "public", "data", "neet_tests", testObj.id);
+
+      if (payloadSize < 650000) {
+        await setDoc(testRef, { ...testObj, isChunked: false });
+      } else {
+        const qs = testObj.questions || [];
+        const chunks = [];
+        let curBatch = [];
+        let curBytes = 0;
+
+        for (const q of qs) {
+          const qb = new Blob([JSON.stringify(q)]).size;
+          if (curBytes + qb > 450000 && curBatch.length > 0) {
+            chunks.push(curBatch);
+            curBatch = [q];
+            curBytes = qb;
+          } else {
+            curBatch.push(q);
+            curBytes += qb;
+          }
+        }
+        if (curBatch.length > 0) chunks.push(curBatch);
+
+        for (let i = 0; i < chunks.length; i++) {
+          const chunkRef = doc(db, "artifacts", CLOUD_APP_ID, "public", "data", "neet_test_chunks", `${testObj.id}_c${i}`);
+          await setDoc(chunkRef, {
+            testId: testObj.id,
+            chunkIndex: i,
+            questionsJson: JSON.stringify(chunks[i])
+          });
+        }
+
+        await setDoc(testRef, {
+          id: testObj.id,
+          title: testObj.title,
+          subject: testObj.subject || "Full Mock",
+          tag: testObj.tag || "NEET 2027",
+          createdAt: testObj.createdAt || Date.now(),
+          isChunked: true,
+          chunkCount: chunks.length,
+          questionCount: qs.length,
+          questions: []
+        });
+      }
+    }
+
+    function updateCloudStatusUI(ok, label) {
+      const dot = document.getElementById("cloudDot");
+      const txt = document.getElementById("cloudStatusText");
+      if (ok) {
+        dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 pulse-green";
+        txt.textContent = "Cloud Live";
+        txt.className = "text-emerald-300";
+      } else {
+        dot.className = "w-2.5 h-2.5 rounded-full bg-rose-500";
+        txt.textContent = label || "Offline";
+        txt.className = "text-rose-300";
+      }
+    }
+
+    // =========================================================================
+    // 3. UI UTILITIES
+    // =========================================================================
+    function showToast(msg, type = "info") {
+      const box = document.getElementById("toastContainer");
+      const el = document.createElement("div");
+      const styles = {
+        success: "bg-emerald-950/95 border-emerald-500/50 text-emerald-200",
+        error: "bg-rose-950/95 border-rose-500/50 text-rose-200",
+        warn: "bg-amber-950/95 border-amber-500/50 text-amber-200",
+        info: "bg-navy-900/95 border-slate-700 text-slate-200"
+      };
+      const icons = {
+        success: "fa-circle-check text-emerald-400",
+        error: "fa-circle-exclamation text-rose-400",
+        warn: "fa-triangle-exclamation text-amber-400",
+        info: "fa-circle-info text-cyan-400"
+      };
+      el.className = `pointer-events-auto border rounded-xl px-3.5 py-2.5 shadow-2xl flex items-start gap-2.5 text-xs font-semibold fade-in ${styles[type] || styles.info}`;
+      el.innerHTML = `<i class="fa-solid ${icons[type] || icons.info} mt-0.5"></i><span class="flex-1 leading-snug">${escapeHtml(msg)}</span>`;
+      box.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = "0";
+        el.style.transition = "opacity 0.25s";
+        setTimeout(() => el.remove(), 260);
+      }, 3600);
+    }
+
+    function askConfirm(title, message) {
+      return new Promise((resolve) => {
+        const modal = document.getElementById("confirmModal");
+        document.getElementById("confirmTitle").textContent = title;
+        document.getElementById("confirmMessage").textContent = message;
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+        const finish = (val) => {
+          modal.classList.add("hidden");
+          modal.classList.remove("flex");
+          resolve(val);
+        };
+        document.getElementById("confirmOkBtn").onclick = () => finish(true);
+        document.getElementById("confirmCancelBtn").onclick = () => finish(false);
+      });
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    function logLive(msg, level = "info") {
+      const box = document.getElementById("liveLogBox");
+      const time = new Date().toLocaleTimeString([], { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      const colors = { info: "text-slate-300", ok: "text-emerald-400", warn: "text-amber-300", err: "text-rose-400" };
+      const row = document.createElement("div");
+      row.className = colors[level] || colors.info;
+      row.textContent = `[${time}] ${msg}`;
+      box.appendChild(row);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function setProgress(pct, title) {
+      document.getElementById("progressCard").classList.remove("hidden");
+      document.getElementById("progressBar").style.width = `${Math.min(100, Math.max(0, pct))}%`;
+      if (title) document.getElementById("progressTitle").textContent = title;
+      const diagCount = state.extractedQuestions.filter((q) => q.image).length;
+      document.getElementById("progressCount").textContent = `${state.extractedQuestions.length} Qs • ${diagCount} Diagrams`;
+    }
+
+    function detectNeetQType(text, matchPairs) {
+      if (Array.isArray(matchPairs) && matchPairs.length > 0) return "Match the Following";
+      const t = String(text || "");
+      if (/assertion\s*(\(a\))?\s*[:\-]|अभिकथन/i.test(t) && /reason\s*(\(r\))?\s*[:\-]|कारण/i.test(t)) return "Assertion-Reason";
+      if (/statement\s*[-–]?\s*(i|1)\b|कथन\s*[-–]?\s*(i|1)/i.test(t) && /statement\s*[-–]?\s*(ii|2)\b|कथन\s*[-–]?\s*(ii|2)/i.test(t)) return "Statement I & II";
+      if (/match\s+(the\s+)?(following|list|column)|list\s*[-–]?\s*i|column\s*[-–]?\s*i/i.test(t)) return "Match the Following";
+      if (/incorrect|not\s+correct|not\s+true|wrong\s+statement/i.test(t)) return "Incorrect / NOT Type";
+      return "Single Choice";
+    }
+
+    function normalizeMatchPairs(rawPairs) {
+      if (!Array.isArray(rawPairs)) return [];
+      return rawPairs
+        .map((p) => {
+          if (!p) return null;
+          if (Array.isArray(p)) return { left: String(p[0] || "").trim(), right: String(p[1] || "").trim() };
+          return {
+            left: String(p.left ?? p.list1 ?? p.col1 ?? p.column1 ?? p.A ?? "").trim(),
+            right: String(p.right ?? p.list2 ?? p.col2 ?? p.column2 ?? p.B ?? "").trim()
+          };
+        })
+        .filter((p) => p && (p.left || p.right));
+    }
+
+    function buildQuestionFingerprint(qText, options, matchPairs) {
+      const clean = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9\u0900-\u097f]/g, "");
+      const qPart = clean(qText).slice(0, 140);
+      const oPart = (Array.isArray(options) ? options : []).map(clean).join("|").slice(0, 120);
+      const mPart = (Array.isArray(matchPairs) ? matchPairs : []).map((p) => clean(p.left) + clean(p.right)).join("|").slice(0, 120);
+      return `${qPart}##${oPart}##${mPart}`;
+    }
+
+    function questionRichnessScore(q) {
+      let s = (q.question || "").length;
+      if (q.image) s += 500;
+      if (Array.isArray(q.matchPairs) && q.matchPairs.length) s += q.matchPairs.length * 120;
+      if (q.explanation) s += q.explanation.length;
+      return s;
+    }
+
+    window.switchTab = (tabId) => {
+      document.querySelectorAll(".tab-panel").forEach((p) => p.classList.add("hidden"));
+      document.getElementById(`tab-${tabId}`).classList.remove("hidden");
+      document.querySelectorAll(".tab-btn").forEach((b) => {
+        const active = b.dataset.tab === tabId;
+        b.className = active
+          ? "tab-btn px-3.5 py-2 rounded-xl text-xs font-extrabold whitespace-nowrap transition flex items-center gap-1.5 bg-emerald-500 text-navy-950 shadow-md shadow-emerald-500/20"
+          : "tab-btn px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 bg-navy-800 text-slate-300 hover:text-white";
+      });
+    };
+
+    window.setDiagramMode = (mode) => {
+      state.diagramMode = mode;
+      ["ai_vision", "python_cv", "hybrid"].forEach((m) => {
+        const el = document.getElementById(`dmode-${m}`);
+        el.className = m === mode
+          ? "dmode-btn text-left p-3 rounded-xl border-2 border-emerald-400 bg-emerald-500/10 transition shadow-md shadow-emerald-500/10"
+          : "dmode-btn text-left p-3 rounded-xl border border-slate-800 bg-navy-950/70 hover:border-slate-700 transition";
+      });
+      updateDynamicButtons();
+    };
+
+    window.setExtractType = (type) => {
+      state.extractType = type;
+      ["paper", "ncert"].forEach((t) => {
+        const el = document.getElementById(`etype-${t}`);
+        el.className = t === type
+          ? "etype-btn px-3 py-1.5 rounded-lg text-[11px] font-extrabold bg-emerald-500 text-navy-950 transition"
+          : "etype-btn px-3 py-1.5 rounded-lg text-[11px] font-bold text-slate-400 hover:text-white transition";
+      });
+      updateDynamicButtons();
+    };
+
+    window.setPublishMode = (mode) => {
+      state.publishMode = mode;
+      ["new", "append"].forEach((m) => {
+        const el = document.getElementById(`pmode-${m}`);
+        el.className = m === mode
+          ? "pmode-btn px-3 py-1.5 rounded-lg text-xs font-extrabold bg-emerald-500 text-navy-950 transition"
+          : "pmode-btn px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition";
+      });
+      document.getElementById("appendTestWrap").classList.toggle("hidden", mode !== "append");
+      document.getElementById("newTestMetaWrap").classList.toggle("hidden", mode === "append");
+      document.getElementById("btnPublishLabel").textContent =
+        mode === "append" ? "Append Questions to Cloud Test" : "Publish Live to Student Portal";
+    };
+
+    function getTargetLimit() {
+      const sel = document.getElementById("targetLimitSelect").value;
+      if (sel === "custom") {
+        const v = parseInt(document.getElementById("customTargetLimit").value, 10);
+        return isNaN(v) || v <= 0 ? 0 : v;
+      }
+      return parseInt(sel, 10) || 0;
+    }
+
+    window.syncTargetLimit = () => {
+      document.getElementById("customTargetLimit").classList.toggle("hidden", document.getElementById("targetLimitSelect").value !== "custom");
+      updateDynamicButtons();
+    };
+
+    window.updateDynamicButtons = () => {
+      const limit = getTargetLimit();
+      const tag = limit > 0 ? `${limit} Qs` : "All Qs";
+      const modeName = state.diagramMode === "ai_vision" ? "AI Vision Crop" : state.diagramMode === "python_cv" ? "Python CV Crop" : "Hybrid Auto";
+      const verb = state.extractType === "ncert" ? "Generate" : "Extract";
+      document.getElementById("btnStartAILabel").textContent = `${verb} ${tag} (${modeName})`;
+      document.getElementById("btnStartZeroAILabel").textContent = `Zero-AI Python Extract (${tag})`;
+    };
+
+    window.toggleCustomKeyBox = () => {
+      const isCustom = document.getElementById("aiProviderMode").value === "custom";
+      document.getElementById("customKeyBox").classList.toggle("hidden", !isCustom);
+      document.getElementById("builtinAiBar").classList.toggle("hidden", isCustom);
+    };
+
+    window.lockStudio = () => {
+      document.getElementById("pinInput").value = "";
+      document.getElementById("pinError").classList.add("hidden");
+      document.getElementById("pinModal").classList.remove("hidden");
+      document.getElementById("pinModal").classList.add("flex");
+    };
+
+    document.getElementById("pinUnlockBtn").onclick = () => {
+      if (document.getElementById("pinInput").value.trim() === "1234") {
+        document.getElementById("pinModal").classList.add("hidden");
+        document.getElementById("pinModal").classList.remove("flex");
+        showToast("Studio Unlocked!", "success");
+      } else {
+        document.getElementById("pinError").classList.remove("hidden");
+      }
+    };
+
+    window.openStudentPortal = () => window.open("index.html", "_blank");
+
+    window.openLightbox = (src, caption) => {
+      document.getElementById("lightboxImg").src = src;
+      document.getElementById("lightboxCaption").textContent = caption || "HD Diagram Preview";
+      document.getElementById("lightboxModal").classList.remove("hidden");
+      document.getElementById("lightboxModal").classList.add("flex");
+    };
+    window.closeLightbox = () => {
+      document.getElementById("lightboxModal").classList.add("hidden");
+      document.getElementById("lightboxModal").classList.remove("flex");
+    };
+
+    // =========================================================================
+    // 4. PDF LOADER, SPATIAL PARSER & CANVAS WATERMARK KILLER
+    // =========================================================================
+    window.handlePdfSelect = async (event) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      try {
+        const buf = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+        state.pdfDoc = pdf;
+        state.pdfName = file.name.replace(/\.pdf$/i, "");
+        state.totalPages = pdf.numPages;
+
+        document.getElementById("pdfFileName").textContent = file.name;
+        const badge = document.getElementById("pdfPageBadge");
+        badge.textContent = `${pdf.numPages} Pages`;
+        badge.classList.remove("hidden");
+
+        document.getElementById("startPage").value = 1;
+        document.getElementById("startPage").max = pdf.numPages;
+        document.getElementById("endPage").value = pdf.numPages;
+        document.getElementById("endPage").max = pdf.numPages;
+
+        if (!document.getElementById("pubTitle").value.trim()) {
+          document.getElementById("pubTitle").value = state.pdfName.replace(/[_-]+/g, " ");
+        }
+        showToast(`Loaded "${file.name}" (${pdf.numPages} pages)`, "success");
+      } catch (err) {
+        showToast("PDF Load Error: " + err.message, "error");
+      }
+    };
+
+    async function extractPageSpatialData(pageNum) {
+      const page = await state.pdfDoc.getPage(pageNum);
+      const vp = page.getViewport({ scale: 1.0 });
+      const textContent = await page.getTextContent();
+      const layout = document.getElementById("columnLayout").value;
+      const midX = vp.width * 0.5;
+
+      const rawItems = [];
+      for (const item of textContent.items) {
+        const str = (item.str || "").replace(/\s+/g, " ").trim();
+        if (!str) continue;
+        const x = item.transform[4];
+        const y = vp.height - item.transform[5];
+        const xNorm = (x / vp.width) * 1000;
+        const yNorm = (y / vp.height) * 1000;
+        const wNorm = ((item.width || 10) / vp.width) * 1000;
+        const hNorm = ((item.height || 10) / vp.height) * 1000;
+        if (yNorm < 25 || yNorm > 965) continue;
+
+        let col = 0;
+        if (layout === "left_only") {
+          if (x > midX + 8) continue;
+          col = 0;
+        } else if (layout === "right_only") {
+          if (x < midX - 8) continue;
+          col = 1;
+        } else if (layout === "two_col") {
+          col = x < midX ? 0 : 1;
+        }
+        rawItems.push({ str, x, y, xNorm, yNorm, wNorm, hNorm, col });
+      }
+
+      const cols = layout === "two_col" ? [0, 1] : [layout === "right_only" ? 1 : 0];
+      const allLines = [];
+      const textBoxes = [];
+
+      for (const c of cols) {
+        const colItems = rawItems.filter((i) => i.col === c).sort((a, b) => a.y - b.y || a.x - b.x);
+        const lines = [];
+        for (const it of colItems) {
+          textBoxes.push([
+            Math.max(0, Math.round(it.yNorm - it.hNorm)),
+            Math.max(0, Math.round(it.xNorm)),
+            Math.min(1000, Math.round(it.yNorm + 6)),
+            Math.min(1000, Math.round(it.xNorm + it.wNorm))
+          ]);
+          const last = lines[lines.length - 1];
+          if (last && Math.abs(last.y - it.y) < 7) last.items.push(it);
+          else lines.push({ y: it.y, yNorm: it.yNorm, col: c, items: [it] });
+        }
+        for (const ln of lines) {
+          ln.items.sort((a, b) => a.x - b.x);
+          // Preserve column gap inside Match-the-Following rows with " | "
+          let text = "";
+          for (let k = 0; k < ln.items.length; k++) {
+            const cur = ln.items[k];
+            if (k > 0) {
+              const prev = ln.items[k - 1];
+              const gap = cur.x - (prev.x + (prev.wNorm / 1000) * vp.width);
+              text += gap > 28 ? "   |   " : " ";
+            }
+            text += cur.str;
+          }
+          text = text.replace(/\s{2,}/g, " ").trim();
+          if (text) allLines.push({ page: pageNum, col: c, yNorm: Math.round(ln.yNorm), xNorm: Math.round(ln.items[0].xNorm), text });
+        }
+      }
+
+      const qSpans = [];
+      const qStartRe = /^(?:Q\.?\s*)?(\d{1,3})\s*[\.\)]\s+(.+)/;
+      for (const c of cols) {
+        const cLines = allLines.filter((l) => l.col === c);
+        const anchors = [];
+        for (const ln of cLines) {
+          const m = ln.text.match(qStartRe);
+          if (m && !/^\(\d\)/.test(ln.text)) {
+            const num = parseInt(m[1], 10);
+            if (num >= 1 && num <= 250) {
+              anchors.push({ qNum: num, yStart: Math.max(0, ln.yNorm - 12), col: c });
+            }
+          }
+        }
+        for (let i = 0; i < anchors.length; i++) {
+          const cur = anchors[i];
+          const next = anchors[i + 1];
+          qSpans.push({ qNum: cur.qNum, col: c, yStart: cur.yStart, yEnd: next ? Math.max(cur.yStart + 30, next.yStart - 6) : 960 });
+        }
+      }
+
+      return { pageNum, lines: allLines, plainText: allLines.map((l) => l.text).join("\n"), qSpans, textBoxes };
+    }
+
+    async function renderPageToCanvas(pageNum, maxWidth = 1100) {
+      const page = await state.pdfDoc.getPage(pageNum);
+      const baseVp = page.getViewport({ scale: 1.0 });
+      const scale = Math.min(2.2, maxWidth / baseVp.width);
+      const vp = page.getViewport({ scale });
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(vp.width);
+      canvas.height = Math.round(vp.height);
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      await page.render({ canvasContext: ctx, viewport: vp }).promise;
+      return canvas;
+    }
+
+    function applyJsWatermarkKiller(canvas) {
+      const ctx = canvas.getContext("2d");
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const d = imgData.data;
+      for (let i = 0; i < d.length; i += 4) {
+        const r = d[i], g = d[i + 1], b = d[i + 2];
+        const maxC = Math.max(r, g, b), minC = Math.min(r, g, b);
+        const sat = maxC - minC;
+        const lum = (r + g + b) / 3;
+        if ((sat > 28 && lum > 110) || (lum > 180 && lum < 248)) {
+          d[i] = 255; d[i + 1] = 255; d[i + 2] = 255;
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+    }
+
+    function getImageSettings() {
+      const q = document.getElementById("imgQualitySelect").value;
+      if (q === "compact") return { maxW: 500, jpegQ: 0.75 };
+      if (q === "balanced") return { maxW: 640, jpegQ: 0.82 };
+      return { maxW: 800, jpegQ: 0.88 };
+    }
+
+    function cropNormalizedBox(sourceCanvas, box, padUnits = 38, cleanWm = true) {
+      if (!Array.isArray(box) || box.length !== 4) return "";
+      let [ymin, xmin, ymax, xmax] = box.map((v) => Number(v) || 0);
+      if (ymax <= ymin || xmax <= xmin) return "";
+
+      ymin = Math.max(0, ymin - padUnits);
+      xmin = Math.max(0, xmin - padUnits);
+      ymax = Math.min(1000, ymax + padUnits);
+      xmax = Math.min(1000, xmax + padUnits);
+
+      const sx = Math.round((xmin / 1000) * sourceCanvas.width);
+      const sy = Math.round((ymin / 1000) * sourceCanvas.height);
+      const sw = Math.max(10, Math.round(((xmax - xmin) / 1000) * sourceCanvas.width));
+      const sh = Math.max(10, Math.round(((ymax - ymin) / 1000) * sourceCanvas.height));
+
+      const { maxW, jpegQ } = getImageSettings();
+      const outScale = sw > maxW ? maxW / sw : 1;
+      const outCanvas = document.createElement("canvas");
+      outCanvas.width = Math.max(10, Math.round(sw * outScale));
+      outCanvas.height = Math.max(10, Math.round(sh * outScale));
+      const octx = outCanvas.getContext("2d");
+      octx.fillStyle = "#ffffff";
+      octx.fillRect(0, 0, outCanvas.width, outCanvas.height);
+      octx.drawImage(sourceCanvas, sx, sy, sw, sh, 0, 0, outCanvas.width, outCanvas.height);
+      if (cleanWm) applyJsWatermarkKiller(outCanvas);
+      return outCanvas.toDataURL("image/jpeg", jpegQ);
+    }
+
+    // =========================================================================
+    // 5. PYTHON 3 (PYODIDE + NUMPY + PILLOW) PRO CV ENGINE
+    // =========================================================================
+    async function ensurePyodideReady() {
+      if (state.pyodide) return state.pyodide;
+      if (state.pyLoading) {
+        while (state.pyLoading) await new Promise((r) => setTimeout(r, 200));
+        return state.pyodide;
+      }
+      state.pyLoading = true;
+      const pill = document.getElementById("pyStatusPill");
+      pill.textContent = "Loading Python 3...";
+      pill.className = "px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold animate-pulse";
+
+      try {
+        if (!window.loadPyodide) {
+          await new Promise((resolve, reject) => {
+            const s = document.createElement("script");
+            s.src = "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js";
+            s.onload = resolve;
+            s.onerror = () => reject(new Error("Pyodide CDN failed"));
+            document.head.appendChild(s);
+          });
+        }
+        const py = await window.loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/" });
+        await py.loadPackage(["numpy", "pillow"]);
+
+        await py.runPythonAsync(`
+import io, base64, json
+import numpy as np
+from PIL import Image
+
+def detect_and_crop_diagrams(img_b64, layout_mode, watermark_killer, merge_multi, q_spans_json, text_boxes_json, max_out_w, jpeg_q):
+    raw = base64.b64decode(img_b64.split(",")[-1])
+    pil_img = Image.open(io.BytesIO(raw)).convert("RGB")
+    W, H = pil_img.size
+    arr = np.array(pil_img, dtype=np.int16)
+    R, G, B = arr[:,:,0], arr[:,:,1], arr[:,:,2]
+
+    if watermark_killer:
+        max_c = np.maximum(np.maximum(R, G), B)
+        min_c = np.minimum(np.minimum(R, G), B)
+        sat = max_c - min_c
+        lum = (R + G + B) / 3.0
+        is_wm = ((sat > 28) & (lum > 110)) | ((lum > 178) & (lum < 248))
+        clean_arr = arr.copy()
+        clean_arr[is_wm] = 255
+        gray = (clean_arr[:,:,0] + clean_arr[:,:,1] + clean_arr[:,:,2]) / 3.0
+        clean_pil = Image.fromarray(clean_arr.astype(np.uint8))
+    else:
+        gray = (R + G + B) / 3.0
+        clean_pil = pil_img
+
+    ink = gray < 165
+    ink[:int(H*0.035), :] = False
+    ink[int(H*0.955):, :] = False
+    mid_x = W // 2
+    if layout_mode in ("left_only", "right_only", "two_col"):
+        ink[:, max(0, mid_x-8):min(W, mid_x+8)] = False
+    if layout_mode == "left_only":
+        ink[:, mid_x:] = False
+    elif layout_mode == "right_only":
+        ink[:, :mid_x] = False
+
+    text_boxes = json.loads(text_boxes_json)
+    ink_no_text = ink.copy()
+    for tb in text_boxes:
+        ty1 = max(0, int((tb[0] / 1000.0) * H) - 3)
+        tx1 = max(0, int((tb[1] / 1000.0) * W) - 4)
+        ty2 = min(H, int((tb[2] / 1000.0) * H) + 3)
+        tx2 = min(W, int((tb[3] / 1000.0) * W) + 4)
+        ink_no_text[ty1:ty2, tx1:tx2] = False
+
+    step = 4
+    gh, gw = H // step, W // step
+    grid = ink_no_text[:gh*step, :gw*step].reshape(gh, step, gw, step).any(axis=(1,3))
+
+    dil = grid.copy()
+    for dy in (-2, -1, 0, 1, 2):
+        for dx in (-2, -1, 0, 1, 2):
+            if dy == 0 and dx == 0: continue
+            y1s, y2s = max(0, dy), min(gh, gh+dy)
+            x1s, x2s = max(0, dx), min(gw, gw+dx)
+            y1d, y2d = max(0, -dy), min(gh, gh-dy)
+            x1d, x2d = max(0, -dx), min(gw, gw-dx)
+            dil[y1d:y2d, x1d:x2d] |= grid[y1s:y2s, x1s:x2s]
+
+    visited = np.zeros_like(dil, dtype=bool)
+    raw_boxes = []
+    for y in range(gh):
+        for x in range(gw):
+            if dil[y, x] and not visited[y, x]:
+                stack = [(y, x)]
+                visited[y, x] = True
+                miny = maxy = y
+                minx = maxx = x
+                while stack:
+                    cy, cx = stack.pop()
+                    if cy < miny: miny = cy
+                    if cy > maxy: maxy = cy
+                    if cx < minx: minx = cx
+                    if cx > maxx: maxx = cx
+                    for ny, nx in ((cy-1,cx),(cy+1,cx),(cy,cx-1),(cy,cx+1)):
+                        if 0 <= ny < gh and 0 <= nx < gw and dil[ny, nx] and not visited[ny, nx]:
+                            visited[ny, nx] = True
+                            stack.append((ny, nx))
+                px1, py1, px2, py2 = minx*step, miny*step, (maxx+1)*step, (maxy+1)*step
+                bw, bh = px2 - px1, py2 - py1
+                if bw < W * 0.068 or bh < H * 0.036:
+                    continue
+                if bh < 36 and (bw / max(1, bh)) > 5.0:
+                    continue
+                if bw > W * 0.90 and bh > H * 0.65:
+                    continue
+                sub_ink = ink_no_text[py1:py2, px1:px2]
+                density = float(sub_ink.mean())
+                if density < 0.008 or density > 0.70:
+                    continue
+                col_id = 0 if ((px1 + px2) / 2.0) < mid_x else 1
+                raw_boxes.append({
+                    "x1": px1, "y1": py1, "x2": px2, "y2": py2,
+                    "col": col_id,
+                    "yNorm1": int((py1 / H) * 1000),
+                    "yNorm2": int((py2 / H) * 1000),
+                    "qNum": None
+                })
+
+    q_spans = json.loads(q_spans_json)
+    final_boxes = []
+    if merge_multi and len(q_spans) > 0 and len(raw_boxes) > 0:
+        grouped = {}
+        unassigned = []
+        for b in raw_boxes:
+            yc = (b["yNorm1"] + b["yNorm2"]) / 2.0
+            matched_q = None
+            for sp in q_spans:
+                if sp["col"] == b["col"] and sp["yStart"] <= yc <= sp["yEnd"]:
+                    matched_q = (sp["col"], sp["qNum"])
+                    break
+            if matched_q is not None:
+                grouped.setdefault(matched_q, []).append(b)
+            else:
+                unassigned.append(b)
+        for (col_id, qn), blist in grouped.items():
+            mx1 = min(b["x1"] for b in blist)
+            my1 = min(b["y1"] for b in blist)
+            mx2 = max(b["x2"] for b in blist)
+            my2 = max(b["y2"] for b in blist)
+            if len(blist) >= 2:
+                col_left = 0 if col_id == 0 else mid_x + 6
+                mx1 = max(col_left, mx1 - int(W * 0.055))
+            final_boxes.append({"x1": mx1, "y1": my1, "x2": mx2, "y2": my2, "col": col_id, "qNum": qn, "mergedCount": len(blist)})
+        for b in unassigned:
+            b["mergedCount"] = 1
+            final_boxes.append(b)
+    else:
+        for b in raw_boxes:
+            b["mergedCount"] = 1
+            final_boxes.append(b)
+
+    final_boxes.sort(key=lambda b: (b["col"], b["y1"]))
+    results = []
+    pad_x = int(W * 0.024)
+    pad_y = int(H * 0.020)
+    for b in final_boxes:
+        col_min_x = 0 if b["col"] == 0 else mid_x + 4
+        col_max_x = mid_x - 4 if (layout_mode in ("left_only", "two_col") and b["col"] == 0) else W
+        cx1 = max(col_min_x, b["x1"] - pad_x)
+        cy1 = max(0, b["y1"] - pad_y)
+        cx2 = min(col_max_x, b["x2"] + pad_x)
+        cy2 = min(H, b["y2"] + pad_y)
+        crop = clean_pil.crop((cx1, cy1, cx2, cy2))
+        if crop.width > max_out_w:
+            nh = max(10, int(crop.height * (max_out_w / crop.width)))
+            crop = crop.resize((max_out_w, nh), Image.LANCZOS)
+        buf = io.BytesIO()
+        crop.save(buf, format="JPEG", quality=int(jpeg_q * 100))
+        b64_out = "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode("ascii")
+        results.append({"col": b["col"], "qNum": b["qNum"], "mergedCount": b["mergedCount"], "yPct": int(((cy1 + cy2) / 2.0 / H) * 100), "dataUrl": b64_out})
+    return json.dumps(results)
+        `);
+
+        state.pyodide = py;
+        pill.textContent = "🐍 Python 3 Active";
+        pill.className = "px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold";
+        return py;
+      } catch (err) {
+        pill.textContent = "Python Failed";
+        pill.className = "px-2.5 py-1 rounded-full bg-rose-500/20 text-rose-300 text-[10px] font-bold";
+        throw err;
+      } finally {
+        state.pyLoading = false;
+      }
+    }
+
+    window.runPythonAutoCutter = async (showUI = true) => {
+      if (!state.pdfDoc) {
+        showToast("Pehle koi PDF file upload karein!", "warn");
+        return [];
+      }
+      const sPage = Math.max(1, parseInt(document.getElementById("startPage").value, 10) || 1);
+      const ePage = Math.min(state.totalPages, parseInt(document.getElementById("endPage").value, 10) || state.totalPages);
+      const layout = document.getElementById("columnLayout").value;
+      const wmKiller = document.getElementById("optWatermarkKiller").checked;
+      const mergeMulti = document.getElementById("optMergeMultiFig").checked;
+      const { maxW, jpegQ } = getImageSettings();
+
+      try {
+        if (showUI) {
+          setProgress(5, "Loading Python 3 CV Engine...");
+          logLive("Booting Python 3 (NumPy + Pillow + Watermark Killer)...", "info");
+        }
+        const py = await ensurePyodideReady();
+        const newDiagrams = [];
+        const total = ePage - sPage + 1;
+
+        for (let p = sPage; p <= ePage; p++) {
+          if (state.stopRequested) break;
+          if (showUI) setProgress(Math.round(((p - sPage + 1) / total) * 100), `Python CV Scanning Page ${p} / ${ePage}...`);
+          const sp = await extractPageSpatialData(p);
+          if (p <= 2 && sp.qSpans.length === 0 && /instruction|roll\s*no|test\s*booklet|syllabus/i.test(sp.plainText)) continue;
+
+          const canvas = await renderPageToCanvas(p, 1100);
+          py.globals.set("g_img", canvas.toDataURL("image/jpeg", 0.90));
+          py.globals.set("g_layout", layout);
+          py.globals.set("g_wm", wmKiller);
+          py.globals.set("g_merge", mergeMulti);
+          py.globals.set("g_spans", JSON.stringify(sp.qSpans));
+          py.globals.set("g_tboxes", JSON.stringify(sp.textBoxes));
+          py.globals.set("g_maxw", maxW);
+          py.globals.set("g_q", jpegQ);
+
+          const res = JSON.parse(await py.runPythonAsync("detect_and_crop_diagrams(g_img, g_layout, g_wm, g_merge, g_spans, g_tboxes, g_maxw, g_q)"));
+          res.forEach((f, idx) => {
+            newDiagrams.push({ id: `P${p}_FIG${idx + 1}`, page: p, col: f.col, qNum: f.qNum, mergedCount: f.mergedCount, yPct: f.yPct, dataUrl: f.dataUrl });
+          });
+          if (res.length > 0) logLive(`Page ${p}: Python cropped ${res.length} HD diagram(s).`, "ok");
+        }
+
+        const manualSnips = state.extractedDiagrams.filter((d) => d.id.startsWith("SNIP_"));
+        state.extractedDiagrams = [...manualSnips, ...newDiagrams];
+        renderDiagramPool();
+        if (showUI) {
+          setProgress(100, `Python CV Done! ${newDiagrams.length} HD diagrams ready.`);
+          showToast(`Python ne ${newDiagrams.length} HD diagrams cut kar liye!`, "success");
+        }
+        return state.extractedDiagrams;
+      } catch (err) {
+        logLive("Python CV Error: " + err.message, "err");
+        showToast("Python CV Error: " + err.message, "error");
+        return [];
+      }
+    };
+
+    function renderDiagramPool() {
+      const sec = document.getElementById("diagramPoolSection");
+      const grid = document.getElementById("diagramPoolGrid");
+      document.getElementById("diagramPoolCount").textContent = state.extractedDiagrams.length;
+      if (!state.extractedDiagrams.length) {
+        sec.classList.add("hidden");
+        grid.innerHTML = "";
+        return;
+      }
+      sec.classList.remove("hidden");
+      grid.innerHTML = state.extractedDiagrams.map((d, idx) => `
+        <div class="relative bg-navy-950 border border-slate-800 rounded-xl p-1.5 flex flex-col">
+          <button onclick="removeDiagramFromPool(${idx})" class="absolute top-1 right-1 z-10 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+          <img src="${d.dataUrl}" onclick="openLightbox('${d.dataUrl}', '${d.id}${d.qNum ? " • Q#" + d.qNum : ""}')" class="w-full h-24 object-contain bg-white rounded-lg cursor-zoom-in" />
+          <div class="mt-1 flex items-center justify-between px-0.5">
+            <span class="text-[10px] font-extrabold text-amber-300 truncate">${d.id}</span>
+            ${d.qNum ? `<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300">Q#${d.qNum}</span>` : `<span class="text-[9px] text-slate-400">y=${d.yPct}%</span>`}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    window.removeDiagramFromPool = (idx) => { state.extractedDiagrams.splice(idx, 1); renderDiagramPool(); };
+    window.clearDiagramPool = () => { state.extractedDiagrams = []; renderDiagramPool(); };
+
+    // =========================================================================
+    // 6. MANUAL HD SNIP TOOL (AUTO-OPENS ON EXACT QUESTION PAGE!)
+    // =========================================================================
+    window.openSnipModal = async (targetQIndex = null) => {
+      if (!state.pdfDoc) {
+        showToast("Upload a PDF first to use Manual Snip!", "warn");
+        return;
+      }
+      state.snipTargetQIndex = targetQIndex;
+      const targetQ = targetQIndex !== null ? state.extractedQuestions[targetQIndex] : null;
+      state.snipPageNum = (targetQ && targetQ.page) ? targetQ.page : Math.max(1, parseInt(document.getElementById("startPage").value, 10) || 1);
+      document.getElementById("snipSubtitle").textContent = targetQ
+        ? `Snip diagram for Q#${targetQ.qNum} (Opened on Page ${state.snipPageNum})`
+        : "Drag box across any diagram (or 2–4 option figures together)";
+      document.getElementById("snipModal").classList.remove("hidden");
+      document.getElementById("snipModal").classList.add("flex");
+      await renderSnipPage();
+    };
+
+    window.closeSnipModal = () => {
+      document.getElementById("snipModal").classList.add("hidden");
+      document.getElementById("snipModal").classList.remove("flex");
+    };
+
+    window.changeSnipPage = async (delta) => {
+      const next = state.snipPageNum + delta;
+      if (next < 1 || next > state.totalPages) return;
+      state.snipPageNum = next;
+      await renderSnipPage();
+    };
+
+    async function renderSnipPage() {
+      document.getElementById("snipPageLabel").textContent = `Page ${state.snipPageNum}/${state.totalPages}`;
+      document.getElementById("snipSaveBtn").disabled = true;
+      state.snipSelection = null;
+      const base = await renderPageToCanvas(state.snipPageNum, 1050);
+      state.snipBaseCanvas = base;
+      const canvas = document.getElementById("snipCanvas");
+      canvas.width = base.width;
+      canvas.height = base.height;
+      canvas.getContext("2d").drawImage(base, 0, 0);
+    }
+
+    function getSnipCoords(e, canvas) {
+      const rect = canvas.getBoundingClientRect();
+      const cx = e.touches ? e.touches[0].clientX : e.clientX;
+      const cy = e.touches ? e.touches[0].clientY : e.clientY;
+      return { x: ((cx - rect.left) / rect.width) * canvas.width, y: ((cy - rect.top) / rect.height) * canvas.height };
+    }
+
+    function drawSnipBox() {
+      const canvas = document.getElementById("snipCanvas");
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(state.snipBaseCanvas, 0, 0);
+      if (!state.snipSelection) return;
+      const { x, y, w, h } = state.snipSelection;
+      ctx.fillStyle = "rgba(16, 185, 129, 0.2)";
+      ctx.fillRect(x, y, w, h);
+      ctx.strokeStyle = "#10b981";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(x, y, w, h);
+    }
+
+    const snipCanvasEl = document.getElementById("snipCanvas");
+    const onSnipDown = (e) => {
+      e.preventDefault();
+      state.snipDragging = true;
+      state.snipStart = getSnipCoords(e, snipCanvasEl);
+      state.snipSelection = { x: state.snipStart.x, y: state.snipStart.y, w: 0, h: 0 };
+    };
+    const onSnipMove = (e) => {
+      if (!state.snipDragging) return;
+      e.preventDefault();
+      const cur = getSnipCoords(e, snipCanvasEl);
+      state.snipSelection = { x: Math.min(state.snipStart.x, cur.x), y: Math.min(state.snipStart.y, cur.y), w: Math.abs(cur.x - state.snipStart.x), h: Math.abs(cur.y - state.snipStart.y) };
+      drawSnipBox();
+    };
+    const onSnipUp = () => {
+      if (!state.snipDragging) return;
+      state.snipDragging = false;
+      if (state.snipSelection && state.snipSelection.w > 15 && state.snipSelection.h > 15) {
+        document.getElementById("snipSaveBtn").disabled = false;
+      }
+    };
+    snipCanvasEl.addEventListener("mousedown", onSnipDown);
+    snipCanvasEl.addEventListener("mousemove", onSnipMove);
+    window.addEventListener("mouseup", onSnipUp);
+    snipCanvasEl.addEventListener("touchstart", onSnipDown, { passive: false });
+    snipCanvasEl.addEventListener("touchmove", onSnipMove, { passive: false });
+    window.addEventListener("touchend", onSnipUp);
+
+    window.saveCurrentSnip = () => {
+      if (!state.snipSelection || !state.snipBaseCanvas) return;
+      const { x, y, w, h } = state.snipSelection;
+      const { maxW, jpegQ } = getImageSettings();
+      const scale = w > maxW ? maxW / w : 1;
+      const out = document.createElement("canvas");
+      out.width = Math.max(10, Math.round(w * scale));
+      out.height = Math.max(10, Math.round(h * scale));
+      const ctx = out.getContext("2d");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, out.width, out.height);
+      ctx.drawImage(state.snipBaseCanvas, x, y, w, h, 0, 0, out.width, out.height);
+      if (document.getElementById("snipCleanWm").checked) applyJsWatermarkKiller(out);
+      const dataUrl = out.toDataURL("image/jpeg", jpegQ);
+
+      const snipId = `SNIP_P${state.snipPageNum}_${Date.now().toString().slice(-3)}`;
+      state.extractedDiagrams.unshift({
+        id: snipId, page: state.snipPageNum, col: 0,
+        qNum: state.snipTargetQIndex !== null ? state.extractedQuestions[state.snipTargetQIndex]?.qNum : null,
+        yPct: Math.round((y / state.snipBaseCanvas.height) * 100), dataUrl
+      });
+      renderDiagramPool();
+
+      if (state.snipTargetQIndex !== null && state.extractedQuestions[state.snipTargetQIndex]) {
+        state.extractedQuestions[state.snipTargetQIndex].image = dataUrl;
+        renderReviewList();
+        showToast(`HD Snip attached to Q#${state.extractedQuestions[state.snipTargetQIndex].qNum}!`, "success");
+      } else {
+        showToast(`Saved ${snipId} to Diagrams Pool!`, "success");
+      }
+      closeSnipModal();
+    };
+
+    // =========================================================================
+    // 7. UNIVERSAL AI CALLER (BUILT-IN PREVIEW AI + GROQ LIVE + GEMINI + OPENROUTER)
+    // =========================================================================
+    function parseUserKeys() {
+      return (document.getElementById("apiKeysInput").value || "")
+        .split(/[\n,;]+/)
+        .map((k) => k.trim())
+        .filter((k) => k.length > 10)
+        .map((key) => ({
+          key,
+          provider: key.startsWith("gsk_") ? "groq" : key.startsWith("sk-or-") ? "openrouter" : "gemini"
+        }));
+    }
+
+    window.saveCustomKeys = (val) => {
+      try { localStorage.setItem("neet_ace_gkey", val.trim()); } catch (_) {}
+      const keys = parseUserKeys();
+      const pill = document.getElementById("detectedKeysPill");
+      if (!keys.length) {
+        pill.textContent = "0 Keys";
+        pill.className = "px-2 py-0.5 rounded-full bg-navy-800 text-slate-400 text-[10px] font-bold";
+      } else {
+        const types = [...new Set(keys.map((k) => k.provider.toUpperCase()))].join("+");
+        pill.textContent = `${keys.length} Key${keys.length > 1 ? "s" : ""} (${types})`;
+        pill.className = "px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold";
+      }
+    };
+
+    async function fetchGroqLiveModels(apiKey) {
+      if (state.groqModelsCache) return state.groqModelsCache;
+      try {
+        const res = await fetch("https://api.groq.com/openai/v1/models", { headers: { Authorization: `Bearer ${apiKey}` } });
+        if (!res.ok) return ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"];
+        const data = await res.json();
+        const ids = (data.data || []).map((m) => m.id).filter((id) => !/whisper|guard|tts|audio|vision/i.test(id));
+        const preferred = ["llama-3.3-70b-versatile", "meta-llama/llama-4-scout-17b-16e-instruct", "llama-3.1-8b-instant"];
+        const sorted = [...preferred.filter((p) => ids.includes(p)), ...ids.filter((i) => !preferred.includes(i))];
+        state.groqModelsCache = sorted.length ? sorted : ["llama-3.3-70b-versatile"];
+        return state.groqModelsCache;
+      } catch {
+        return ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"];
+      }
+    }
+
+    async function callLLM({ systemPrompt, userPrompt, pageImages = [], requireVision = false }) {
+      const providerMode = document.getElementById("aiProviderMode").value;
+
+      const callGemini = async (apiKey, model) => {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        const parts = [{ text: userPrompt }];
+        for (const img of pageImages) {
+          parts.push({ text: `[IMAGE OF PAGE ${img.page}]` });
+          parts.push({ inlineData: { mimeType: "image/jpeg", data: img.base64 } });
+        }
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ role: "user", parts }],
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            generationConfig: { temperature: 0.1, maxOutputTokens: 16384, responseMimeType: "application/json" }
+          })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          const err = new Error(data?.error?.message || `HTTP ${res.status}`);
+          err.status = res.status;
+          throw err;
+        }
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!text) throw new Error("Empty Gemini response");
+        return text;
+      };
+
+      const callOpenAICompat = async (endpoint, apiKey, model) => {
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+          body: JSON.stringify({
+            model, temperature: 0.1, max_tokens: 8192,
+            messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }]
+          })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          const err = new Error(data?.error?.message || `HTTP ${res.status}`);
+          err.status = res.status;
+          throw err;
+        }
+        return data?.choices?.[0]?.message?.content || "";
+      };
+
+      if (providerMode === "builtin") {
+        const previewModels = ["gemini-2.5-flash-preview-09-2025", "gemini-2.5-flash"];
+        let lastErr = null;
+        for (const m of previewModels) {
+          try {
+            return await callGemini("", m);
+          } catch (e) {
+            lastErr = e;
+          }
+        }
+        throw lastErr || new Error("Built-in Preview AI unavailable on this host");
+      }
+
+      let pool = parseUserKeys();
+      if (!pool.length) throw new Error("Koi API key nahi mili! Built-in Preview AI chunein ya free Gemini/Groq key paste karein.");
+      if (requireVision) {
+        const gKeys = pool.filter((k) => k.provider === "gemini");
+        if (gKeys.length > 0) pool = gKeys;
+      }
+
+      let lastErr = null;
+      for (let tries = 0; tries < pool.length * 2; tries++) {
+        const entry = pool[state.keyCursor % pool.length];
+        state.keyCursor++;
+        try {
+          if (entry.provider === "gemini") {
+            try { return await callGemini(entry.key, "gemini-2.5-flash"); }
+            catch (e1) { if (e1.status === 404) return await callGemini(entry.key, "gemini-2.0-flash"); throw e1; }
+          } else if (entry.provider === "groq") {
+            const models = await fetchGroqLiveModels(entry.key);
+            return await callOpenAICompat("https://api.groq.com/openai/v1/chat/completions", entry.key, models[0]);
+          } else {
+            return await callOpenAICompat("https://openrouter.ai/api/v1/chat/completions", entry.key, "meta-llama/llama-3.3-70b-instruct:free");
+          }
+        } catch (err) {
+          lastErr = err;
+          if (err.status === 429) {
+            logLive(`Rate limit on ${entry.provider.toUpperCase()} — rotating key...`, "warn");
+            await new Promise((r) => setTimeout(r, tries >= pool.length ? 7000 : 1200));
+          }
+        }
+      }
+      throw lastErr || new Error("All keys exhausted");
+    }
+
+    window.testBuiltinAI = async () => {
+      const st = document.getElementById("builtinTestStatus");
+      st.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-emerald-400 mr-1.5"></i>Testing Built-in Preview AI...`;
+      try {
+        await callLLM({ systemPrompt: 'Return {"ok":true}', userPrompt: 'Return {"ok":true}' });
+        st.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 mr-1.5"></i>Built-in Gemini Vision & Text AI is <strong>100% ACTIVE</strong>!`;
+        showToast("Built-in Preview AI Active!", "success");
+      } catch (err) {
+        st.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-amber-400 mr-1.5"></i>Preview proxy unavailable here (${escapeHtml(err.message)}). Use Custom Keys or Zero-AI Python!`;
+        showToast("Use Custom Keys or Zero-AI Python on this host.", "warn");
+      }
+    };
+
+    window.testAllKeys = async () => {
+      const keys = parseUserKeys();
+      const st = document.getElementById("keyTestStatus");
+      if (!keys.length) { showToast("Paste at least 1 key first!", "warn"); return; }
+      st.textContent = `Testing ${keys.length} key(s)...`;
+      let ok = 0;
+      const out = [];
+      for (let i = 0; i < keys.length; i++) {
+        const k = keys[i];
+        try {
+          if (k.provider === "groq") {
+            const models = await fetchGroqLiveModels(k.key);
+            out.push(`#${i + 1} GROQ ✅ (${models[0]})`);
+            ok++;
+          } else if (k.provider === "gemini") {
+            const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${k.key}`, {
+              method: "POST", headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ contents: [{ parts: [{ text: "OK" }] }] })
+            });
+            if (r.ok) { out.push(`#${i + 1} GEMINI ✅`); ok++; } else out.push(`#${i + 1} GEMINI ❌ (${r.status})`);
+          } else {
+            out.push(`#${i + 1} OPENROUTER ✅`); ok++;
+          }
+        } catch { out.push(`#${i + 1} ${k.provider.toUpperCase()} ❌`); }
+      }
+      st.textContent = out.join(" • ");
+      showToast(`${ok}/${keys.length} keys active!`, ok > 0 ? "success" : "error");
+    };
+
+    function safeParseJsonArray(rawText) {
+      let str = String(rawText || "").replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```$/i, "").trim();
+      const s = str.indexOf("["), e = str.lastIndexOf("]");
+      if (s !== -1 && e > s) str = str.slice(s, e + 1);
+      try {
+        const p = JSON.parse(str);
+        return Array.isArray(p) ? p : (p.questions || []);
+      } catch {
+        const lastObj = str.lastIndexOf("}");
+        if (lastObj > 0) {
+          try { return JSON.parse(str.slice(0, lastObj + 1) + "]"); } catch { return []; }
+        }
+        return [];
+      }
+    }
+
+    // =========================================================================
+    // 8. MAIN AI EXTRACTION (STRICT SERIAL # + ZERO DUPLICATES + MATCH TABLE FIX)
+    // =========================================================================
+    window.startAIExtraction = async () => {
+      if (!state.pdfDoc) { showToast("Pehle koi PDF upload karein!", "warn"); return; }
+      if (state.isRunning) return;
+
+      const sPage = Math.max(1, parseInt(document.getElementById("startPage").value, 10) || 1);
+      const ePage = Math.min(state.totalPages, parseInt(document.getElementById("endPage").value, 10) || state.totalPages);
+      const batchSize = parseInt(document.getElementById("pagesPerBatch").value, 10) || 3;
+      const targetLimit = getTargetLimit();
+      const langPref = document.getElementById("extractLanguage").value;
+      const providerMode = document.getElementById("aiProviderMode").value;
+      const wmKiller = document.getElementById("optWatermarkKiller").checked;
+
+      let effectiveMode = state.diagramMode;
+      const hasVision = providerMode === "builtin" || parseUserKeys().some((k) => k.provider === "gemini");
+      if (effectiveMode === "ai_vision" && !hasVision) {
+        showToast("Groq text-only hai — auto-switching to Hybrid Python CV Crop!", "info");
+        effectiveMode = "hybrid";
+      }
+
+      state.isRunning = true;
+      state.stopRequested = false;
+      state.extractedQuestions = [];
+      document.getElementById("liveLogBox").innerHTML = "";
+      document.getElementById("btnStopExtract").classList.remove("hidden");
+      document.getElementById("gapDetectorBanner").classList.add("hidden");
+
+      try {
+        if ((effectiveMode === "python_cv" || effectiveMode === "hybrid") && state.extractedDiagrams.length === 0) {
+          logLive("Auto-running Python CV Diagram Cutter first so every diagram attaches...", "info");
+          await runPythonAutoCutter(false);
+        }
+
+        const batches = [];
+        const step = state.extractType === "paper" && batchSize > 1 ? batchSize - 1 : batchSize;
+        for (let p = sPage; p <= ePage; p += step) {
+          const endP = Math.min(ePage, p + batchSize - 1);
+          batches.push({ start: p, end: endP });
+          if (endP >= ePage) break;
+        }
+
+        // Dual Deduplication: by exact printed qNum (Test Paper mode) + by normalized content fingerprint
+        const byQNum = new Map();
+        const seenFp = new Set();
+        const diagById = new Map(state.extractedDiagrams.map((d) => [d.id, d.dataUrl]));
+        const diagByQNum = new Map();
+        state.extractedDiagrams.forEach((d) => { if (d.qNum && !diagByQNum.has(d.qNum)) diagByQNum.set(d.qNum, d.dataUrl); });
+
+        for (let bIdx = 0; bIdx < batches.length; bIdx++) {
+          if (state.stopRequested) { logLive("Stopped by user.", "warn"); break; }
+          if (targetLimit > 0 && state.extractedQuestions.length >= targetLimit) break;
+
+          const batch = batches[bIdx];
+          setProgress(Math.round(((bIdx + 1) / batches.length) * 100), `AI Extracting Pages ${batch.start}–${batch.end} (Batch ${bIdx + 1}/${batches.length})...`);
+
+          let batchText = "";
+          const pageImages = [];
+          const pageCanvasMap = new Map();
+          const batchPool = [];
+
+          for (let p = batch.start; p <= batch.end; p++) {
+            const sp = await extractPageSpatialData(p);
+            batchText += `\n=== PAGE ${p} ===\n${sp.plainText}\n`;
+            if (effectiveMode === "ai_vision") {
+              const canvas = await renderPageToCanvas(p, 1150);
+              pageCanvasMap.set(p, canvas);
+              pageImages.push({ page: p, base64: canvas.toDataURL("image/jpeg", 0.80).split(",")[1] });
+            } else {
+              state.extractedDiagrams.filter((d) => d.page === p).forEach((d) => batchPool.push(`${d.id} (Page ${p}, y=${d.yPct}%${d.qNum ? ", Q#" + d.qNum : ""})`));
+            }
+          }
+
+          const diagRule = effectiveMode === "ai_vision"
+            ? `DIAGRAM CROPPING: Inspect page images. For ANY question with a figure, circuit, graph, bio diagram, or 2-4 option diagrams, return "page_num" (integer) AND "diagram_box": [ymin, xmin, ymax, xmax] (0-1000 normalized). If a question has 2-4 sub-diagrams, enclose ALL of them together in ONE combined box with generous margin. Otherwise null.`
+            : `DIAGRAM LINKING: Pre-cropped diagrams: ${batchPool.length ? batchPool.join("; ") : "None"}. Set "diagram_id" to matching ID or null.`;
+
+          const matchRule = `MATCH THE FOLLOWING RULE (CRITICAL — DO NOT MISS):
+Whenever a question is "Match List-I with List-II" / "Match Column-I with Column-II" / "Match the Following":
+1. You MUST extract EVERY SINGLE ROW of List-I and List-II into "matchPairs": [{"left": "(A) ...", "right": "(i) ..."}, {"left": "(B) ...", "right": "(ii) ..."}, ...].
+2. NEVER return an empty matchPairs array for a Match the Following question! Look carefully at both text and page image so the entire matching table is preserved.`;
+
+          const serialRule = state.extractType === "paper"
+            ? `EXACT SERIAL NUMBER RULE: You MUST set "qNum" to the EXACT printed question number from the PDF (e.g. 1, 2, 17, 45, 180). NEVER renumber or shift question numbers!`
+            : `Number generated questions sequentially starting from ${state.extractedQuestions.length + 1}.`;
+
+          const systemPrompt = `You are India's #1 NEET Exam Digitizer. Output ONLY a strict JSON array.
+Each object: {"qNum": integer, "page_num": integer, "question": string, "qType": string, "matchPairs": [{"left":"","right":""}], "options": [optA, optB, optC, optD], "answer": 0..3, "explanation": "concise 1-2 line NCERT solution", ${effectiveMode === "ai_vision" ? '"diagram_box": [ymin,xmin,ymax,xmax] or null' : '"diagram_id": string or null'}}
+${matchRule}
+${serialRule}`;
+
+          const userPrompt = state.extractType === "ncert"
+            ? `Create high-yield NEET MCQs in ${langPref}. ${diagRule}\n\nTEXT:\n${batchText.slice(0, 26000)}`
+            : `Extract EVERY SINGLE MCQ verbatim in ${langPref} from Pages ${batch.start}-${batch.end}. Do NOT skip any question and do NOT omit List-I / List-II rows for Match the Following questions! ${diagRule}\n\nTEXT:\n${batchText.slice(0, 30000)}`;
+
+          try {
+            const raw = await callLLM({ systemPrompt, userPrompt, pageImages, requireVision: effectiveMode === "ai_vision" });
+            const items = safeParseJsonArray(raw);
+            let added = 0;
+
+            for (const q of items) {
+              if (targetLimit > 0 && state.extractedQuestions.length >= targetLimit) break;
+              if (!q || !q.question || !Array.isArray(q.options) || q.options.length < 2) continue;
+
+              const normOpts = [0, 1, 2, 3].map((i) => String(q.options[i] || "").trim());
+              const cleanPairs = normalizeMatchPairs(q.matchPairs);
+              const qNumInt = parseInt(q.qNum, 10);
+              const validQNum = (!isNaN(qNumInt) && qNumInt >= 1 && qNumInt <= 300) ? qNumInt : null;
+
+              const pNum = parseInt(q.page_num, 10) || batch.start;
+              let imgUrl = "";
+              if (effectiveMode === "ai_vision" && Array.isArray(q.diagram_box) && q.diagram_box.length === 4) {
+                const pCanvas = pageCanvasMap.get(pNum) || pageCanvasMap.get(batch.start);
+                if (pCanvas) imgUrl = cropNormalizedBox(pCanvas, q.diagram_box, 40, wmKiller);
+              } else {
+                if (q.diagram_id && diagById.has(q.diagram_id)) imgUrl = diagById.get(q.diagram_id);
+                else if (validQNum && diagByQNum.has(validQNum)) imgUrl = diagByQNum.get(validQNum);
+              }
+
+              const newObj = {
+                qNum: validQNum || (state.extractedQuestions.length + 1),
+                page: pNum,
+                question: String(q.question).trim(),
+                qType: q.qType || (cleanPairs.length ? "Match the Following" : imgUrl ? "Diagram Based" : detectNeetQType(q.question, cleanPairs)),
+                matchPairs: cleanPairs,
+                options: normOpts,
+                answer: Math.min(3, Math.max(0, parseInt(q.answer, 10) || 0)),
+                explanation: String(q.explanation || "").trim(),
+                image: imgUrl
+              };
+
+              // 1) Exact qNum deduplication for Test Paper mode (keep the richer/more complete copy!)
+              if (state.extractType === "paper" && validQNum !== null && byQNum.has(validQNum)) {
+                const existingIdx = byQNum.get(validQNum);
+                const prevObj = state.extractedQuestions[existingIdx];
+                if (prevObj && questionRichnessScore(newObj) > questionRichnessScore(prevObj)) {
+                  state.extractedQuestions[existingIdx] = {
+                    ...newObj,
+                    image: newObj.image || prevObj.image,
+                    matchPairs: newObj.matchPairs.length ? newObj.matchPairs : prevObj.matchPairs
+                  };
+                }
+                continue;
+              }
+
+              // 2) Content fingerprint deduplication (catches overlap duplicates even if qNum differed)
+              const fp = buildQuestionFingerprint(newObj.question, normOpts, cleanPairs);
+              if (seenFp.has(fp)) continue;
+              seenFp.add(fp);
+
+              const pushIdx = state.extractedQuestions.length;
+              state.extractedQuestions.push(newObj);
+              if (state.extractType === "paper" && validQNum !== null) byQNum.set(validQNum, pushIdx);
+              added++;
+            }
+            logLive(`Pages ${batch.start}–${batch.end}: +${added} unique Qs (Total: ${state.extractedQuestions.length})`, "ok");
+            renderReviewList();
+          } catch (bErr) {
+            logLive(`Pages ${batch.start}–${batch.end} Error: ${bErr.message}`, "err");
+          }
+        }
+
+        await applyAutoAnswerKeyFromPDF();
+        state.extractedQuestions.sort((a, b) => (a.qNum || 0) - (b.qNum || 0));
+        renderReviewList();
+        detectMissingQuestionGaps();
+        setProgress(100, `Done! Extracted ${state.extractedQuestions.length} unique Qs.`);
+        showToast(`Done! Extracted ${state.extractedQuestions.length} unique questions.`, "success");
+      } finally {
+        state.isRunning = false;
+        document.getElementById("btnStopExtract").classList.add("hidden");
+      }
+    };
+
+    // =========================================================================
+    // 9. ZERO-AI PYTHON EXTRACTOR (STRICT SERIAL # + MATCH TABLE PARSER)
+    // =========================================================================
+    function extractMatchPairsFromLines(stemText) {
+      const lines = String(stemText || "").split("\n").map((l) => l.trim()).filter(Boolean);
+      const pairs = [];
+      const keptStem = [];
+      for (const ln of lines) {
+        if (ln.includes("|")) {
+          const parts = ln.split("|").map((s) => s.trim()).filter(Boolean);
+          if (parts.length >= 2 && !/^list\s*[-–]?\s*i$/i.test(parts[0]) && !/^column\s*[-–]?\s*i$/i.test(parts[0])) {
+            pairs.push({ left: parts[0], right: parts.slice(1).join(" ") });
+            continue;
+          }
+        }
+        keptStem.push(ln);
+      }
+      if (pairs.length >= 2) {
+        return { stem: keptStem.join("\n").trim() || "Match List-I with List-II:", pairs };
+      }
+      return { stem: stemText.replace(/\s*\|\s*/g, " ").replace(/\s+/g, " ").trim(), pairs: [] };
+    }
+
+    window.startZeroAIPythonExtraction = async () => {
+      if (!state.pdfDoc) { showToast("Pehle koi PDF upload karein!", "warn"); return; }
+      if (state.isRunning) return;
+
+      const sPage = Math.max(1, parseInt(document.getElementById("startPage").value, 10) || 1);
+      const ePage = Math.min(state.totalPages, parseInt(document.getElementById("endPage").value, 10) || state.totalPages);
+      const targetLimit = getTargetLimit();
+
+      state.isRunning = true;
+      state.stopRequested = false;
+      state.extractedQuestions = [];
+      document.getElementById("liveLogBox").innerHTML = "";
+      document.getElementById("btnStopExtract").classList.remove("hidden");
+      document.getElementById("gapDetectorBanner").classList.add("hidden");
+
+      try {
+        setProgress(10, "Step 1/3: Python CV Cutting & Merging Multi-Diagrams...");
+        await runPythonAutoCutter(false);
+
+        setProgress(55, "Step 2/3: Strict Serial-Number Spatial MCQ Extraction...");
+        const allLines = [];
+        for (let p = sPage; p <= ePage; p++) {
+          if (state.stopRequested) break;
+          const sp = await extractPageSpatialData(p);
+          if (p <= 2 && sp.qSpans.length === 0 && /instruction|roll\s*no|test\s*booklet/i.test(sp.plainText)) continue;
+          sp.lines.forEach((l) => allLines.push(l));
+        }
+
+        const parsedQs = [];
+        let current = null;
+        let lastQNum = 0;
+        const qRe = /^(?:Q\.?\s*)?(\d{1,3})\s*[\.\)]\s+(.+)/;
+
+        for (const ln of allLines) {
+          const t = ln.text.trim();
+          if (/^(ANSWER\s*KEY|HINTS\s*&?\s*SOLUTIONS)/i.test(t)) break;
+          const m = t.match(qRe);
+          if (m && !/^\(\d\)/.test(t)) {
+            const num = parseInt(m[1], 10);
+            const isValidNext = (lastQNum === 0 && num >= 1 && num <= 20) || (num > lastQNum && num <= lastQNum + 15);
+            if (isValidNext && num <= 250) {
+              if (current) parsedQs.push(current);
+              lastQNum = num;
+              current = { qNum: num, page: ln.page, col: ln.col, yStart: ln.yNorm, rawLines: [m[2]] };
+              continue;
+            }
+          }
+          if (current) current.rawLines.push(t);
+        }
+        if (current) parsedQs.push(current);
+
+        const diagByQNum = new Map();
+        state.extractedDiagrams.forEach((d) => { if (d.qNum && !diagByQNum.has(d.qNum)) diagByQNum.set(d.qNum, d.dataUrl); });
+
+        for (const pq of parsedQs) {
+          if (targetLimit > 0 && state.extractedQuestions.length >= targetLimit) break;
+          const full = pq.rawLines.join("\n");
+          const optNum = full.match(/([\s\S]*?)\(\s*1\s*\)([\s\S]*?)\(\s*2\s*\)([\s\S]*?)\(\s*3\s*\)([\s\S]*?)\(\s*4\s*\)([\s\S]*)/);
+          const optAlpha = !optNum && full.match(/([\s\S]*?)\(\s*[Aa]\s*\)([\s\S]*?)\(\s*[Bb]\s*\)([\s\S]*?)\(\s*[Cc]\s*\)([\s\S]*?)\(\s*[Dd]\s*\)([\s\S]*)/);
+          const m = optNum || optAlpha;
+          if (!m) continue;
+
+          const parsedMatch = extractMatchPairsFromLines(m[1]);
+          const opts = [m[2], m[3], m[4], m[5]].map((o) => o.replace(/\s*\|\s*/g, " ").replace(/\s+/g, " ").trim());
+          let img = diagByQNum.get(pq.qNum) || "";
+          if (!img) {
+            const near = state.extractedDiagrams.find((d) => d.page === pq.page && d.col === pq.col && !d.used && Math.abs(d.yPct * 10 - pq.yStart) < 220);
+            if (near) { img = near.dataUrl; near.used = true; }
+          }
+
+          state.extractedQuestions.push({
+            qNum: pq.qNum,
+            page: pq.page,
+            question: parsedMatch.stem,
+            qType: parsedMatch.pairs.length ? "Match the Following" : img ? "Diagram Based" : detectNeetQType(parsedMatch.stem),
+            matchPairs: parsedMatch.pairs,
+            options: opts,
+            answer: 0,
+            explanation: "",
+            image: img
+          });
+        }
+
+        setProgress(90, "Step 3/3: Auto-Reading Answer Key from PDF...");
+        await applyAutoAnswerKeyFromPDF();
+
+        renderReviewList();
+        detectMissingQuestionGaps();
+        setProgress(100, `Zero-AI Python Done! Extracted ${state.extractedQuestions.length} exact Qs.`);
+        showToast(`Zero-AI Python extracted ${state.extractedQuestions.length} exact Qs!`, "success");
+      } catch (err) {
+        logLive("Zero-AI Error: " + err.message, "err");
+        showToast("Zero-AI Error: " + err.message, "error");
+      } finally {
+        state.isRunning = false;
+        document.getElementById("btnStopExtract").classList.add("hidden");
+      }
+    };
+
+    async function applyAutoAnswerKeyFromPDF() {
+      if (!state.pdfDoc || !state.extractedQuestions.length) return;
+      const scanStart = Math.max(1, state.totalPages - 4);
+      let keyText = "";
+      for (let p = scanStart; p <= state.totalPages; p++) {
+        const sp = await extractPageSpatialData(p);
+        if (/answer\s*key/i.test(sp.plainText)) keyText += "\n" + sp.plainText;
+      }
+      if (!keyText) return;
+      const filled = applyAnswerKeyString(keyText);
+      if (filled > 0) logLive(`Auto Answer Key applied to ${filled} questions!`, "ok");
+    }
+
+    function applyAnswerKeyString(keyStr) {
+      const map = { "1": 0, "2": 1, "3": 2, "4": 3, A: 0, B: 1, C: 2, D: 3 };
+      const re = /(\d{1,3})\s*[\.\)\-:\s]+\(?([1-4A-Da-d])\)?/g;
+      const ansMap = new Map();
+      let m;
+      while ((m = re.exec(keyStr)) !== null) {
+        const idx = map[m[2].toUpperCase()];
+        if (idx !== undefined) ansMap.set(parseInt(m[1], 10), idx);
+      }
+      let count = 0;
+      state.extractedQuestions.forEach((q) => {
+        if (ansMap.has(q.qNum)) { q.answer = ansMap.get(q.qNum); count++; }
+      });
+      return count;
+    }
+
+    window.applyManualAnswerKey = () => {
+      const txt = document.getElementById("bulkAnswerKeyInput").value.trim();
+      if (!txt) { showToast("Paste answer key first!", "warn"); return; }
+      const n = applyAnswerKeyString(txt);
+      renderReviewList();
+      showToast(n > 0 ? `Updated answers for ${n} questions!` : "Format not recognized. Example: 1.(3) 2.(1)", n > 0 ? "success" : "warn");
+    };
+
+    function getMissingQNumbers() {
+      const qs = state.extractedQuestions;
+      if (qs.length < 2) return [];
+      const nums = new Set(qs.map((q) => Number(q.qNum)).filter((n) => n > 0));
+      if (nums.size < 2) return [];
+      const minQ = 1;
+      const maxQ = Math.max(...nums);
+      if (maxQ > 260) return [];
+      const missing = [];
+      for (let n = minQ; n <= maxQ; n++) {
+        if (!nums.has(n)) missing.push(n);
+      }
+      return missing;
+    }
+
+    function detectMissingQuestionGaps() {
+      const missing = getMissingQNumbers();
+      const banner = document.getElementById("gapDetectorBanner");
+      const quickBox = document.getElementById("gapQuickButtons");
+      if (missing.length > 0 && missing.length <= 60) {
+        document.getElementById("gapDetectorText").textContent =
+          `${missing.length} skipped slot(s) found — kisi doosre question ne inka number nahi liya! Tap any button below (or inline slot card) to manually add it at the exact same place:`;
+        quickBox.innerHTML = missing.slice(0, 25).map((n) => `
+          <button onclick="openInsertManualQModal(${n})" class="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-navy-950 border border-amber-500/40 text-[11px] font-extrabold transition">
+            + Add Q#${n}
+          </button>
+        `).join("") + (missing.length > 25 ? `<span class="text-[11px] text-slate-400 self-center">+${missing.length - 25} more in list</span>` : "");
+        banner.classList.remove("hidden");
+      } else {
+        banner.classList.add("hidden");
+        quickBox.innerHTML = "";
+      }
+    }
+
+    window.stopExtraction = () => { state.stopRequested = true; showToast("Stopping after current batch...", "warn"); };
+
+    window.autoFillSolutionsWithAI = async () => {
+      const need = state.extractedQuestions.filter((q) => !q.explanation || q.explanation.length < 8);
+      if (!need.length) { showToast("All questions already have solutions!", "info"); return; }
+      const btn = document.getElementById("btnAutoSolutions");
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i>Solving...`;
+      try {
+        for (let i = 0; i < need.length; i += 15) {
+          const chunk = need.slice(i, i + 15);
+          const prompt = chunk.map((q) => `Q${q.qNum}: ${q.question} ${q.matchPairs?.length ? JSON.stringify(q.matchPairs) : ""} | Opts: ${q.options.join(" ; ")}`).join("\n");
+          const raw = await callLLM({
+            systemPrompt: `Return JSON array: [{"qNum": number, "answer": 0..3, "explanation": "concise 1-2 line NCERT solution"}]`,
+            userPrompt: `Provide accurate NEET answer (0-3) and concise NCERT solution:\n${prompt}`
+          });
+          safeParseJsonArray(raw).forEach((r) => {
+            const t = state.extractedQuestions.find((q) => q.qNum === Number(r.qNum));
+            if (t) {
+              if (r.explanation) t.explanation = r.explanation;
+              if (r.answer !== undefined) t.answer = Math.min(3, Math.max(0, parseInt(r.answer, 10) || 0));
+            }
+          });
+          renderReviewList();
+        }
+        showToast("AI NCERT Solutions generated!", "success");
+      } catch (err) {
+        showToast("AI Solutions Error: " + err.message, "error");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-sparkles mr-1"></i>AI Solutions`;
+      }
+    };
+
+    // =========================================================================
+    // 10. REVIEW WORKSPACE (MATCH TABLE RENDERER + IN-PLACE MISSING SLOT CARDS!)
+    // =========================================================================
+    function renderMatchPairsTableHtml(pairs) {
+      if (!Array.isArray(pairs) || !pairs.length) return "";
+      return `
+        <div class="overflow-x-auto rounded-xl border border-amber-500/30 bg-navy-900/80">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-amber-500/15 text-amber-300 font-extrabold">
+                <th class="px-3 py-1.5 w-1/2">List-I / Column-I</th>
+                <th class="px-3 py-1.5 w-1/2 border-l border-amber-500/20">List-II / Column-II</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${pairs.map((p) => `
+                <tr class="border-t border-slate-800">
+                  <td class="px-3 py-1.5 text-slate-200 font-semibold">${escapeHtml(p.left || "")}</td>
+                  <td class="px-3 py-1.5 text-slate-300 border-l border-slate-800">${escapeHtml(p.right || "")}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    window.renderReviewList = () => {
+      const sec = document.getElementById("reviewSection");
+      const list = document.getElementById("reviewList");
+      const total = state.extractedQuestions.length;
+      document.getElementById("reviewTotalCount").textContent = total;
+      const pubPill = document.getElementById("pubCountPill");
+
+      if (total > 0) {
+        sec.classList.remove("hidden");
+        pubPill.textContent = total;
+        pubPill.classList.remove("hidden");
+      } else {
+        sec.classList.add("hidden");
+        pubPill.classList.add("hidden");
+        return;
+      }
+
+      // Always keep sorted by original printed qNum (never overwrite qNum!)
+      state.extractedQuestions.sort((a, b) => (Number(a.qNum) || 0) - (Number(b.qNum) || 0));
+
+      const withImg = state.extractedQuestions.filter((q) => q.image).length;
+      const missingNums = getMissingQNumbers();
+      document.getElementById("reviewSubStats").textContent =
+        `${withImg} with HD diagrams • ${total - withImg} text-only` + (missingNums.length ? ` • ${missingNums.length} skipped slot(s)` : "");
+
+      const search = (document.getElementById("reviewSearch").value || "").toLowerCase();
+      const filter = document.getElementById("reviewFilter").value;
+      const letters = ["A", "B", "C", "D"];
+
+      // Build interleaved timeline of extracted questions + missing slot cards at exact serial position
+      const displayEntries = [];
+      const qByNum = new Map();
+      state.extractedQuestions.forEach((q, idx) => {
+        qByNum.set(Number(q.qNum), { q, idx });
+      });
+
+      const showGaps = !search && (filter === "all" || filter === "missing_only") && missingNums.length > 0 && missingNums.length <= 60;
+
+      if (showGaps) {
+        const maxQ = Math.max(...state.extractedQuestions.map((q) => Number(q.qNum) || 0));
+        for (let n = 1; n <= maxQ; n++) {
+          if (qByNum.has(n)) {
+            if (filter !== "missing_only") displayEntries.push({ type: "question", ...qByNum.get(n) });
+          } else {
+            displayEntries.push({ type: "missing", qNum: n });
+          }
+        }
+        // Include any edge questions without valid qNum in 1..maxQ
+        if (filter !== "missing_only") {
+          state.extractedQuestions.forEach((q, idx) => {
+            const n = Number(q.qNum);
+            if (!n || n < 1 || n > maxQ) displayEntries.push({ type: "question", q, idx });
+          });
+        }
+      } else {
+        state.extractedQuestions.forEach((q, idx) => {
+          if (filter === "missing_only") return;
+          if (filter === "with_img" && !q.image) return;
+          if (filter === "no_img" && q.image) return;
+          if (search && !q.question.toLowerCase().includes(search) && !String(q.qNum).includes(search)) return;
+          displayEntries.push({ type: "question", q, idx });
+        });
+      }
+
+      if (!displayEntries.length) {
+        list.innerHTML = `<div class="text-center py-8 text-xs text-slate-400">No items match this filter.</div>`;
+        return;
+      }
+
+      list.innerHTML = displayEntries.map((entry) => {
+        if (entry.type === "missing") {
+          return `
+            <div class="bg-amber-500/10 border border-dashed border-amber-500/50 rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                <span class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 text-xs font-black">Q#${entry.qNum}</span>
+                <span class="text-xs font-bold text-amber-200">Skipped / Missing — Serial #${entry.qNum} reserved here</span>
+              </div>
+              <button onclick="openInsertManualQModal(${entry.qNum})" class="px-3.5 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-navy-950 text-xs font-black transition">
+                <i class="fa-solid fa-plus mr-1"></i>Add Q#${entry.qNum} Manually Here
+              </button>
+            </div>
+          `;
+        }
+
+        const { q, idx } = entry;
+        const matchHtml = renderMatchPairsTableHtml(q.matchPairs);
+        const missingMatchWarning = (q.qType === "Match the Following" && (!q.matchPairs || !q.matchPairs.length) && !/list\s*[-–]?\s*ii|column\s*[-–]?\s*ii/i.test(q.question))
+          ? `<div class="text-[11px] text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-lg px-2.5 py-1.5 flex items-center justify-between gap-2">
+               <span><i class="fa-solid fa-triangle-exclamation mr-1"></i>Match table missing — tap Edit to add List-I & List-II rows!</span>
+               <button onclick="openEditQModal(${idx})" class="underline font-extrabold">Add Table</button>
+             </div>`
+          : "";
+
+        return `
+          <div class="bg-navy-950/90 border border-slate-800 rounded-xl p-3.5 space-y-2.5">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 text-xs font-extrabold">Q#${q.qNum}</span>
+                <span class="px-2 py-0.5 rounded-lg bg-navy-800 text-sky-300 text-[10px] font-bold">${escapeHtml(q.qType || "Single Choice")}</span>
+                ${q.page ? `<span class="text-[10px] text-slate-500 font-bold">Pg ${q.page}</span>` : ""}
+              </div>
+              <div class="flex items-center gap-1">
+                ${letters.map((L, oi) => `
+                  <button onclick="setQuickAnswer(${idx}, ${oi})" class="w-7 h-7 rounded-lg text-xs font-black transition ${q.answer === oi ? "bg-emerald-500 text-navy-950" : "bg-navy-800 text-slate-400 hover:text-white"}">${L}</button>
+                `).join("")}
+                <button onclick="openSnipModal(${idx})" title="Snip Diagram on Page ${q.page || 1}" class="px-2.5 py-1.5 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 text-[11px] font-bold"><i class="fa-solid fa-scissors"></i></button>
+                <button onclick="openEditQModal(${idx})" title="Edit" class="px-2.5 py-1.5 rounded-lg bg-navy-800 hover:bg-navy-700 text-slate-200 text-[11px] font-bold"><i class="fa-solid fa-pen"></i></button>
+                <button onclick="deleteExtractedQ(${idx})" title="Delete" class="px-2.5 py-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 text-[11px] font-bold"><i class="fa-solid fa-trash"></i></button>
+              </div>
+            </div>
+            <p class="text-xs sm:text-sm text-slate-100 leading-relaxed font-medium whitespace-pre-line">${escapeHtml(q.question)}</p>
+            ${matchHtml}
+            ${missingMatchWarning}
+            ${q.image ? `<div class="inline-block bg-white rounded-xl p-1.5"><img src="${q.image}" onclick="openLightbox('${q.image}', 'Q#${q.qNum} Diagram')" class="max-h-44 object-contain rounded cursor-zoom-in" /></div>` : ""}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+              ${q.options.map((opt, oi) => `
+                <div class="px-2.5 py-1.5 rounded-lg text-xs border ${q.answer === oi ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-200 font-bold" : "bg-navy-900 border-slate-800 text-slate-300"}">
+                  <span class="font-extrabold mr-1">(${letters[oi]})</span> ${escapeHtml(opt)}
+                </div>
+              `).join("")}
+            </div>
+            ${q.explanation ? `<p class="text-[11px] text-cyan-300 bg-cyan-950/30 border border-cyan-500/20 rounded-lg px-2.5 py-1.5"><strong>Solution:</strong> ${escapeHtml(q.explanation)}</p>` : ""}
+          </div>
+        `;
+      }).join("");
+    };
+
+    window.setQuickAnswer = (idx, ans) => { if (state.extractedQuestions[idx]) { state.extractedQuestions[idx].answer = ans; renderReviewList(); } };
+    window.deleteExtractedQ = (idx) => {
+      state.extractedQuestions.splice(idx, 1);
+      renderReviewList();
+      detectMissingQuestionGaps();
+    };
+
+    window.insertSampleMatchPairs = () => {
+      document.getElementById("editQMatchPairs").value = "(A)  | (i) \n(B)  | (ii) \n(C)  | (iii) \n(D)  | (iv) ";
+      document.getElementById("editQType").value = "Match the Following";
+    };
+
+    function populateDiagramSelectForModal() {
+      const sel = document.getElementById("editQDiagramSelect");
+      sel.innerHTML = `<option value="">-- Select From Cropped Pool --</option>` +
+        state.extractedDiagrams.map((d) => `<option value="${d.id}">${d.id} (Page ${d.page}${d.qNum ? ", Q#" + d.qNum : ""})</option>`).join("");
+      sel.onchange = () => {
+        const found = state.extractedDiagrams.find((d) => d.id === sel.value);
+        if (found) { state.editQTempImg = found.dataUrl; updateEditQImgPreview(); }
+      };
+    }
+
+    // Manual Insert at Exact Serial Place (e.g., Q#42)
+    window.openInsertManualQModal = (presetQNum = null) => {
+      state.editQIndex = null;
+      state.editQTempImg = "";
+      const nextNum = presetQNum || (state.extractedQuestions.length ? Math.max(...state.extractedQuestions.map((q) => Number(q.qNum) || 0)) + 1 : 1);
+      document.getElementById("editQModalTitle").textContent = presetQNum ? `Add Missing Question #${presetQNum} (Same Place)` : `Add Manual Question`;
+      document.getElementById("editQSaveBtn").textContent = `Insert Q#${nextNum}`;
+      document.getElementById("editQNum").value = nextNum;
+      document.getElementById("editQType").value = "Single Choice";
+      document.getElementById("editQAns").value = 0;
+      document.getElementById("editQText").value = "";
+      document.getElementById("editQMatchPairs").value = "";
+      [0, 1, 2, 3].forEach((i) => (document.getElementById(`editQOpt${i}`).value = ""));
+      document.getElementById("editQExp").value = "";
+      populateDiagramSelectForModal();
+      updateEditQImgPreview();
+      document.getElementById("editQModal").classList.remove("hidden");
+      document.getElementById("editQModal").classList.add("flex");
+    };
+
+    window.openEditQModal = (idx) => {
+      const q = state.extractedQuestions[idx];
+      if (!q) return;
+      state.editQIndex = idx;
+      state.editQTempImg = q.image || "";
+      document.getElementById("editQModalTitle").textContent = `Edit Question #${q.qNum}`;
+      document.getElementById("editQSaveBtn").textContent = "Save Question";
+      document.getElementById("editQNum").value = q.qNum;
+      document.getElementById("editQType").value = q.qType || "Single Choice";
+      document.getElementById("editQAns").value = q.answer || 0;
+      document.getElementById("editQText").value = q.question || "";
+      document.getElementById("editQMatchPairs").value = Array.isArray(q.matchPairs) && q.matchPairs.length
+        ? q.matchPairs.map((p) => `${p.left || ""} | ${p.right || ""}`).join("\n")
+        : "";
+      document.getElementById("editQOpt0").value = q.options?.[0] || "";
+      document.getElementById("editQOpt1").value = q.options?.[1] || "";
+      document.getElementById("editQOpt2").value = q.options?.[2] || "";
+      document.getElementById("editQOpt3").value = q.options?.[3] || "";
+      document.getElementById("editQExp").value = q.explanation || "";
+      populateDiagramSelectForModal();
+      updateEditQImgPreview();
+      document.getElementById("editQModal").classList.remove("hidden");
+      document.getElementById("editQModal").classList.add("flex");
+    };
+
+    function updateEditQImgPreview() {
+      const wrap = document.getElementById("editQImgPreviewWrap");
+      const img = document.getElementById("editQImgPreview");
+      if (state.editQTempImg) { img.src = state.editQTempImg; wrap.classList.remove("hidden"); }
+      else wrap.classList.add("hidden");
+    }
+
+    window.handleEditQImgUpload = (e) => {
+      const f = e.target.files?.[0];
+      if (!f) return;
+      const r = new FileReader();
+      r.onload = () => { state.editQTempImg = r.result; updateEditQImgPreview(); };
+      r.readAsDataURL(f);
+    };
+    window.clearEditQImg = () => { state.editQTempImg = ""; updateEditQImgPreview(); };
+    window.closeEditQModal = () => {
+      document.getElementById("editQModal").classList.add("hidden");
+      document.getElementById("editQModal").classList.remove("flex");
+    };
+
+    window.saveEditQModal = () => {
+      const qNum = parseInt(document.getElementById("editQNum").value, 10) || 1;
+      const qText = document.getElementById("editQText").value.trim();
+      if (!qText) { showToast("Question statement cannot be empty!", "warn"); return; }
+
+      const rawPairs = document.getElementById("editQMatchPairs").value.trim();
+      const matchPairs = rawPairs
+        ? rawPairs.split("\n").map((ln) => {
+            const parts = ln.split("|");
+            return { left: (parts[0] || "").trim(), right: parts.slice(1).join("|").trim() };
+          }).filter((p) => p.left || p.right)
+        : [];
+
+      const qType = matchPairs.length ? "Match the Following" : document.getElementById("editQType").value;
+      const obj = {
+        qNum,
+        page: state.editQIndex !== null ? (state.extractedQuestions[state.editQIndex]?.page || 1) : 1,
+        question: qText,
+        qType,
+        matchPairs,
+        options: [0, 1, 2, 3].map((i) => document.getElementById(`editQOpt${i}`).value.trim()),
+        answer: parseInt(document.getElementById("editQAns").value, 10) || 0,
+        explanation: document.getElementById("editQExp").value.trim(),
+        image: state.editQTempImg
+      };
+
+      if (state.editQIndex === null) {
+        // Insert new manual question at its exact serial number (replace if same qNum exists)
+        const existingIdx = state.extractedQuestions.findIndex((x) => Number(x.qNum) === qNum);
+        if (existingIdx !== -1) state.extractedQuestions[existingIdx] = obj;
+        else state.extractedQuestions.push(obj);
+        state.extractedQuestions.sort((a, b) => (Number(a.qNum) || 0) - (Number(b.qNum) || 0));
+        showToast(`Inserted Q#${qNum} at exact position!`, "success");
+      } else {
+        state.extractedQuestions[state.editQIndex] = obj;
+        state.extractedQuestions.sort((a, b) => (Number(a.qNum) || 0) - (Number(b.qNum) || 0));
+        showToast(`Saved Q#${qNum}`, "success");
+      }
+
+      closeEditQModal();
+      renderReviewList();
+      detectMissingQuestionGaps();
+    };
+
+    window.copyExtractedJSON = () => {
+      const ta = document.createElement("textarea");
+      ta.value = JSON.stringify(state.extractedQuestions, null, 2);
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+      showToast("JSON copied to clipboard!", "success");
+    };
+
+    window.sendToPublisher = () => {
+      document.getElementById("pubJsonInput").value = JSON.stringify(state.extractedQuestions, null, 2);
+      document.getElementById("pubSubject").value = document.getElementById("extractSubject").value;
+      updatePubJsonStats();
+      switchTab("publisher");
+      showToast(`Loaded ${state.extractedQuestions.length} Qs into Publisher!`, "success");
+    };
+
+    // =========================================================================
+    // 11. BULK PUBLISHER, CLOUD TESTS MANAGER & ANALYTICS
+    // =========================================================================
+    window.updatePubJsonStats = () => {
+      const raw = document.getElementById("pubJsonInput").value.trim();
+      const el = document.getElementById("pubJsonStats");
+      if (!raw) { el.textContent = "0 questions • 0 KB"; return; }
+      try {
+        const arr = JSON.parse(raw);
+        const kb = Math.round(new Blob([raw]).size / 1024);
+        el.textContent = `${Array.isArray(arr) ? arr.length : 0} questions • ${kb} KB${kb > 640 ? " (Auto-Chunking Active)" : ""}`;
+        el.className = "text-[11px] font-bold text-emerald-400";
+      } catch {
+        el.textContent = "Invalid JSON syntax";
+        el.className = "text-[11px] font-bold text-rose-400";
+      }
+    };
+
+    window.formatPubJson = () => {
+      try {
+        const arr = JSON.parse(document.getElementById("pubJsonInput").value);
+        document.getElementById("pubJsonInput").value = JSON.stringify(arr, null, 2);
+        updatePubJsonStats();
+        showToast("Valid JSON!", "success");
+      } catch (e) { showToast("JSON Error: " + e.message, "error"); }
+    };
+
+    window.publishToCloud = async () => {
+      let questions;
+      try {
+        questions = JSON.parse(document.getElementById("pubJsonInput").value);
+        if (!Array.isArray(questions) || !questions.length) throw new Error("Empty array");
+      } catch (e) { showToast("Invalid JSON: " + e.message, "error"); return; }
+
+      const sanitized = questions.map((q, idx) => ({
+        qNum: Number(q.qNum) || idx + 1,
+        question: String(q.question || "").trim(),
+        qType: String(q.qType || detectNeetQType(q.question, q.matchPairs)),
+        matchPairs: normalizeMatchPairs(q.matchPairs),
+        options: Array.isArray(q.options) ? q.options.slice(0, 4).map(String) : ["A", "B", "C", "D"],
+        answer: Math.max(0, Math.min(3, parseInt(q.answer, 10) || 0)),
+        explanation: String(q.explanation || "").trim(),
+        image: String(q.image || "")
+      })).filter((q) => q.question.length > 0);
+
+      const btn = document.getElementById("btnPublishCloud");
+      btn.disabled = true;
+      try {
+        if (state.publishMode === "append") {
+          const targetId = document.getElementById("appendTestSelect").value;
+          const existing = state.cloudTests.find((t) => t.id === targetId);
+          if (!existing) throw new Error("Select a valid Cloud Test");
+          await saveTestToCloudChunked({ ...existing, questions: [...(existing.questions || []), ...sanitized] });
+          showToast(`Appended ${sanitized.length} Qs to "${existing.title}"!`, "success");
+        } else {
+          const title = document.getElementById("pubTitle").value.trim() || `NEET Mock Test (${sanitized.length} Qs)`;
+          const subject = document.getElementById("pubSubject").value;
+          const tag = document.getElementById("pubTag").value.trim() || "NEET 2027";
+          await saveTestToCloudChunked({
+            id: "test-" + Date.now(),
+            title, subject, tag,
+            questions: sanitized,
+            createdAt: Date.now()
+          });
+          showToast(`Published "${title}" LIVE to Student Portal!`, "success");
+        }
+        switchTab("manage");
+      } catch (err) {
+        showToast("Publish Failed: " + err.message, "error");
+      } finally {
+        btn.disabled = false;
+      }
+    };
+
+    window.renderCloudTests = () => {
+      document.getElementById("cloudTestsCount").textContent = state.cloudTests.length;
+      const grid = document.getElementById("cloudTestsGrid");
+      const q = (document.getElementById("manageSearch").value || "").toLowerCase();
+      const filtered = state.cloudTests.filter((t) => (t.title || "").toLowerCase().includes(q) || (t.subject || "").toLowerCase().includes(q));
+
+      if (!filtered.length) {
+        grid.innerHTML = `<div class="col-span-full text-center py-12 glass-panel rounded-2xl text-slate-400 text-xs">No tests in Cloud Database yet.</div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map((t) => {
+        const count = (t.questions || []).length;
+        const imgCount = (t.questions || []).filter((x) => x.image).length;
+        return `
+          <div class="glass-panel rounded-2xl p-4 flex flex-col justify-between gap-3">
+            <div>
+              <div class="flex items-center justify-between gap-2">
+                <span class="px-2 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-300 text-[10px] font-extrabold">${escapeHtml(t.subject || "Full Mock")}</span>
+                <span class="text-[10px] text-slate-400">${escapeHtml(t.tag || "NEET 2027")}</span>
+              </div>
+              <h3 class="text-sm font-extrabold text-white mt-2 leading-snug">${escapeHtml(t.title)}</h3>
+              <p class="text-xs text-slate-400 mt-1">${count} Qs • ${imgCount} HD Diagrams • ${count} Min Timer</p>
+            </div>
+            <div class="flex items-center gap-2 pt-2 border-t border-slate-800">
+              <button onclick="loadTestIntoReview('${t.id}')" class="flex-1 py-2 rounded-xl bg-navy-800 hover:bg-navy-700 text-xs font-bold text-emerald-300"><i class="fa-solid fa-pen-to-square mr-1"></i>Edit</button>
+              <button onclick="downloadSingleTest('${t.id}')" class="px-3 py-2 rounded-xl bg-navy-800 hover:bg-navy-700 text-xs font-bold text-cyan-300"><i class="fa-solid fa-download"></i></button>
+              <button onclick="deleteCloudTest('${t.id}')" class="px-3 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-xs font-bold text-rose-300"><i class="fa-solid fa-trash"></i></button>
+            </div>
+          </div>`;
+      }).join("");
+    };
+
+    window.loadTestIntoReview = (id) => {
+      const t = state.cloudTests.find((x) => x.id === id);
+      if (!t) return;
+      state.extractedQuestions = (t.questions || []).map((q, i) => ({
+        ...q,
+        qNum: Number(q.qNum) || i + 1,
+        matchPairs: normalizeMatchPairs(q.matchPairs)
+      }));
+      document.getElementById("pubTitle").value = t.title || "";
+      renderReviewList();
+      detectMissingQuestionGaps();
+      switchTab("studio");
+      showToast(`Loaded "${t.title}" into Review Workspace!`, "info");
+    };
+
+    window.downloadSingleTest = (id) => {
+      const t = state.cloudTests.find((x) => x.id === id);
+      if (!t) return;
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(t, null, 2)], { type: "application/json" }));
+      a.download = `${(t.title || t.id).replace(/\s+/g, "_")}.json`;
+      a.click();
+    };
+
+    window.exportAllTestsBackup = () => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(state.cloudTests, null, 2)], { type: "application/json" }));
+      a.download = `neet_ace_backup_${Date.now()}.json`;
+      a.click();
+      showToast("Full Cloud Backup downloaded!", "success");
+    };
+
+    window.deleteCloudTest = async (id) => {
+      const t = state.cloudTests.find((x) => x.id === id);
+      if (!(await askConfirm("Delete Cloud Test?", `Permanently delete "${t?.title || id}" from Student Portal?`))) return;
+      try {
+        await deleteDoc(doc(db, "artifacts", CLOUD_APP_ID, "public", "data", "neet_tests", id));
+        showToast("Deleted from Cloud.", "success");
+      } catch (e) { showToast("Delete error: " + e.message, "error"); }
+    };
+
+    function refreshTestDropdowns() {
+      const opts = state.cloudTests.map((t) => `<option value="${t.id}">${escapeHtml(t.title)} (${(t.questions || []).length} Qs)</option>`).join("");
+      document.getElementById("appendTestSelect").innerHTML = opts || `<option value="">No tests</option>`;
+      document.getElementById("singleTargetTest").innerHTML = opts || `<option value="">No tests</option>`;
+    }
+
+    window.handleSingleImgUpload = (e) => {
+      const f = e.target.files?.[0];
+      if (!f) return;
+      const r = new FileReader();
+      r.onload = () => { state.singleTempImg = r.result; };
+      r.readAsDataURL(f);
+    };
+
+    window.saveSingleQuestionToCloud = async () => {
+      const targetId = document.getElementById("singleTargetTest").value;
+      const existing = state.cloudTests.find((t) => t.id === targetId);
+      if (!existing) { showToast("Select a Cloud Test first!", "warn"); return; }
+      const qText = document.getElementById("singleQuestion").value.trim();
+      const opts = [0, 1, 2, 3].map((i) => document.getElementById(`singleOpt${i}`).value.trim());
+      if (!qText || opts.some((o) => !o)) { showToast("Fill question and all 4 options.", "warn"); return; }
+      try {
+        const nextNum = (existing.questions || []).length + 1;
+        const newQ = {
+          qNum: nextNum,
+          question: qText, qType: detectNeetQType(qText), matchPairs: [],
+          options: opts, answer: parseInt(document.getElementById("singleAns").value, 10) || 0,
+          explanation: document.getElementById("singleExp").value.trim(), image: state.singleTempImg || ""
+        };
+        await saveTestToCloudChunked({ ...existing, questions: [...(existing.questions || []), newQ] });
+        document.getElementById("singleQuestion").value = "";
+        [0, 1, 2, 3].forEach((i) => (document.getElementById(`singleOpt${i}`).value = ""));
+        document.getElementById("singleExp").value = "";
+        state.singleTempImg = "";
+        showToast(`Added question to "${existing.title}"!`, "success");
+      } catch (e) { showToast("Save failed: " + e.message, "error"); }
+    };
+
+    function updateAnalyticsStats() {
+      document.getElementById("statTotalTests").textContent = state.cloudTests.length;
+      document.getElementById("statTotalQs").textContent = state.cloudTests.reduce((a, t) => a + (t.questions || []).length, 0);
+      document.getElementById("statTotalAttempts").textContent = state.cloudSubmissions.length;
+
+      const list = document.getElementById("analyticsAttemptsList");
+      if (!state.cloudSubmissions.length) {
+        list.innerHTML = `<p class="text-slate-500">No student attempts recorded yet.</p>`;
+        return;
+      }
+      list.innerHTML = state.cloudSubmissions.slice(0, 20).map((s) => `
+        <div class="flex items-center justify-between bg-navy-950 border border-slate-800 rounded-xl px-3 py-2.5">
+          <div>
+            <p class="font-extrabold text-white">${escapeHtml(s.studentName || "Student")}</p>
+            <p class="text-[11px] text-slate-400">${escapeHtml(s.testTitle || "Mock Test")} • Acc: ${s.accuracy ?? 0}%</p>
+          </div>
+          <span class="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-300 font-black">${s.score ?? 0} / ${s.maxScore ?? 720}</span>
+        </div>
+      `).join("");
+    }
+
+    // =========================================================================
+    // 12. BOOTSTRAP
+    // =========================================================================
+    try {
+      const savedKey = localStorage.getItem("neet_ace_gkey");
+      if (savedKey) {
+        document.getElementById("apiKeysInput").value = savedKey;
+        saveCustomKeys(savedKey);
+      }
+    } catch (_) {}
+
+    switchTab("studio");
+    setDiagramMode("ai_vision");
+    setExtractType("paper");
+    setPublishMode("new");
+    initCloud();
+  </script>
+</body>
+</html>

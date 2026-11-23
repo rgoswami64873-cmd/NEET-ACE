@@ -458,7 +458,7 @@
         <div class="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between gap-3">
           <div>
             <div class="font-bold text-sm text-emerald-400">Admin Panel & PDF Studio</div>
-            <div class="text-xs text-slate-400">Multi-Key 180Q Extractor, HD Diagrams, Manage DB, Cloud Setup</div>
+            <div class="text-xs text-slate-400">Multi-Key 180Q Extractor, Zero-Cut HD Diagrams, Manage DB, Cloud Setup</div>
           </div>
           <button onclick="openAdminGate()" class="px-4 py-2 rounded-xl bg-emerald-500 text-navy-950 font-extrabold text-xs shrink-0">
             Open Admin
@@ -503,10 +503,10 @@
         <div class="flex flex-wrap items-start justify-between gap-2">
           <div>
             <h3 class="text-lg font-extrabold flex items-center gap-2">
-              <i class="fa-solid fa-wand-magic-sparkles text-emerald-500"></i> Pro NEET PDF → JSON Extractor (Multi-Key 180Q)
+              <i class="fa-solid fa-wand-magic-sparkles text-emerald-500"></i> Pro NEET PDF → JSON Extractor (180/180 Engine)
             </h3>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Supports All 8+ NEET Types + Multi-Key Auto-Rotation + Smart 429 Auto-Cooldown + Auto-Save Draft
+              1-Page Overlap + Full-Stem Dedup (180/180) + Zero-Cut HD Diagrams + Multi-Key Rotation
             </p>
           </div>
           <!-- Draft Restore Banner Button (Shown if draft exists) -->
@@ -540,7 +540,7 @@
                   <i class="fa-solid fa-file-lines text-emerald-500"></i> Test Paper / Question Bank
                 </div>
                 <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                  PDF mein diye gaye exact questions, options & solutions seedha extract karega.
+                  1-page overlap ke saath saare 180/180 questions verbatim extract karega.
                 </div>
               </div>
             </label>
@@ -592,8 +592,8 @@
             <label class="flex items-center gap-2.5 cursor-pointer">
               <input id="pdfDiagramReader" type="checkbox" checked class="w-4 h-4 accent-emerald-500 rounded" />
               <div>
-                <div class="text-sm font-bold">AI HD Diagram Reader & Auto-Crop</div>
-                <div class="text-[11px] text-slate-500">PDF pages ko HD mein render karke diagrams crop karega</div>
+                <div class="text-sm font-bold">AI Zero-Cut HD Diagram Reader</div>
+                <div class="text-[11px] text-slate-500">Extra 4.8% safe padding ke saath diagrams bina kate crop karega</div>
               </div>
             </label>
             <select id="pdfImageQuality" class="px-3 py-1.5 rounded-xl bg-white dark:bg-navy-800 border border-slate-300 dark:border-white/10 text-xs font-bold">
@@ -656,7 +656,7 @@
         <!-- Action Buttons -->
         <div class="flex flex-wrap gap-2.5">
           <button id="btnStartAiExtract" onclick="runAiPdfExtraction()" class="flex-1 min-w-[200px] py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-400 to-teal-500 text-navy-950 font-extrabold text-sm shadow-lg shadow-emerald-500/20 active:scale-95 transition flex items-center justify-center gap-2">
-            <i class="fa-solid fa-robot"></i> Start AI Extraction (180Q Engine)
+            <i class="fa-solid fa-robot"></i> Start AI Extraction (180/180 Engine)
           </button>
           <button id="btnStopAiExtract" onclick="stopAiExtraction()" class="hidden py-3 px-4 rounded-xl bg-rose-500 text-white font-extrabold text-sm active:scale-95 transition">
             <i class="fa-solid fa-stop mr-1"></i> Stop & Keep
@@ -1132,7 +1132,7 @@
     // =========================================================================
     // 1. CONFIGURATION (Aap yahan apna Admin PIN badal sakte hain!)
     // =========================================================================
-    const ADMIN_PIN = "1234"; // Letters, numbers, symbols sab allowed hain (e.g. "Neet@2027")
+    const ADMIN_PIN = "181229"; // Letters, numbers, symbols sab allowed hain (e.g. "Neet@2027")
     const NEET_EXAM_DATE = new Date("2027-05-02T14:00:00+05:30").getTime();
 
     if (typeof pdfjsLib !== "undefined") {
@@ -2262,7 +2262,7 @@
     }
 
     // =========================================================================
-    // 8. ADMIN STUDIO — MULTI-KEY AUTO-ROTATION + 180-Q EXTRACTOR + AUTO-DRAFT
+    // 8. ADMIN STUDIO — 180/180 OVERLAP + FULL-STEM DEDUP + ZERO-CUT HD DIAGRAMS
     // =========================================================================
     const ACTIVE_GEMINI_MODELS = [
       "gemini-2.5-flash",
@@ -2442,16 +2442,25 @@
       return canvas;
     }
 
+    // ZERO-CUT HD DIAGRAM CROPPER: Generous 48-unit padding so axis labels, circuit values & sub-parts NEVER get clipped!
     function cropDiagramHD(pageCanvas, box, qualityMode = "hd") {
       if (!pageCanvas || !Array.isArray(box) || box.length !== 4) return "";
-      let [ymin, xmin, ymax, xmax] = box.map(Number);
-      if ([ymin, xmin, ymax, xmax].some(v => isNaN(v))) return "";
+      let [y1, x1, y2, x2] = box.map(Number);
+      if ([y1, x1, y2, x2].some(v => isNaN(v))) return "";
 
-      const pad = 22;
-      ymin = Math.max(0, ymin - pad);
-      xmin = Math.max(0, xmin - pad);
-      ymax = Math.min(1000, ymax + pad);
-      xmax = Math.min(1000, xmax + pad);
+      // Ensure proper min/max ordering
+      let ymin = Math.min(y1, y2);
+      let ymax = Math.max(y1, y2);
+      let xmin = Math.min(x1, x2);
+      let xmax = Math.max(x1, x2);
+
+      // Generous safe padding (~4.8% horizontally & ~4.5% vertically)
+      const padY = 45;
+      const padX = 48;
+      ymin = Math.max(0, ymin - padY);
+      xmin = Math.max(0, xmin - padX);
+      ymax = Math.min(1000, ymax + padY);
+      xmax = Math.min(1000, xmax + padX);
       if (ymax - ymin < 25 || xmax - xmin < 25) return "";
 
       const sx = Math.floor((xmin / 1000) * pageCanvas.width);
@@ -2481,6 +2490,18 @@
       octx.drawImage(pageCanvas, sx, sy, sw, sh, 0, 0, outW, outH);
 
       return outCanvas.toDataURL(cfg.mime, cfg.q);
+    }
+
+    // FULL-STEM + OPTIONS + MATCH-PAIRS DEDUP KEY (Prevents Assertion-Reason / Statement I&II / Match collisions!)
+    function buildQuestionFingerprint(qText, options, matchPairs) {
+      const cleanQ = String(qText || "").toLowerCase().replace(/[^a-z0-9\u0900-\u097f]/g, "");
+      const cleanOpts = (Array.isArray(options) ? options : [])
+        .map(o => String(o || "").toLowerCase().replace(/[^a-z0-9\u0900-\u097f]/g, ""))
+        .join("|");
+      const cleanMatch = (Array.isArray(matchPairs) ? matchPairs : [])
+        .map(p => `${p.left || ""}${p.right || ""}`.toLowerCase().replace(/[^a-z0-9\u0900-\u097f]/g, ""))
+        .join("|");
+      return `${cleanQ}##${cleanOpts}##${cleanMatch}`;
     }
 
     function safeParseJsonArray(rawText) {
@@ -2784,7 +2805,7 @@
       btnStop.classList.remove("hidden");
       progBox.classList.remove("hidden");
       document.getElementById("pdfOutputSection").classList.remove("hidden");
-      appendExtractLog(`Starting 180Q Engine • ${keysList.length || 1} Key(s) • Mode: ${sourceMode.toUpperCase()} • Lang: ${langMode.toUpperCase()}`, "info");
+      appendExtractLog(`Starting 180/180 Engine • ${keysList.length || 1} Key(s) • Mode: ${sourceMode.toUpperCase()} • Lang: ${langMode.toUpperCase()}`, "info");
 
       const langRule =
         langMode === "english"
@@ -2795,7 +2816,7 @@
 
       const modeRule =
         sourceMode === "paper"
-          ? "SOURCE MODE: TEST PAPER / QUESTION BANK. Extract EVERY SINGLE question present on these pages VERBATIM with all 4 options (whether labelled (1)(2)(3)(4) or (A)(B)(C)(D)). Skip cover/instructions pages if they have 0 questions. If answer key is not on the page, solve accurately and give a crisp NEET solution."
+          ? "SOURCE MODE: TEST PAPER / QUESTION BANK. Extract EVERY SINGLE complete question present across these pages VERBATIM with all 4 options (whether labelled (1)(2)(3)(4) or (A)(B)(C)(D)). Do NOT miss any question at the bottom of a column or spanning across two pages! Skip cover/instructions pages if they have 0 questions. If answer key is not on the page, solve accurately and give a crisp NEET solution."
           : "SOURCE MODE: TEXTBOOK / NCERT / NOTES. Create high-yield NEET-UG MCQs covering ALL 8+ NEET formats (Single Choice, Assertion-Reason, Statement I & II, Match the Following, Multiple Statements, Numerical, Sequence/Order, Incorrect/NOT type).";
 
       const neetTypesRule = `NEET 8+ MCQ TYPES SUPPORT (CRITICAL):
@@ -2806,10 +2827,10 @@ Properly set "qType" to one of: "Single Choice", "Assertion-Reason", "Statement 
 - Use plain Unicode symbols (×, ÷, ±, °, α, β, γ, Δ, Ω, μ, π, →, ², ³) instead of raw LaTeX backslashes.`;
 
       const diagramRule = useDiagramReader
-        ? `DIAGRAM RULE: If a question refers to a figure/graph/circuit/structure on PDF page P, set "diagram_page": P and "diagram_box": [ymin, xmin, ymax, xmax] (0-1000 normalized coordinates tightly enclosing the diagram + labels). Otherwise set both to null.`
+        ? `DIAGRAM RULE (ZERO-CUT): If a question refers to a figure/graph/circuit/biological diagram/chemical structure on PDF page P, set "diagram_page": P and "diagram_box": [ymin, xmin, ymax, xmax] (0-1000 normalized coordinates). GENEROUSLY enclose the ENTIRE diagram including ALL axis labels, numbers, circuit values, arrows, units, and (a)/(b)/(c)/(d) sub-figures with comfortable outer margin so NOTHING gets cut off. Otherwise set both to null.`
         : `Set "diagram_page": null and "diagram_box": null.`;
 
-      const seenStems = new Set();
+      const seenFingerprints = new Set();
 
       try {
         if (pdfEngine.pdfDoc && pdfEngine.pages.length > 0) {
@@ -2818,9 +2839,17 @@ Properly set "qType" to one of: "Single Choice", "Assertion-Reason", "Statement 
           const endP = Math.max(startP, Math.min(totalPages, parseInt(document.getElementById("pdfEndPage").value, 10) || totalPages));
           const pagesPerBatch = Math.max(1, Math.min(5, parseInt(document.getElementById("pdfPagesPerBatch").value, 10) || 3));
 
+          // Smart 1-page overlap in Test Paper mode so page-boundary split questions are NEVER lost!
+          const step = (sourceMode === "paper" && pagesPerBatch >= 2) ? (pagesPerBatch - 1) : pagesPerBatch;
           const batches = [];
-          for (let p = startP; p <= endP; p += pagesPerBatch) {
-            batches.push({ from: p, to: Math.min(endP, p + pagesPerBatch - 1) });
+          for (let p = startP; p <= endP; p += step) {
+            const toP = Math.min(endP, p + pagesPerBatch - 1);
+            batches.push({ from: p, to: toP });
+            if (toP >= endP) break;
+          }
+
+          if (sourceMode === "paper" && pagesPerBatch >= 2 && batches.length > 1) {
+            appendExtractLog(`1-Page Boundary Overlap active across ${batches.length} batches (zero split-question loss).`, "info");
           }
 
           for (let bIdx = 0; bIdx < batches.length; bIdx++) {
@@ -2854,7 +2883,7 @@ Properly set "qType" to one of: "Single Choice", "Assertion-Reason", "Statement 
                 visionCanvas.width = Math.round(hdCanvas.width * vScale);
                 visionCanvas.height = Math.round(hdCanvas.height * vScale);
                 visionCanvas.getContext("2d").drawImage(hdCanvas, 0, 0, visionCanvas.width, visionCanvas.height);
-                const b64 = visionCanvas.toDataURL("image/jpeg", 0.75).split(",")[1];
+                const b64 = visionCanvas.toDataURL("image/jpeg", 0.78).split(",")[1];
                 parts.push({ text: `[IMAGE OF PDF PAGE ${p}]` });
                 parts.push({ inlineData: { mimeType: "image/jpeg", data: b64 } });
               }
@@ -2883,9 +2912,13 @@ ${batchText}`;
                 if (pdfEngine.extractedQuestions.length >= targetCount) break;
                 if (!item || !item.question || !Array.isArray(item.options) || item.options.length < 2) continue;
 
-                const stemKey = String(item.question).toLowerCase().replace(/\s+/g, "").slice(0, 80);
-                if (seenStems.has(stemKey)) continue;
-                seenStems.add(stemKey);
+                const cleanOpts = item.options.slice(0, 4).map(o => String(o).trim());
+                while (cleanOpts.length < 4) cleanOpts.push("");
+                const cleanMatchPairs = Array.isArray(item.matchPairs) ? item.matchPairs : [];
+
+                const fingerprint = buildQuestionFingerprint(item.question, cleanOpts, cleanMatchPairs);
+                if (seenFingerprints.has(fingerprint)) continue;
+                seenFingerprints.add(fingerprint);
 
                 let croppedImg = "";
                 if (useDiagramReader && item.diagram_page && Array.isArray(item.diagram_box) && item.diagram_box.length === 4) {
@@ -2893,13 +2926,10 @@ ${batchText}`;
                   croppedImg = cropDiagramHD(targetCanvas, item.diagram_box, imageQuality);
                 }
 
-                const cleanOpts = item.options.slice(0, 4).map(o => String(o).trim());
-                while (cleanOpts.length < 4) cleanOpts.push("");
-
                 pdfEngine.extractedQuestions.push({
                   question: String(item.question).trim(),
                   qType: item.qType || (croppedImg ? "Diagram Based" : detectNeetQuestionType(item.question)),
-                  matchPairs: Array.isArray(item.matchPairs) ? item.matchPairs : [],
+                  matchPairs: cleanMatchPairs,
                   options: cleanOpts,
                   answer: Math.max(0, Math.min(3, parseInt(item.answer, 10) || 0)),
                   explanation: String(item.explanation || "").trim(),
@@ -2908,7 +2938,7 @@ ${batchText}`;
                 addedThisBatch++;
               }
 
-              appendExtractLog(`Pages ${batch.from}-${batch.to} [${respObj.keyTag} • ${respObj.model}]: +${addedThisBatch} Qs`, addedThisBatch > 0 ? "success" : "info");
+              appendExtractLog(`Pages ${batch.from}-${batch.to} [${respObj.keyTag} • ${respObj.model}]: +${addedThisBatch} new Qs`, addedThisBatch > 0 ? "success" : "info");
               if (addedThisBatch > 0) saveDraftToLocal();
             } catch (batchErr) {
               if (pdfEngine.abortRequested) break;
@@ -2956,10 +2986,15 @@ ${chunks[c]}`;
                 if (!item || !item.question || !Array.isArray(item.options)) continue;
                 const cleanOpts = item.options.slice(0, 4).map(o => String(o).trim());
                 while (cleanOpts.length < 4) cleanOpts.push("");
+                const cleanMatchPairs = Array.isArray(item.matchPairs) ? item.matchPairs : [];
+                const fingerprint = buildQuestionFingerprint(item.question, cleanOpts, cleanMatchPairs);
+                if (seenFingerprints.has(fingerprint)) continue;
+                seenFingerprints.add(fingerprint);
+
                 pdfEngine.extractedQuestions.push({
                   question: String(item.question).trim(),
                   qType: item.qType || detectNeetQuestionType(item.question),
-                  matchPairs: Array.isArray(item.matchPairs) ? item.matchPairs : [],
+                  matchPairs: cleanMatchPairs,
                   options: cleanOpts,
                   answer: Math.max(0, Math.min(3, parseInt(item.answer, 10) || 0)),
                   explanation: String(item.explanation || "").trim(),

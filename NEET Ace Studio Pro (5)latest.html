@@ -1,0 +1,2761 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>NEET Ace Studio Pro • Hydrogen AI + Python CV Engine</title>
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          colors: {
+            navy: {
+              950: '#040914',
+              900: '#0a1222',
+              850: '#0f1b30',
+              800: '#16243d',
+              700: '#1f3152'
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- PDF.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    }
+  </script>
+
+  <!-- Pyodide (Python 3 CV Engine loaded lazily when needed) -->
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js" defer></script>
+
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: #040914;
+      background-image: radial-gradient(circle at 10% 0%, rgba(16, 185, 129, 0.08), transparent 36%),
+                        radial-gradient(circle at 90% 10%, rgba(56, 189, 248, 0.07), transparent 34%);
+      color: #f1f5f9;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .studio-card {
+      background: rgba(15, 27, 48, 0.86);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      box-shadow: 0 12px 34px rgba(0, 0, 0, 0.42);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0a1222; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 999px; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.2s ease-out; }
+
+    @keyframes pulseDot {
+      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.65); }
+      70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+    .pulse-green { animation: pulseDot 2s infinite; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col pb-12">
+
+  <!-- ==================== TOASTS ==================== -->
+  <div id="toastBox" class="fixed top-4 right-4 z-[180] flex flex-col gap-2 max-w-sm w-[calc(100%-2rem)] pointer-events-none"></div>
+
+  <!-- ==================== TOP STUDIO HEADER ==================== -->
+  <header class="sticky top-0 z-40 bg-navy-950/95 backdrop-blur-md border-b border-white/10">
+    <div class="max-w-7xl mx-auto pl-14 pr-3 md:px-5 py-2.5 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 via-cyan-400 to-purple-500 text-navy-950 flex items-center justify-center text-base font-black shadow-lg shadow-emerald-500/25 shrink-0">
+          <i class="fa-solid fa-atom"></i>
+        </div>
+        <div class="leading-tight min-w-0">
+          <div class="flex items-center gap-1.5">
+            <h1 class="text-sm sm:text-base font-black text-white truncate">NEET Ace Studio Pro</h1>
+            <span class="px-1.5 py-0.5 rounded-md bg-purple-500/20 border border-purple-400/30 text-purple-300 text-[10px] font-black shrink-0">Hydrogen + CV</span>
+          </div>
+          <div class="flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
+            <span id="cloudDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0"></span>
+            <span id="cloudStatusText">Connecting Cloud...</span>
+            <span class="text-slate-600">•</span>
+            <span id="pyStatusBadge" class="text-cyan-400">Python CV Ready</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1.5 flex-wrap">
+        <button onclick="openCloudManagerModal('tests')" class="px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/35 text-emerald-300 text-xs font-extrabold transition">
+          <i class="fa-solid fa-cloud mr-1"></i>Cloud Tests (<span id="cloudTestsCount">0</span>)
+        </button>
+        <button onclick="openCloudManagerModal('students')" class="px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/35 text-amber-300 text-xs font-extrabold transition">
+          <i class="fa-solid fa-ranking-star mr-1"></i>Students (<span id="cloudSubsCount">0</span>)
+        </button>
+        <button onclick="openKeysModal()" class="px-3 py-1.5 rounded-xl bg-navy-800 hover:bg-navy-700 border border-slate-700 text-slate-200 text-xs font-extrabold transition">
+          <i class="fa-solid fa-key text-cyan-400 mr-1"></i>API Keys (<span id="keysCountBadge">Built-in</span>)
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== MAIN WORKSPACE ==================== -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-5 py-5 space-y-5">
+
+    <!-- STEP 1 + STEP 2 + STEP 3 GRID -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+
+      <!-- LEFT COLUMN (Steps 1 & 2) -->
+      <div class="lg:col-span-5 space-y-4">
+
+        <!-- STEP 1: UPLOAD PDF & LAYOUT -->
+        <section class="studio-card rounded-3xl p-4 sm:p-5 space-y-4">
+          <div class="flex items-center justify-between gap-2">
+            <h2 class="text-sm font-black flex items-center gap-2 text-white">
+              <span class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs">1</span>
+              Upload NEET PDF & Layout
+            </h2>
+            <span id="pdfPagesBadge" class="px-2.5 py-0.5 rounded-lg bg-navy-950 border border-slate-700 text-[11px] font-extrabold text-cyan-400">0 Pages</span>
+          </div>
+
+          <label class="block cursor-pointer rounded-2xl border-2 border-dashed border-emerald-500/40 hover:border-emerald-400 bg-navy-950/70 p-4 text-center transition">
+            <input id="pdfFileInput" type="file" accept="application/pdf" class="hidden" onchange="handlePdfUpload(event)" />
+            <i class="fa-solid fa-file-pdf text-2xl text-emerald-400 mb-1.5"></i>
+            <p id="pdfFileNameLabel" class="text-xs font-extrabold text-white truncate">Tap to Select NEET PDF Paper</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">Allen, Aakash, PW, New Light, NTA & Bilingual Papers</p>
+          </label>
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
+            <div>
+              <label class="text-[10px] font-bold text-slate-400 uppercase">Start Page</label>
+              <input id="startPage" type="number" min="1" value="1" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-3 py-2 font-bold text-white outline-none focus:border-emerald-400" />
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-slate-400 uppercase">End Page</label>
+              <input id="endPage" type="number" min="1" value="1" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-3 py-2 font-bold text-white outline-none focus:border-emerald-400" />
+            </div>
+            <div class="col-span-2 sm:col-span-1">
+              <label class="text-[10px] font-bold text-slate-400 uppercase">Pages/Batch</label>
+              <select id="pagesPerBatch" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-2.5 py-2 font-bold text-white outline-none focus:border-emerald-400">
+                <option value="1">1 Page (Max)</option>
+                <option value="2" selected>2 Pages (100%)</option>
+                <option value="3">3 Pages (Fast)</option>
+                <option value="5">5 Pages (Turbo)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+            <div>
+              <label class="text-[10px] font-bold text-slate-400 uppercase">Column Layout</label>
+              <select id="columnLayout" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-2.5 py-2 font-bold text-white outline-none">
+                <option value="left_only" selected>Left Column Only (English)</option>
+                <option value="right_only">Right Column Only (Hindi)</option>
+                <option value="two_col">Two Columns (All Qs)</option>
+                <option value="single_col">Single Column (Full Width)</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-slate-400 uppercase">Language Mode</label>
+              <select id="langPrefSelect" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-2.5 py-2 font-bold text-white outline-none">
+                <option value="English" selected>English</option>
+                <option value="Hindi">Hindi</option>
+                <option value="Bilingual">Bilingual (EN + हिं Dual)</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-slate-400 uppercase">Extraction Type</label>
+              <select id="extractTypeSelect" onchange="state.extractType=this.value" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-2.5 py-2 font-bold text-white outline-none">
+                <option value="paper" selected>Exam Paper (Exact Q#)</option>
+                <option value="ncert">NCERT Chapter (Generate)</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-slate-400 uppercase">Question Limit</label>
+              <select id="questionLimitSelect" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-2.5 py-2 font-bold text-white outline-none">
+                <option value="0" selected>All Questions (Auto)</option>
+                <option value="20">20 Questions</option>
+                <option value="45">45 Questions</option>
+                <option value="90">90 Questions</option>
+                <option value="180">180 Questions</option>
+                <option value="200">200 Questions</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <!-- STEP 2: 3-IN-1 DIAGRAM CROPPING ENGINE -->
+        <section class="studio-card rounded-3xl p-4 sm:p-5 space-y-3.5">
+          <div class="flex items-center justify-between gap-2">
+            <h2 class="text-sm font-black flex items-center gap-2 text-white">
+              <span class="w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs">2</span>
+              3-in-1 Diagram Cropping Engine
+            </h2>
+            <select id="imgQualitySelect" class="bg-navy-950 border border-slate-700 rounded-lg px-2 py-1 text-[11px] font-bold text-cyan-300 outline-none">
+              <option value="compact">Compact (500px)</option>
+              <option value="balanced" selected>Balanced (640px)</option>
+              <option value="hd">HD (800px)</option>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2">
+            <button onclick="setCropMode('ai_vision')" data-cropmode="ai_vision" class="crop-mode-btn p-2.5 rounded-2xl border-2 border-emerald-500 bg-emerald-500/15 text-emerald-300 text-xs font-extrabold flex flex-col items-center gap-1 transition">
+              <i class="fa-solid fa-eye text-base"></i>
+              <span>AI Vision Crop</span>
+            </button>
+            <button onclick="setCropMode('python_cv')" data-cropmode="python_cv" class="crop-mode-btn p-2.5 rounded-2xl border border-slate-700 bg-navy-950 text-slate-300 text-xs font-bold flex flex-col items-center gap-1 transition">
+              <i class="fa-brands fa-python text-base text-amber-400"></i>
+              <span>Python CV Pro</span>
+            </button>
+            <button onclick="setCropMode('hybrid')" data-cropmode="hybrid" class="crop-mode-btn p-2.5 rounded-2xl border border-slate-700 bg-navy-950 text-slate-300 text-xs font-bold flex flex-col items-center gap-1 transition">
+              <i class="fa-solid fa-bolt text-base text-cyan-400"></i>
+              <span>Hybrid Auto</span>
+            </button>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3 text-[11px] font-bold text-slate-300">
+            <label class="flex items-center gap-1.5 cursor-pointer">
+              <input id="chkWatermarkKiller" type="checkbox" checked class="accent-emerald-500" />
+              Watermark Killer + Ink
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer">
+              <input id="chkMergeMulti" type="checkbox" checked class="accent-emerald-500" />
+              Merge 2–4 Figs
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer text-cyan-300">
+              <input id="chkRamGuard" type="checkbox" checked class="accent-cyan-400" />
+              🛡️ RAM Guard
+            </label>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="runPythonAutoCutter(true)" class="flex-1 py-2 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/35 text-amber-300 text-xs font-extrabold transition">
+              <i class="fa-brands fa-python mr-1"></i>Python Auto-Cutter
+            </button>
+            <button onclick="openSnipModal(-1)" class="py-2 px-3 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/35 text-cyan-300 text-xs font-extrabold transition">
+              <i class="fa-solid fa-scissors mr-1"></i>Manual Snip
+            </button>
+            <button onclick="clearDiagramPool()" class="py-2 px-3 rounded-xl bg-navy-950 hover:bg-navy-800 border border-slate-700 text-slate-400 text-xs font-bold transition">
+              Clear
+            </button>
+          </div>
+
+          <!-- Cropped Diagram Pool Preview -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between text-[11px] font-bold text-slate-400">
+              <span>Cropped Diagram Pool (<span id="diagPoolCount">0</span>)</span>
+              <span class="text-[10px] text-emerald-400">Label-Safe • Auto-Trimmed</span>
+            </div>
+            <div id="diagramPoolStrip" class="flex items-center gap-2 overflow-x-auto pb-1 min-h-[54px] bg-navy-950/70 rounded-xl p-2 border border-slate-800 text-[11px] text-slate-500">
+              No cropped figures yet. AI Vision crops automatically or run Python Auto-Cutter.
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- RIGHT COLUMN (Step 3: Extraction Engine + Live Console) -->
+      <div class="lg:col-span-7 space-y-4">
+        <section class="studio-card rounded-3xl p-4 sm:p-5 space-y-4 h-full flex flex-col">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h2 class="text-sm font-black flex items-center gap-2 text-white">
+              <span class="w-6 h-6 rounded-lg bg-purple-500/20 text-purple-300 flex items-center justify-center text-xs">3</span>
+              ⚛️ Hydrogen AI & Turbo Parallel Extraction
+            </h2>
+            <select id="parallelSpeedSelect" class="bg-navy-950 border border-purple-500/40 rounded-xl px-3 py-1.5 text-xs font-extrabold text-purple-300 outline-none">
+              <option value="1">1x Safe Sequential</option>
+              <option value="2">2x Fast Parallel</option>
+              <option value="3" selected>3x Turbo (Preview Safe)</option>
+              <option value="5">5x Hyper-Turbo</option>
+              <option value="10">🔥 10x Ultra-Turbo (Multi-Key)</option>
+              <option value="50">☢️ 50x God-Mode (All At Once)</option>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <button id="btnStartAI" onclick="startAIExtraction()" class="py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 hover:brightness-110 text-navy-950 font-black text-xs sm:text-sm shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2">
+              <i class="fa-solid fa-atom"></i>
+              <span>Start Hydrogen AI Extraction</span>
+            </button>
+            <button id="btnStartZeroAI" onclick="startZeroAIPythonExtraction()" class="py-3.5 px-4 rounded-2xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 font-black text-xs sm:text-sm transition flex items-center justify-center gap-2">
+              <i class="fa-brands fa-python"></i>
+              <span>Zero-AI Python Extractor (0 Keys)</span>
+            </button>
+          </div>
+
+          <button id="btnStopExtract" onclick="requestStopExtraction()" class="hidden w-full py-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-300 font-black text-xs transition">
+            <i class="fa-solid fa-stop mr-1"></i>Stop Current Process
+          </button>
+
+          <!-- Live Progress Bar -->
+          <div class="bg-navy-950/80 border border-slate-800 rounded-2xl p-3.5 space-y-2">
+            <div class="flex items-center justify-between text-xs font-bold">
+              <span id="progressLabel" class="text-slate-300 truncate">Ready — Upload a NEET PDF to begin.</span>
+              <div class="flex items-center gap-2 shrink-0">
+                <span id="elapsedLabel" class="text-[11px] text-cyan-400 font-mono">00:00</span>
+                <span id="progressPct" class="text-emerald-400 font-black">0%</span>
+              </div>
+            </div>
+            <div class="w-full h-2.5 rounded-full bg-navy-800 overflow-hidden">
+              <div id="progressBar" class="h-full bg-gradient-to-r from-emerald-500 via-cyan-400 to-purple-500 transition-all duration-300" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- Live Console Log -->
+          <div class="flex-1 flex flex-col min-h-[210px] bg-navy-950 border border-slate-800 rounded-2xl p-3">
+            <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-800 text-[11px] font-bold text-slate-400">
+              <span><i class="fa-solid fa-terminal text-emerald-400 mr-1.5"></i>Live Engine Telemetry</span>
+              <button onclick="document.getElementById('liveLogBox').innerHTML=''" class="text-slate-500 hover:text-slate-200">Clear Log</button>
+            </div>
+            <div id="liveLogBox" class="flex-1 overflow-y-auto space-y-1 font-mono text-[11px] max-h-56 pr-1 text-slate-300">
+              <div class="text-emerald-400">[READY] Hydrogen Primary Engine + Python CV Pro + All-Type NEET Parser initialized.</div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- ==================== STEP 4: WORLD-CLASS REVIEW & PUBLISH WORKSPACE ==================== -->
+    <section class="studio-card rounded-3xl p-4 sm:p-6 space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="text-base font-black text-white flex items-center gap-2">
+            <span class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs">4</span>
+            Review, Verify & Publish Live to NEET Ace Portal
+          </h2>
+          <p id="reviewSubStats" class="text-xs text-slate-400 mt-0.5">0 questions loaded • Ready for extraction or editing</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="runVisionAIVerifyAnswers()" class="px-3.5 py-2 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/40 text-cyan-300 text-xs font-extrabold transition">
+            <i class="fa-solid fa-circle-check mr-1"></i>Vision AI Verify Answers
+          </button>
+          <button onclick="runFillMissingSolutions()" class="px-3.5 py-2 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/40 text-purple-300 text-xs font-extrabold transition">
+            <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>AI Solutions
+          </button>
+          <button onclick="runBulkAddHindi()" class="px-3.5 py-2 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/40 text-sky-300 text-xs font-extrabold transition">
+            <i class="fa-solid fa-language mr-1"></i>Add Hindi (Bilingual)
+          </button>
+          <button onclick="openInsertManualQModal()" class="px-3 py-2 rounded-xl bg-navy-800 hover:bg-navy-700 border border-slate-700 text-white text-xs font-extrabold transition">
+            <i class="fa-solid fa-plus mr-1"></i>Add Q
+          </button>
+          <button onclick="openBulkJsonModal()" class="px-3 py-2 rounded-xl bg-navy-800 hover:bg-navy-700 border border-slate-700 text-slate-300 text-xs font-extrabold transition">
+            <i class="fa-solid fa-code mr-1"></i>JSON
+          </button>
+        </div>
+      </div>
+
+      <!-- Publish Metadata Bar -->
+      <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 bg-navy-950/80 border border-emerald-500/25 rounded-2xl p-3.5">
+        <input id="publishTestTitle" type="text" placeholder="Test Title (e.g., Allen FST-01 NEET 2027 Full Syllabus)"
+          class="sm:col-span-5 bg-navy-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-bold text-white outline-none focus:border-emerald-400" />
+        <select id="publishSubject" class="sm:col-span-2 bg-navy-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs font-bold text-white outline-none">
+          <option value="Full Mock">Full Mock</option>
+          <option value="Biology">Biology</option>
+          <option value="Physics">Physics</option>
+          <option value="Chemistry">Chemistry</option>
+        </select>
+        <input id="publishTag" type="text" value="NEET 2027" placeholder="Tag"
+          class="sm:col-span-2 bg-navy-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs font-bold text-white outline-none" />
+        <button id="btnPublishLive" onclick="publishTestToCloud()" class="sm:col-span-3 py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-navy-950 font-black text-xs shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <span id="publishBtnLabel">Publish Live to Cloud</span>
+        </button>
+      </div>
+
+      <!-- Bulk Answer Key Matcher (Paste OR Upload Answer Key PDF/Image) -->
+      <div class="bg-navy-950/70 border border-slate-800 rounded-2xl p-3.5 space-y-2">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <span class="text-xs font-extrabold text-amber-300"><i class="fa-solid fa-key mr-1.5"></i>Bulk Answer Key Matcher (Optional — Paste OR Upload Key PDF/Image)</span>
+          <label class="cursor-pointer px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/35 text-amber-300 text-[11px] font-extrabold transition">
+            <input id="answerKeyFileInput" type="file" accept="application/pdf,image/*" class="hidden" onchange="handleAnswerKeyFileUpload(event)" />
+            <i class="fa-solid fa-file-arrow-up mr-1"></i>Upload Key PDF / Image
+          </label>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-2">
+          <input id="bulkAnswerKeyInput" type="text" placeholder="Paste key e.g., 1.(3) 2.(1) 3.(4) OR 1-A 2-C 3-B OR A,C,B,D..."
+            class="flex-1 bg-navy-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-400" />
+          <button onclick="applyBulkAnswerKey()" class="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-navy-950 font-black text-xs transition shrink-0">
+            Apply Answer Key
+          </button>
+        </div>
+      </div>
+
+      <!-- Gap Detector Banner -->
+      <div id="gapDetectorBanner" class="hidden p-3 rounded-2xl bg-amber-500/10 border border-amber-500/40 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <span id="gapDetectorText" class="font-bold text-amber-300"></span>
+        <button onclick="document.getElementById('reviewFilter').value='missing_only'; renderReviewList();" class="px-3 py-1 rounded-lg bg-amber-400 text-navy-950 font-black text-[11px]">Show Missing Slots</button>
+      </div>
+
+      <!-- Search, Filter & Live Question-Type Pills -->
+      <div class="space-y-2">
+        <div class="flex flex-wrap items-center gap-2">
+          <input id="reviewSearch" type="text" oninput="renderReviewList()" placeholder="Search question text, type, or Q#..."
+            class="flex-1 min-w-[180px] bg-navy-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-emerald-400" />
+          <select id="reviewFilter" onchange="renderReviewList()" class="bg-navy-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-200 outline-none">
+            <option value="all">All Questions (+ Missing Slots)</option>
+            <option value="missing_only">Missing / Skipped Slots Only</option>
+            <option value="with_img">With Diagram Only</option>
+            <option value="no_img">Without Diagram</option>
+            <option value="type_match">Match the Following</option>
+            <option value="type_ar">Assertion-Reason</option>
+            <option value="type_stmt">Statement I & II</option>
+            <option value="type_multi">Multi-Statement (A–E)</option>
+            <option value="type_num">Numerical</option>
+            <option value="type_neg">Incorrect / NOT Type</option>
+            <option value="verified_only">AI Verified Only</option>
+          </select>
+        </div>
+        <div id="reviewTypePills" class="flex flex-wrap items-center gap-1.5 text-[10px] font-extrabold"></div>
+      </div>
+
+      <!-- Review Cards List -->
+      <div id="reviewList" class="space-y-3 max-h-[68vh] overflow-y-auto pr-1">
+        <div class="text-center py-10 text-xs text-slate-500">Upload a PDF and click <strong>Start Hydrogen AI Extraction</strong> or <strong>Zero-AI Python Extractor</strong> to populate questions here.</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- 1. FULL QUESTION EDITOR MODAL -->
+  <div id="editQModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[130] hidden items-center justify-center p-3">
+    <div class="bg-navy-900 border border-slate-700 rounded-3xl w-full max-w-2xl max-h-[92vh] flex flex-col p-5 space-y-3.5 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h3 id="editModalTitle" class="font-black text-base text-white">Edit Question</h3>
+        <button onclick="closeModal('editQModal')" class="w-8 h-8 rounded-lg bg-navy-800 text-slate-300"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="flex-1 overflow-y-auto space-y-3 pr-1 text-xs">
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="text-[10px] font-bold text-slate-400 uppercase">Serial Q#</label>
+            <input id="editQNum" type="number" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-3 py-2 font-bold text-white outline-none" />
+          </div>
+          <div>
+            <label class="text-[10px] font-bold text-slate-400 uppercase">PDF Page</label>
+            <input id="editQPage" type="number" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-3 py-2 font-bold text-white outline-none" />
+          </div>
+          <div>
+            <label class="text-[10px] font-bold text-slate-400 uppercase">Question Type</label>
+            <select id="editQType" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-2.5 py-2 font-bold text-white outline-none focus:border-emerald-400">
+              <option value="Single Choice">Single Choice</option>
+              <option value="Assertion-Reason">Assertion-Reason</option>
+              <option value="Statement I & II">Statement I & II</option>
+              <option value="Multi-Statement">Multi-Statement (A–E)</option>
+              <option value="Match the Following">Match the Following</option>
+              <option value="Diagram Based">Diagram Based</option>
+              <option value="Numerical">Numerical</option>
+              <option value="Incorrect / NOT Type">Incorrect / NOT Type</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="text-[10px] font-bold text-slate-400 uppercase">Question Text (English)</label>
+          <textarea id="editQText" rows="3" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl p-3 text-white outline-none focus:border-emerald-400"></textarea>
+        </div>
+
+        <div>
+          <label class="text-[10px] font-bold text-sky-400 uppercase">Question Text (Hindi — Optional Bilingual)</label>
+          <textarea id="editQTextHi" rows="2" placeholder="Optional Hindi translation..." class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl p-2.5 text-sky-100 outline-none focus:border-sky-400"></textarea>
+        </div>
+
+        <!-- Match the Following Rows Editor -->
+        <div class="bg-navy-950/70 border border-slate-800 rounded-2xl p-3 space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="text-[10px] font-bold text-amber-300 uppercase">Match-the-Following Rows (List-I | List-II)</label>
+            <button onclick="addEditMatchRow()" class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 text-[10px] font-extrabold">+ Add Row</button>
+          </div>
+          <div id="editMatchRowsWrap" class="space-y-1.5"></div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div><label class="text-[10px] font-bold text-slate-400">Option (A)</label><input id="editOpt0" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none" /></div>
+          <div><label class="text-[10px] font-bold text-slate-400">Option (B)</label><input id="editOpt1" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none" /></div>
+          <div><label class="text-[10px] font-bold text-slate-400">Option (C)</label><input id="editOpt2" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none" /></div>
+          <div><label class="text-[10px] font-bold text-slate-400">Option (D)</label><input id="editOpt3" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none" /></div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div>
+            <label class="text-[10px] font-bold text-emerald-400 uppercase">Correct Answer</label>
+            <select id="editAnswer" class="mt-1 w-full bg-navy-950 border border-emerald-500/40 rounded-xl px-3 py-2 font-black text-emerald-300 outline-none">
+              <option value="0">Option (A)</option>
+              <option value="1">Option (B)</option>
+              <option value="2">Option (C)</option>
+              <option value="3">Option (D)</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[10px] font-bold text-cyan-400 uppercase">Diagram Image</label>
+            <div class="mt-1 flex items-center gap-2">
+              <label class="cursor-pointer flex-1 text-center py-2 rounded-xl bg-cyan-500/15 border border-cyan-500/35 text-cyan-300 font-extrabold">
+                <input type="file" accept="image/*" class="hidden" onchange="handleEditImageUpload(event)" />
+                Upload Image
+              </label>
+              <button onclick="clearEditImage()" class="px-3 py-2 rounded-xl bg-rose-500/15 text-rose-300 font-bold">Clear</button>
+            </div>
+          </div>
+        </div>
+        <div id="editImagePreviewWrap" class="hidden">
+          <img id="editImagePreview" src="" alt="Preview" class="max-h-36 rounded-xl bg-white p-1" />
+        </div>
+
+        <div>
+          <label class="text-[10px] font-bold text-slate-400 uppercase">NCERT Solution / Explanation</label>
+          <textarea id="editExplanation" rows="2" class="mt-1 w-full bg-navy-950 border border-slate-700 rounded-xl p-2.5 text-white outline-none"></textarea>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+        <button onclick="closeModal('editQModal')" class="px-4 py-2 rounded-xl bg-navy-800 text-slate-300 text-xs font-bold">Cancel</button>
+        <button onclick="saveEditedQuestion()" class="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-navy-950 text-xs font-black">Save Question</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. MANUAL HD DIAGRAM SNIPPER MODAL -->
+  <div id="snipModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-[140] hidden items-center justify-center p-3">
+    <div class="bg-navy-900 border border-slate-700 rounded-3xl w-full max-w-4xl max-h-[94vh] flex flex-col p-4 space-y-3 shadow-2xl">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <h3 class="font-black text-sm text-white flex items-center gap-2">
+          <i class="fa-solid fa-scissors text-cyan-400"></i>
+          <span id="snipModalTitle">Manual HD Diagram Snipper</span>
+        </h3>
+        <div class="flex items-center gap-2 text-xs">
+          <button onclick="changeSnipPage(-1)" class="px-2.5 py-1 rounded-lg bg-navy-800 font-bold">Prev Pg</button>
+          <span id="snipPageLabel" class="font-extrabold text-cyan-400">Page 1</span>
+          <button onclick="changeSnipPage(1)" class="px-2.5 py-1 rounded-lg bg-navy-800 font-bold">Next Pg</button>
+          <button onclick="closeModal('snipModal')" class="w-8 h-8 rounded-lg bg-navy-800 text-slate-300"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+      <div class="flex-1 overflow-auto bg-navy-950 rounded-2xl border border-slate-800 flex items-start justify-center p-2">
+        <canvas id="snipCanvas" class="max-w-full cursor-crosshair shadow-xl" style="touch-action:none;"></canvas>
+      </div>
+      <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+        <span class="text-slate-400">Drag a box over any diagram, graph, or circuit to crop cleanly (auto-trimmed + watermark removed).</span>
+        <button onclick="confirmManualSnip()" class="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-navy-950 font-black">
+          <i class="fa-solid fa-crop-simple mr-1"></i>Attach Cropped Diagram
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. CLOUD MANAGER & ALL-STUDENTS ANALYTICS MODAL -->
+  <div id="cloudManagerModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[135] hidden items-center justify-center p-3">
+    <div class="bg-navy-900 border border-slate-700 rounded-3xl w-full max-w-3xl max-h-[90vh] flex flex-col p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <button onclick="switchCloudTab('tests')" id="cloudTabTests" class="px-3.5 py-1.5 rounded-xl text-xs font-black bg-emerald-500 text-navy-950">Cloud Tests</button>
+          <button onclick="switchCloudTab('students')" id="cloudTabStudents" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-navy-800 text-slate-300">All Students Ranks & Attempts</button>
+        </div>
+        <button onclick="closeModal('cloudManagerModal')" class="w-8 h-8 rounded-lg bg-navy-800 text-slate-300"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="cloudManagerBody" class="flex-1 overflow-y-auto space-y-2.5 pr-1 text-xs"></div>
+    </div>
+  </div>
+
+  <!-- 4. API KEYS VAULT MODAL -->
+  <div id="keysModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[138] hidden items-center justify-center p-3">
+    <div class="bg-navy-900 border border-slate-700 rounded-3xl w-full max-w-lg p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h3 class="font-black text-base text-white flex items-center gap-2"><i class="fa-solid fa-key text-cyan-400"></i>Hydrogen & Multi-Key Pool</h3>
+        <button onclick="closeModal('keysModal')" class="w-8 h-8 rounded-lg bg-navy-800 text-slate-300"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <p class="text-xs text-slate-400 leading-relaxed">
+        Paste one or more <strong>Gemini API Keys (AIza...)</strong> or <strong>Groq Keys (gsk_...)</strong> — one per line — for 10x–50x Ultra-Turbo speed on GitHub Pages. Leave blank inside Gemini Preview to use Built-in AI automatically.
+      </p>
+      <textarea id="apiKeysTextarea" rows="5" placeholder="AIzaSy... (Gemini Key 1)&#10;AIzaSy... (Gemini Key 2)&#10;gsk_... (Groq Key)"
+        class="w-full bg-navy-950 border border-slate-700 rounded-2xl p-3 font-mono text-xs text-emerald-300 outline-none focus:border-emerald-400"></textarea>
+      <div class="flex justify-end gap-2">
+        <button onclick="closeModal('keysModal')" class="px-4 py-2 rounded-xl bg-navy-800 text-xs font-bold">Cancel</button>
+        <button onclick="saveApiKeys()" class="px-5 py-2 rounded-xl bg-emerald-500 text-navy-950 text-xs font-black">Save Key Pool</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. BULK JSON IMPORT/EXPORT MODAL -->
+  <div id="bulkJsonModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[138] hidden items-center justify-center p-3">
+    <div class="bg-navy-900 border border-slate-700 rounded-3xl w-full max-w-2xl p-5 space-y-3 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h3 class="font-black text-base text-white">Bulk JSON Import / Export</h3>
+        <button onclick="closeModal('bulkJsonModal')" class="w-8 h-8 rounded-lg bg-navy-800 text-slate-300"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <textarea id="bulkJsonTextarea" rows="12" class="w-full bg-navy-950 border border-slate-700 rounded-2xl p-3 font-mono text-[11px] text-cyan-200 outline-none"></textarea>
+      <div class="flex flex-wrap justify-between gap-2">
+        <button onclick="copyBulkJson()" class="px-4 py-2 rounded-xl bg-cyan-500/15 text-cyan-300 text-xs font-extrabold">Copy JSON</button>
+        <div class="flex gap-2">
+          <button onclick="closeModal('bulkJsonModal')" class="px-4 py-2 rounded-xl bg-navy-800 text-xs font-bold">Close</button>
+          <button onclick="importBulkJson()" class="px-5 py-2 rounded-xl bg-emerald-500 text-navy-950 text-xs font-black">Load JSON into Workspace</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. HD IMAGE LIGHTBOX -->
+  <div id="lightboxModal" class="fixed inset-0 bg-black/90 z-[160] hidden items-center justify-center p-4" onclick="closeModal('lightboxModal')">
+    <div class="space-y-2 text-center">
+      <img id="lightboxImg" src="" alt="Diagram" class="max-w-full max-h-[84vh] rounded-2xl bg-white p-2 shadow-2xl mx-auto" />
+      <p id="lightboxCaption" class="text-xs font-bold text-slate-300"></p>
+    </div>
+  </div>
+
+  <!-- 7. CONFIRM MODAL -->
+  <div id="confirmModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[165] hidden items-center justify-center p-4">
+    <div class="bg-navy-900 border border-slate-700 rounded-3xl w-full max-w-sm p-5 space-y-4">
+      <h3 id="confirmTitle" class="font-black text-base text-white">Confirm</h3>
+      <p id="confirmBody" class="text-xs text-slate-300 leading-relaxed"></p>
+      <div class="flex justify-end gap-2">
+        <button onclick="closeModal('confirmModal')" class="px-4 py-2 rounded-xl bg-navy-800 text-xs font-bold">Cancel</button>
+        <button id="confirmActionBtn" class="px-4 py-2 rounded-xl bg-rose-500 text-white text-xs font-black">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== STUDIO PRO ENGINE ==================== -->
+  <script type="module">
+    import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, doc, setDoc, deleteDoc, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // =========================================================================
+    // 1. CLOUD CONFIG & STUDIO STATE
+    // =========================================================================
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyAfjBdGyktTMAYR9vPn83xwbzPYM3Iowqs",
+      authDomain: "neet-ace-portal.firebaseapp.com",
+      projectId: "neet-ace-portal",
+      storageBucket: "neet-ace-portal.firebasestorage.app",
+      messagingSenderId: "1098024797220",
+      appId: "1:1098024797220:web:e5b9c10ae7cbc6afbb84b1",
+      measurementId: "G-531GJCEQ37"
+    };
+    const CLOUD_APP_ID = "neet-ace-portal";
+
+    const state = {
+      cloudApi: null,
+      cloudTests: [],
+      cloudSubs: [],
+      editingCloudTestId: null,
+      pdfDoc: null,
+      totalPages: 0,
+      cropMode: "ai_vision", // 'ai_vision' | 'python_cv' | 'hybrid'
+      extractType: "paper",
+      extractedDiagrams: [],
+      extractedQuestions: [],
+      isRunning: false,
+      stopRequested: false,
+      elapsedTimerId: null,
+      pyodide: null,
+      pyReady: false,
+      apiKeys: [],
+      keyCursor: 0,
+      editIndex: -1,
+      editImageUrl: "",
+      snipTargetIdx: -1,
+      snipPage: 1,
+      snipImgData: null,
+      snipRect: null
+    };
+    window.state = state;
+
+    // =========================================================================
+    // 2. UI HELPERS, LOGGING & SCIENTIFIC UNICODE AUTO-CLEANER
+    // =========================================================================
+    function escapeHtml(s) {
+      return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    function showToast(msg, type = "info") {
+      const box = document.getElementById("toastBox");
+      const el = document.createElement("div");
+      const styles = {
+        success: "bg-emerald-950/95 border-emerald-500/50 text-emerald-200",
+        error: "bg-rose-950/95 border-rose-500/50 text-rose-200",
+        warn: "bg-amber-950/95 border-amber-500/50 text-amber-200",
+        info: "bg-navy-900/95 border-slate-700 text-slate-200"
+      };
+      el.className = `pointer-events-auto border rounded-xl px-3.5 py-2.5 text-xs font-bold shadow-2xl fade-up ${styles[type] || styles.info}`;
+      el.textContent = msg;
+      box.appendChild(el);
+      setTimeout(() => { el.style.opacity = "0"; el.style.transition = "opacity .25s"; setTimeout(() => el.remove(), 260); }, 3400);
+    }
+
+    function logLine(msg, tone = "info") {
+      const box = document.getElementById("liveLogBox");
+      const colors = { info: "text-slate-300", ok: "text-emerald-400", warn: "text-amber-300", err: "text-rose-400", ai: "text-cyan-300" };
+      const div = document.createElement("div");
+      const now = new Date().toLocaleTimeString([], { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      div.className = colors[tone] || colors.info;
+      div.textContent = `[${now}] ${msg}`;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function setProgress(pct, label) {
+      const p = Math.max(0, Math.min(100, Math.round(pct)));
+      document.getElementById("progressBar").style.width = `${p}%`;
+      document.getElementById("progressPct").textContent = `${p}%`;
+      if (label) document.getElementById("progressLabel").textContent = label;
+    }
+
+    function startElapsedTimer() {
+      if (state.elapsedTimerId) clearInterval(state.elapsedTimerId);
+      const t0 = Date.now();
+      state.elapsedTimerId = setInterval(() => {
+        const s = Math.floor((Date.now() - t0) / 1000);
+        document.getElementById("elapsedLabel").textContent = `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+      }, 1000);
+    }
+    function stopElapsedTimer() {
+      if (state.elapsedTimerId) { clearInterval(state.elapsedTimerId); state.elapsedTimerId = null; }
+    }
+
+    window.openModal = (id) => { const m = document.getElementById(id); if (m) { m.classList.remove("hidden"); m.classList.add("flex"); } };
+    window.closeModal = (id) => { const m = document.getElementById(id); if (m) { m.classList.add("hidden"); m.classList.remove("flex"); } };
+    window.openLightbox = (src, cap = "") => {
+      document.getElementById("lightboxImg").src = src;
+      document.getElementById("lightboxCaption").textContent = cap;
+      openModal("lightboxModal");
+    };
+    function openConfirm(title, body, onConfirm) {
+      document.getElementById("confirmTitle").textContent = title;
+      document.getElementById("confirmBody").textContent = body;
+      document.getElementById("confirmActionBtn").onclick = () => { closeModal("confirmModal"); onConfirm(); };
+      openModal("confirmModal");
+    }
+
+    // Human-Readable Physics/Chemistry Math Auto-Cleaner (Removes LaTeX/Computer Code)
+    const SUP_MAP = { "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹", "+": "⁺", "-": "⁻", "n": "ⁿ", "i": "ⁱ" };
+    const SUB_MAP = { "0": "₀", "1": "₁", "2": "₂", "3": "₃", "4": "₄", "5": "₅", "6": "₆", "7": "₇", "8": "₈", "9": "₉", "+": "₊", "-": "₋" };
+    const toSup = (str) => String(str).split("").map((c) => SUP_MAP[c] || c).join("");
+    const toSub = (str) => String(str).split("").map((c) => SUB_MAP[c] || c).join("");
+
+    function cleanScientificText(raw) {
+      if (!raw) return "";
+      let s = String(raw);
+      s = s.replace(/\$\$([\s\S]*?)\$\$/g, "$1").replace(/\$([^$]+)\$/g, "$1");
+      s = s.replace(/\\(?:text|mathrm|mathbf|mathit|operatorname)\{([^}]*)\}/g, "$1");
+      s = s.replace(/\\frac\{([^}]*)\}\{([^}]*)\}/g, "($1)/($2)");
+      s = s.replace(/\\sqrt\{([^}]*)\}/g, "√($1)");
+      const symMap = [
+        [/\\times/g, "×"], [/\\cdot/g, "·"], [/\\div/g, "÷"], [/\\pm/g, "±"], [/\\mp/g, "∓"],
+        [/\\leq|\\le\b/g, "≤"], [/\\geq|\\ge\b/g, "≥"], [/\\neq|\\ne\b/g, "≠"], [/\\approx/g, "≈"], [/\\propto/g, "∝"], [/\\infty/g, "∞"],
+        [/\\rightarrow|\\to\b/g, "→"], [/\\leftarrow/g, "←"], [/\\rightleftharpoons|\\leftrightarrow/g, "⇌"],
+        [/\\circ/g, "°"], [/\\degree/g, "°"], [/\\Omega/g, "Ω"], [/\\omega/g, "ω"], [/\\mu/g, "μ"], [/\\lambda/g, "λ"],
+        [/\\Delta/g, "Δ"], [/\\delta/g, "δ"], [/\\theta/g, "θ"], [/\\pi/g, "π"], [/\\alpha/g, "α"], [/\\beta/g, "β"],
+        [/\\gamma/g, "γ"], [/\\sigma/g, "σ"], [/\\rho/g, "ρ"], [/\\phi|\\varphi/g, "φ"], [/\\epsilon|\\varepsilon/g, "ε"],
+        [/\\nu/g, "ν"], [/\\tau/g, "τ"], [/\\eta/g, "η"], [/\\AA/g, "Å"]
+      ];
+      for (const [re, rep] of symMap) s = s.replace(re, rep);
+      s = s.replace(/\^\{([0-9+\-ni]+)\}/g, (_, g) => toSup(g));
+      s = s.replace(/\^([0-9+\-])/g, (_, g) => toSup(g));
+      s = s.replace(/_\{([0-9+\-]+)\}/g, (_, g) => toSub(g));
+      s = s.replace(/([A-Za-z\)])_([0-9])/g, (_, a, b) => a + toSub(b));
+      s = s.replace(/\\left|\\right|\\,|\\;|\\!/g, "");
+      s = s.replace(/\(([A-Za-z0-9]+)\)\/\(([A-Za-z0-9]+)\)/g, "$1/$2");
+      return s.replace(/[ \t]{2,}/g, " ").trim();
+    }
+
+    function normalizeMatchPairs(pairs) {
+      if (!Array.isArray(pairs)) return [];
+      return pairs
+        .filter((p) => p && (p.left || p.right))
+        .map((p) => ({ left: cleanScientificText(p.left || ""), right: cleanScientificText(p.right || "") }));
+    }
+
+    function detectNeetQType(text, matchPairs, hasImage = false) {
+      if (Array.isArray(matchPairs) && matchPairs.length > 0) return "Match the Following";
+      const t = String(text || "");
+      if (/(?:assertion|अभिकथन)\s*(?:\(a\)|a)?\s*[:\-–]/i.test(t) && /(?:reason|कारण)\s*(?:\(r\)|r)?\s*[:\-–]/i.test(t)) return "Assertion-Reason";
+      if (/(?:statement|कथन)\s*[-–]?\s*(?:i|1)\b/i.test(t) && /(?:statement|कथन)\s*[-–]?\s*(?:ii|2)\b/i.test(t)) return "Statement I & II";
+      if (/match\s+(?:the\s+)?(?:following|list|column)|list\s*[-–]?\s*i\b.*list\s*[-–]?\s*ii|column\s*[-–]?\s*i\b.*column\s*[-–]?\s*ii|सूची\s*[-–]?\s*i/i.test(t)) return "Match the Following";
+      const multiMatches = t.match(/(?:^|\n|\s)\([A-Ea-e]\)\s+\S+/g);
+      if ((multiMatches && multiMatches.length >= 3) || /(?:how many of the|choose the correct statements?|following statements?|which of the above statements?)/i.test(t)) return "Multi-Statement";
+      if (hasImage || /(?:given\s+(?:figure|diagram|graph|circuit)|shown\s+in\s+(?:the\s+)?(?:figure|diagram|graph|circuit)|identify\s+[a-d]\s*,?\s*[b-d])/i.test(t)) return "Diagram Based";
+      if (/\b(?:not\s+correct|incorrect|false\s+statement|wrong\s+statement|not\s+true|except|not\s+an\s+example|असत्य|गलत|नहीं)\b/i.test(t)) return "Incorrect / NOT Type";
+      if (/(?:\d+\.?\d*\s*(?:m\/s|km\/h|kg|cm|mm|nm|μm|Ω|ohm|volt|amp|mol|bar|atm|kelvin|joule|watt|hz|tesla|henry|farad|ev|mev|cal|°c|k\b|n\b|pa\b|×\s*10))|\b(?:calculate|find the value|magnitude of|ratio of|velocity of|acceleration|resistance|potential difference|wavelength|molarity|molality|ph of)\b/i.test(t)) return "Numerical";
+      return "Single Choice";
+    }
+
+    function structureNeetQuestionText(rawText) {
+      let s = cleanScientificText(rawText || "");
+      if (!s) return "";
+      s = s.replace(/\s+(Assertion\s*(?:\(A\))?\s*[:\-–])/gi, "\n$1");
+      s = s.replace(/\s+(Reason\s*(?:\(R\))?\s*[:\-–])/gi, "\n$1");
+      s = s.replace(/\s+(अभिकथन\s*(?:\(A\))?\s*[:\-–])/gi, "\n$1");
+      s = s.replace(/\s+(कारण\s*(?:\(R\))?\s*[:\-–])/gi, "\n$1");
+      s = s.replace(/\s+(Statement\s*[-–]?\s*(?:I|II|1|2)\s*[:\-–]?)/gi, "\n$1");
+      s = s.replace(/\s+(कथन\s*[-–]?\s*(?:I|II|1|2)\s*[:\-–]?)/gi, "\n$1");
+      if (/\(A\)[\s\S]{6,}\(B\)[\s\S]{6,}\(C\)/.test(s) && !/Assertion\s*\(A\)/i.test(s)) {
+        s = s.replace(/\s+(\([A-E]\)\s+)/g, "\n$1");
+      }
+      if (/\(i\)[\s\S]{5,}\(ii\)[\s\S]{5,}\(iii\)/i.test(s)) {
+        s = s.replace(/\s+(\((?:i|ii|iii|iv|v)\)\s+)/gi, "\n$1");
+      }
+      s = s.replace(/\s+(In the light of the above statements|Choose the (?:most appropriate|correct|incorrect) answer|Select the correct option)/gi, "\n$1");
+      return s.replace(/\n{3,}/g, "\n\n").trim();
+    }
+
+    function highlightNegativeKeywords(escapedText) {
+      return String(escapedText || "").replace(
+        /\b(NOT|INCORRECT|FALSE|WRONG|EXCEPT|नहीं|असत्य|गलत)\b/gi,
+        `<span class="px-1 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/35 font-black">$1</span>`
+      );
+    }
+
+    function renderMatchPairsTableHtml(pairs) {
+      if (!Array.isArray(pairs) || !pairs.length) return "";
+      return `
+        <div class="overflow-x-auto rounded-xl border border-amber-500/30 bg-navy-900/90 mt-1.5">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-amber-500/15 text-amber-300 font-extrabold">
+                <th class="p-2 w-1/2">List-I / Column-I</th>
+                <th class="p-2 w-1/2 border-l border-slate-700">List-II / Column-II</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${pairs.map((p) => `
+                <tr class="border-t border-slate-800">
+                  <td class="p-2 text-slate-200 font-medium">${highlightNegativeKeywords(escapeHtml(p.left))}</td>
+                  <td class="p-2 text-slate-200 border-l border-slate-800">${highlightNegativeKeywords(escapeHtml(p.right))}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderStructuredNeetQuestionHtml(q) {
+      const text = structureNeetQuestionText(q.question || "");
+      const matchHtml = renderMatchPairsTableHtml(q.matchPairs);
+
+      // 1. Assertion-Reason
+      const arMatch = text.match(/([\s\S]*?)((?:Assertion|अभिकथन)\s*(?:\(A\))?\s*[:\-–][\s\S]*?)((?:Reason|कारण)\s*(?:\(R\))?\s*[:\-–][\s\S]*)/i);
+      if (arMatch) {
+        const intro = arMatch[1].trim();
+        const aPart = arMatch[2].trim();
+        let rPart = arMatch[3].trim();
+        let outro = "";
+        const outroSplit = rPart.match(/([\s\S]*?)\n((?:In the light of|Choose the|Select the)[\s\S]*)/i);
+        if (outroSplit) { rPart = outroSplit[1].trim(); outro = outroSplit[2].trim(); }
+        return `
+          <div class="space-y-2">
+            ${intro ? `<p class="text-xs sm:text-sm text-slate-200 font-medium">${highlightNegativeKeywords(escapeHtml(intro))}</p>` : ""}
+            <div class="p-2.5 rounded-xl bg-sky-500/10 border border-sky-500/30 text-xs sm:text-sm text-sky-100 font-medium leading-relaxed">
+              <span class="inline-block px-1.5 py-0.5 rounded bg-sky-500/25 text-sky-300 text-[10px] font-black uppercase mr-1.5">A</span>${highlightNegativeKeywords(escapeHtml(aPart))}
+            </div>
+            <div class="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/30 text-xs sm:text-sm text-purple-100 font-medium leading-relaxed">
+              <span class="inline-block px-1.5 py-0.5 rounded bg-purple-500/25 text-purple-300 text-[10px] font-black uppercase mr-1.5">R</span>${highlightNegativeKeywords(escapeHtml(rPart))}
+            </div>
+            ${outro ? `<p class="text-xs text-slate-300 italic">${highlightNegativeKeywords(escapeHtml(outro))}</p>` : ""}
+          </div>
+          ${matchHtml}
+        `;
+      }
+
+      // 2. Statement I & II
+      const stMatch = text.match(/([\s\S]*?)((?:Statement|कथन)\s*[-–]?\s*(?:I|1)\b[\s\S]*?)((?:Statement|कथन)\s*[-–]?\s*(?:II|2)\b[\s\S]*)/i);
+      if (stMatch) {
+        const intro = stMatch[1].trim();
+        const s1 = stMatch[2].trim();
+        let s2 = stMatch[3].trim();
+        let outro = "";
+        const outroSplit = s2.match(/([\s\S]*?)\n((?:In the light of|Choose the|Select the)[\s\S]*)/i);
+        if (outroSplit) { s2 = outroSplit[1].trim(); outro = outroSplit[2].trim(); }
+        return `
+          <div class="space-y-2">
+            ${intro ? `<p class="text-xs sm:text-sm text-slate-200 font-medium">${highlightNegativeKeywords(escapeHtml(intro))}</p>` : ""}
+            <div class="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs sm:text-sm text-emerald-100 font-medium leading-relaxed">${highlightNegativeKeywords(escapeHtml(s1))}</div>
+            <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs sm:text-sm text-amber-100 font-medium leading-relaxed">${highlightNegativeKeywords(escapeHtml(s2))}</div>
+            ${outro ? `<p class="text-xs text-slate-300 italic">${highlightNegativeKeywords(escapeHtml(outro))}</p>` : ""}
+          </div>
+          ${matchHtml}
+        `;
+      }
+
+      // 3. Multi-Statement (A)-(E) or (i)-(v)
+      const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+      const bulletLines = lines.filter((l) => /^\([A-Ea-e]\)|^\((?:i|ii|iii|iv|v)\)/i.test(l));
+      if (bulletLines.length >= 3 && !matchHtml) {
+        return `
+          <div class="space-y-1.5">
+            ${lines.map((ln) => {
+              const isBullet = /^\([A-Ea-e]\)|^\((?:i|ii|iii|iv|v)\)/i.test(ln);
+              return isBullet
+                ? `<div class="px-3 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/25 text-xs sm:text-sm text-indigo-100 font-medium">${highlightNegativeKeywords(escapeHtml(ln))}</div>`
+                : `<p class="text-xs sm:text-sm text-slate-100 font-semibold leading-relaxed">${highlightNegativeKeywords(escapeHtml(ln))}</p>`;
+            }).join("")}
+          </div>
+        `;
+      }
+
+      return `<p class="text-xs sm:text-sm text-slate-100 leading-relaxed font-medium whitespace-pre-line">${highlightNegativeKeywords(escapeHtml(text))}</p>${matchHtml}`;
+    }
+
+    // =========================================================================
+    // 3. FIREBASE CLOUD SYNC & ALL-STUDENTS ANALYTICS
+    // =========================================================================
+    async function initCloud() {
+      try {
+        const appName = "neet-ace-studio-pro";
+        const app = getApps().find((a) => a.name === appName) || initializeApp(FIREBASE_CONFIG, appName);
+        const db = getFirestore(app);
+        try {
+          const auth = getAuth(app);
+          if (typeof __initial_auth_token !== "undefined" && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token);
+          else await signInAnonymously(auth);
+        } catch (_) {}
+
+        const testsCol = collection(db, "artifacts", CLOUD_APP_ID, "public", "data", "neet_tests");
+        const chunksCol = collection(db, "artifacts", CLOUD_APP_ID, "public", "data", "neet_test_chunks");
+        const subsCol = collection(db, "artifacts", CLOUD_APP_ID, "public", "data", "neet_submissions");
+
+        state.cloudApi = {
+          publishTest: async (testId, meta, questions) => {
+            const CHUNK_SIZE = 20;
+            const totalChunks = Math.max(1, Math.ceil(questions.length / CHUNK_SIZE));
+            // Clean old chunks if updating
+            const existingChunks = await getDocs(chunksCol);
+            const delPromises = [];
+            existingChunks.forEach((d) => {
+              if (d.data().testId === testId) delPromises.push(deleteDoc(d.ref));
+            });
+            await Promise.all(delPromises);
+
+            for (let ci = 0; ci < totalChunks; ci++) {
+              const slice = questions.slice(ci * CHUNK_SIZE, (ci + 1) * CHUNK_SIZE);
+              await setDoc(doc(db, "artifacts", CLOUD_APP_ID, "public", "data", "neet_test_chunks", `${testId}_c${ci}`), {
+                testId, chunkIndex: ci, questionsJson: JSON.stringify(slice)
+              });
+            }
+            await setDoc(doc(db, "artifacts", CLOUD_APP_ID, "public", "data", "neet_tests", testId), {
+              ...meta, isChunked: true, chunkCount: totalChunks, questionCount: questions.length, updatedAt: Date.now()
+            });
+          },
+          deleteTest: async (testId) => {
+            await deleteDoc(doc(db, "artifacts", CLOUD_APP_ID, "public", "data", "neet_tests", testId));
+            const cSnap = await getDocs(chunksCol);
+            const dels = [];
+            cSnap.forEach((d) => { if (d.data().testId === testId) dels.push(deleteDoc(d.ref)); });
+            await Promise.all(dels);
+          },
+          loadTestQuestions: async (testMeta) => {
+            if (!testMeta.isChunked) return testMeta.questions || [];
+            const cSnap = await getDocs(chunksCol);
+            const parts = [];
+            cSnap.forEach((d) => { if (d.data().testId === testMeta.id) parts.push(d.data()); });
+            parts.sort((a, b) => a.chunkIndex - b.chunkIndex);
+            const merged = [];
+            parts.forEach((p) => {
+              try { merged.push(...(typeof p.questionsJson === "string" ? JSON.parse(p.questionsJson) : (p.questions || []))); } catch (_) {}
+            });
+            return merged;
+          }
+        };
+
+        onSnapshot(testsCol, (snap) => {
+          const arr = [];
+          snap.forEach((d) => arr.push({ id: d.id, ...d.data() }));
+          arr.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+          state.cloudTests = arr;
+          document.getElementById("cloudTestsCount").textContent = arr.length;
+          document.getElementById("cloudDot").className = "w-2 h-2 rounded-full bg-emerald-400 pulse-green shrink-0";
+          document.getElementById("cloudStatusText").textContent = "Cloud Live";
+        }, () => {
+          document.getElementById("cloudDot").className = "w-2 h-2 rounded-full bg-rose-500 shrink-0";
+          document.getElementById("cloudStatusText").textContent = "Offline";
+        });
+
+        onSnapshot(subsCol, (snap) => {
+          const arr = [];
+          snap.forEach((d) => arr.push({ id: d.id, ...d.data() }));
+          arr.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+          state.cloudSubs = arr;
+          document.getElementById("cloudSubsCount").textContent = arr.length;
+        }, () => {});
+      } catch (err) {
+        document.getElementById("cloudStatusText").textContent = "Offline";
+      }
+    }
+
+    // =========================================================================
+    // 4. API KEYS VAULT & HYDROGEN MULTI-MODEL ENGINE
+    // =========================================================================
+    function loadSavedKeys() {
+      try {
+        const raw = localStorage.getItem("neet_studio_keys") || "";
+        state.apiKeys = raw.split(/\r?\n/).map((k) => k.trim()).filter(Boolean);
+        document.getElementById("keysCountBadge").textContent = state.apiKeys.length ? `${state.apiKeys.length} Keys` : "Built-in";
+      } catch (_) {}
+    }
+
+    window.openKeysModal = () => {
+      document.getElementById("apiKeysTextarea").value = state.apiKeys.join("\n");
+      openModal("keysModal");
+    };
+    window.saveApiKeys = () => {
+      const raw = document.getElementById("apiKeysTextarea").value.trim();
+      localStorage.setItem("neet_studio_keys", raw);
+      loadSavedKeys();
+      closeModal("keysModal");
+      showToast(state.apiKeys.length ? `Saved ${state.apiKeys.length} API key(s) in Turbo Pool!` : "Switched to Built-in Preview AI.", "success");
+    };
+
+    function pickKey(workerId = 0, requireVision = false) {
+      if (!state.apiKeys.length) return { provider: "gemini", key: "" };
+      const pool = requireVision
+        ? state.apiKeys.filter((k) => !k.startsWith("gsk_"))
+        : state.apiKeys;
+      const effective = pool.length ? pool : state.apiKeys;
+      const idx = (state.keyCursor++ + workerId) % effective.length;
+      const key = effective[idx];
+      return { provider: key.startsWith("gsk_") ? "groq" : "gemini", key };
+    }
+
+    async function callLLM({ systemPrompt, userPrompt, pageImages = [], requireVision = false, workerId = 0 }) {
+      const { provider, key } = pickKey(workerId, requireVision);
+
+      if (provider === "groq" && key) {
+        const content = [{ type: "text", text: userPrompt }];
+        if (requireVision && pageImages.length) {
+          pageImages.forEach((b64) => content.push({ type: "image_url", image_url: { url: b64 } }));
+        }
+        const model = requireVision ? "meta-llama/llama-4-scout-17b-16e-instruct" : "llama-3.3-70b-versatile";
+        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+          body: JSON.stringify({
+            model,
+            temperature: 0.1,
+            messages: [{ role: "system", content: systemPrompt }, { role: "user", content }]
+          })
+        });
+        if (!res.ok) throw new Error(`Groq HTTP ${res.status}`);
+        const data = await res.json();
+        return data?.choices?.[0]?.message?.content || "";
+      }
+
+      // Gemini Primary Priority: Hydrogen -> 3-Flash -> 2.5-Flash (seamless auto-fallback!)
+      const models = ["gemini-4-hydrogen", "gemini-3-flash-preview", "gemini-2.5-flash"];
+      const parts = [{ text: `${systemPrompt}\n\n${userPrompt}` }];
+      pageImages.forEach((dataUrl) => {
+        const base64 = String(dataUrl).split(",")[1] || "";
+        if (base64) parts.push({ inlineData: { mimeType: "image/jpeg", data: base64 } });
+      });
+
+      let lastErr = null;
+      for (const model of models) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
+          const res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ role: "user", parts }],
+              generationConfig: { temperature: 0.1, responseMimeType: "application/json" }
+            })
+          });
+          if (!res.ok) {
+            lastErr = new Error(`${model} HTTP ${res.status}`);
+            continue;
+          }
+          const data = await res.json();
+          const txt = data?.candidates?.[0]?.content?.parts?.map((p) => p.text || "").join("") || "";
+          if (txt.trim()) return txt;
+        } catch (e) {
+          lastErr = e;
+        }
+      }
+      throw lastErr || new Error("AI call failed — check API key or network.");
+    }
+
+    function safeParseJsonArray(raw) {
+      let s = String(raw || "").trim();
+      s = s.replace(/^```(?:json)?/i, "").replace(/```$/i, "").trim();
+      try {
+        const parsed = JSON.parse(s);
+        if (Array.isArray(parsed)) return parsed;
+        if (parsed && Array.isArray(parsed.questions)) return parsed.questions;
+        return [];
+      } catch (_) {
+        const start = s.indexOf("[");
+        const end = s.lastIndexOf("]");
+        if (start >= 0 && end > start) {
+          try { return JSON.parse(s.slice(start, end + 1)); } catch (_) {}
+        }
+        return [];
+      }
+    }
+
+    // =========================================================================
+    // 5. PDF UPLOAD, SPATIAL PARSER & ANTI-CRASH RAM GUARD RENDERING
+    // =========================================================================
+    window.handlePdfUpload = async (ev) => {
+      const file = ev.target.files?.[0];
+      if (!file) return;
+      try {
+        const buf = await file.arrayBuffer();
+        state.pdfDoc = await pdfjsLib.getDocument({ data: buf }).promise;
+        state.totalPages = state.pdfDoc.numPages;
+        document.getElementById("pdfFileNameLabel").textContent = file.name;
+        document.getElementById("pdfPagesBadge").textContent = `${state.totalPages} Pages`;
+        document.getElementById("startPage").value = "1";
+        document.getElementById("endPage").value = String(state.totalPages);
+        if (!document.getElementById("publishTestTitle").value.trim()) {
+          document.getElementById("publishTestTitle").value = file.name.replace(/\.pdf$/i, "").replace(/[_-]+/g, " ");
+        }
+        logLine(`PDF Loaded: ${file.name} (${state.totalPages} pages)`, "ok");
+        showToast(`PDF loaded (${state.totalPages} pages)!`, "success");
+      } catch (err) {
+        showToast("Failed to open PDF: " + err.message, "error");
+      }
+    };
+
+    async function renderPdfPageToJpeg(pageNum, scale = 1.65) {
+      const page = await state.pdfDoc.getPage(pageNum);
+      const vp = page.getViewport({ scale });
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(vp.width);
+      canvas.height = Math.round(vp.height);
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      await page.render({ canvasContext: ctx, viewport: vp }).promise;
+      const jpeg = canvas.toDataURL("image/jpeg", 0.86);
+      // Anti-Crash RAM Guard: immediately free canvas backing memory!
+      if (document.getElementById("chkRamGuard")?.checked) {
+        canvas.width = 0; canvas.height = 0;
+      }
+      return jpeg;
+    }
+
+    function loadImageFromDataUrl(url) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = url;
+      });
+    }
+
+    async function extractPageSpatialData(pageNum) {
+      const page = await state.pdfDoc.getPage(pageNum);
+      const vp = page.getViewport({ scale: 1.0 });
+      const tc = await page.getTextContent();
+      const layoutMode = document.getElementById("columnLayout").value;
+      const midX = vp.width / 2;
+
+      const items = [];
+      const textBoxes = [];
+      for (const it of tc.items) {
+        const str = (it.str || "").trim();
+        if (!str) continue;
+        const x = it.transform[4];
+        const y = vp.height - it.transform[5];
+        const w = it.width || (str.length * 5);
+        const h = Math.abs(it.transform[3]) || 10;
+        const col = (layoutMode === "single_col") ? 0 : (x + w * 0.25 < midX ? 0 : 1);
+
+        const y1n = Math.max(0, Math.round(((y - h) / vp.height) * 1000));
+        const x1n = Math.max(0, Math.round((x / vp.width) * 1000));
+        const y2n = Math.min(1000, Math.round(((y + 3) / vp.height) * 1000));
+        const x2n = Math.min(1000, Math.round(((x + w) / vp.width) * 1000));
+        textBoxes.push([y1n, x1n, y2n, x2n]);
+
+        if (layoutMode === "left_only" && col !== 0) continue;
+        if (layoutMode === "right_only" && col !== 1) continue;
+        items.push({ str, x, y, w, h, col, yNorm: Math.round((y / vp.height) * 1000) });
+      }
+
+      const lines = [];
+      const cols = layoutMode === "two_col" ? [0, 1] : [layoutMode === "right_only" ? 1 : 0];
+      for (const c of cols) {
+        const cItems = items.filter((i) => i.col === c).sort((a, b) => (Math.abs(a.y - b.y) < 5 ? a.x - b.x : a.y - b.y));
+        let curLine = null;
+        for (const it of cItems) {
+          if (!curLine || Math.abs(it.y - curLine.y) > 5.5) {
+            if (curLine) lines.push(curLine);
+            curLine = { page: pageNum, col: c, y: it.y, yNorm: it.yNorm, parts: [it] };
+          } else {
+            curLine.parts.push(it);
+          }
+        }
+        if (curLine) lines.push(curLine);
+      }
+
+      const formattedLines = lines.map((ln) => {
+        ln.parts.sort((a, b) => a.x - b.x);
+        let text = "";
+        for (let i = 0; i < ln.parts.length; i++) {
+          const p = ln.parts[i];
+          if (i > 0) {
+            const gap = p.x - (ln.parts[i - 1].x + ln.parts[i - 1].w);
+            text += gap > 28 ? " | " : " ";
+          }
+          text += p.str;
+        }
+        return { page: ln.page, col: ln.col, yNorm: ln.yNorm, text: text.trim() };
+      });
+
+      const qSpans = [];
+      const qStartRe = /^(?:Q\.?\s*)?(\d{1,3})\s*[\.\)]\s+/;
+      for (const ln of formattedLines) {
+        const m = ln.text.match(qStartRe);
+        if (m && !/^\(\d\)/.test(ln.text)) {
+          const qNum = parseInt(m[1], 10);
+          if (qNum >= 1 && qNum <= 250) {
+            qSpans.push({ col: ln.col, qNum, yStart: ln.yNorm, yEnd: 970 });
+          }
+        }
+      }
+      for (let i = 0; i < qSpans.length; i++) {
+        for (let j = i + 1; j < qSpans.length; j++) {
+          if (qSpans[j].col === qSpans[i].col) {
+            qSpans[i].yEnd = Math.max(qSpans[i].yStart + 20, qSpans[j].yStart - 6);
+            break;
+          }
+        }
+      }
+
+      return {
+        page: pageNum,
+        lines: formattedLines,
+        plainText: formattedLines.map((l) => l.text).join("\n"),
+        qSpans,
+        textBoxes
+      };
+    }
+
+    // =========================================================================
+    // 6. IMAGE PROCESSING: WATERMARK KILLER + INK CRISPENER + AUTO-TRIM + COLUMN-LOCK
+    // =========================================================================
+    function applyJsWatermarkKiller(canvas) {
+      const ctx = canvas.getContext("2d");
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const d = imgData.data;
+      for (let i = 0; i < d.length; i += 4) {
+        const r = d[i], g = d[i + 1], b = d[i + 2];
+        const maxC = Math.max(r, g, b), minC = Math.min(r, g, b);
+        const sat = maxC - minC;
+        const lum = (r + g + b) / 3;
+        if ((sat > 30 && lum > 118) || (lum > 188 && lum < 250)) {
+          d[i] = 255; d[i + 1] = 255; d[i + 2] = 255;
+        } else if (lum < 145) {
+          d[i] = Math.round(r * 0.84);
+          d[i + 1] = Math.round(g * 0.84);
+          d[i + 2] = Math.round(b * 0.84);
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+    }
+
+    function trimAndFrameDiagramCanvas(srcCanvas, padPx = 12) {
+      const w = srcCanvas.width, h = srcCanvas.height;
+      if (w < 20 || h < 20) return srcCanvas;
+      const d = srcCanvas.getContext("2d").getImageData(0, 0, w, h).data;
+      let minX = w, minY = h, maxX = 0, maxY = 0, found = false;
+      for (let y = 0; y < h; y += 2) {
+        for (let x = 0; x < w; x += 2) {
+          const idx = (y * w + x) * 4;
+          const lum = (d[idx] + d[idx + 1] + d[idx + 2]) / 3;
+          if (lum < 215) {
+            if (x < minX) minX = x; if (x > maxX) maxX = x;
+            if (y < minY) minY = y; if (y > maxY) maxY = y;
+            found = true;
+          }
+        }
+      }
+      if (!found || (maxX - minX) < 18 || (maxY - minY) < 18) return srcCanvas;
+      const cx1 = Math.max(0, minX - 4), cy1 = Math.max(0, minY - 4);
+      const cw = Math.min(w - cx1, (maxX - minX) + 8), ch = Math.min(h - cy1, (maxY - minY) + 8);
+      const framed = document.createElement("canvas");
+      framed.width = cw + padPx * 2;
+      framed.height = ch + padPx * 2;
+      const fctx = framed.getContext("2d");
+      fctx.fillStyle = "#ffffff";
+      fctx.fillRect(0, 0, framed.width, framed.height);
+      fctx.drawImage(srcCanvas, cx1, cy1, cw, ch, padPx, padPx, cw, ch);
+      return framed;
+    }
+
+    function getImageSettings() {
+      const q = document.getElementById("imgQualitySelect").value;
+      if (q === "compact") return { maxW: 500, jpegQ: 0.75 };
+      if (q === "balanced") return { maxW: 640, jpegQ: 0.82 };
+      return { maxW: 800, jpegQ: 0.88 };
+    }
+
+    function cropNormalizedBox(source, box, padUnits = 26, cleanWm = true, layoutMode = "") {
+      if (!source || !Array.isArray(box) || box.length !== 4) return "";
+      const srcW = source.naturalWidth || source.width || 0;
+      const srcH = source.naturalHeight || source.height || 0;
+      if (srcW < 10 || srcH < 10) return "";
+
+      let [ymin, xmin, ymax, xmax] = box.map((v) => Number(v) || 0);
+      if (ymax <= ymin || xmax <= xmin) return "";
+
+      const colMinX = layoutMode === "right_only" ? 496 : 0;
+      const colMaxX = layoutMode === "left_only" ? 504 : 1000;
+
+      ymin = Math.max(25, ymin - padUnits);
+      xmin = Math.max(colMinX, xmin - padUnits);
+      ymax = Math.min(975, ymax + padUnits);
+      xmax = Math.min(colMaxX, xmax + padUnits);
+      if (ymax - ymin < 18 || xmax - xmin < 18) return "";
+
+      const sx = Math.round((xmin / 1000) * srcW);
+      const sy = Math.round((ymin / 1000) * srcH);
+      const sw = Math.max(10, Math.round(((xmax - xmin) / 1000) * srcW));
+      const sh = Math.max(10, Math.round(((ymax - ymin) / 1000) * srcH));
+
+      const rawCanvas = document.createElement("canvas");
+      rawCanvas.width = sw; rawCanvas.height = sh;
+      const rctx = rawCanvas.getContext("2d");
+      rctx.fillStyle = "#ffffff"; rctx.fillRect(0, 0, sw, sh);
+      rctx.drawImage(source, sx, sy, sw, sh, 0, 0, sw, sh);
+      if (cleanWm) applyJsWatermarkKiller(rawCanvas);
+
+      const trimmed = trimAndFrameDiagramCanvas(rawCanvas, 12);
+      if (trimmed !== rawCanvas) { rawCanvas.width = 0; rawCanvas.height = 0; }
+
+      const { maxW, jpegQ } = getImageSettings();
+      const outScale = trimmed.width > maxW ? maxW / trimmed.width : 1;
+      const outCanvas = document.createElement("canvas");
+      outCanvas.width = Math.max(10, Math.round(trimmed.width * outScale));
+      outCanvas.height = Math.max(10, Math.round(trimmed.height * outScale));
+      const octx = outCanvas.getContext("2d");
+      octx.fillStyle = "#ffffff"; octx.fillRect(0, 0, outCanvas.width, outCanvas.height);
+      octx.drawImage(trimmed, 0, 0, trimmed.width, trimmed.height, 0, 0, outCanvas.width, outCanvas.height);
+
+      const dataUrl = outCanvas.toDataURL("image/jpeg", jpegQ);
+      trimmed.width = 0; trimmed.height = 0;
+      outCanvas.width = 0; outCanvas.height = 0;
+      return dataUrl;
+    }
+
+    // =========================================================================
+    // 7. PYTHON 3 CV PRO ENGINE (LABEL-SAFE + TABLE-FILTER + AUTO-TRIM)
+    // =========================================================================
+    window.setCropMode = (mode) => {
+      state.cropMode = mode;
+      document.querySelectorAll(".crop-mode-btn").forEach((b) => {
+        const active = b.dataset.cropmode === mode;
+        b.className = active
+          ? "crop-mode-btn p-2.5 rounded-2xl border-2 border-emerald-500 bg-emerald-500/15 text-emerald-300 text-xs font-extrabold flex flex-col items-center gap-1 transition"
+          : "crop-mode-btn p-2.5 rounded-2xl border border-slate-700 bg-navy-950 text-slate-300 text-xs font-bold flex flex-col items-center gap-1 transition";
+      });
+    };
+
+    async function ensurePyodideReady() {
+      if (state.pyReady && state.pyodide) return state.pyodide;
+      document.getElementById("pyStatusBadge").textContent = "Loading Python CV...";
+      logLine("Initializing Python 3 + NumPy + Pillow CV Engine (one-time)...", "ai");
+      const py = await loadPyodide();
+      await py.loadPackage(["numpy", "pillow"]);
+      await py.runPythonAsync(`
+import io, base64, json
+import numpy as np
+from PIL import Image
+
+def detect_and_crop_diagrams(img_b64, layout_mode, watermark_killer, merge_multi, q_spans_json, text_boxes_json, max_out_w, jpeg_q):
+    raw = base64.b64decode(img_b64.split(",")[-1])
+    pil_img = Image.open(io.BytesIO(raw)).convert("RGB")
+    W, H = pil_img.size
+    arr = np.array(pil_img, dtype=np.int16)
+    R, G, B = arr[:,:,0], arr[:,:,1], arr[:,:,2]
+
+    if watermark_killer:
+        max_c = np.maximum(np.maximum(R, G), B)
+        min_c = np.minimum(np.minimum(R, G), B)
+        sat = max_c - min_c
+        lum = (R + G + B) / 3.0
+        is_wm = ((sat > 30) & (lum > 118)) | ((lum > 186) & (lum < 250))
+        clean_arr = arr.copy()
+        clean_arr[is_wm] = 255
+        dark_mask = lum < 145
+        clean_arr[dark_mask] = np.clip(clean_arr[dark_mask] * 0.84, 0, 255)
+        gray = (clean_arr[:,:,0] + clean_arr[:,:,1] + clean_arr[:,:,2]) / 3.0
+        clean_pil = Image.fromarray(clean_arr.astype(np.uint8))
+    else:
+        gray = (R + G + B) / 3.0
+        clean_pil = pil_img
+
+    ink = gray < 172
+    ink[:int(H*0.035), :] = False
+    ink[int(H*0.955):, :] = False
+    mid_x = W // 2
+    if layout_mode in ("left_only", "right_only", "two_col"):
+        ink[:, max(0, mid_x-8):min(W, mid_x+8)] = False
+    if layout_mode == "left_only":
+        ink[:, mid_x:] = False
+    elif layout_mode == "right_only":
+        ink[:, :mid_x] = False
+
+    # Smart Prose-Only Masking: preserve short labels inside circuits/graphs/bio figures!
+    text_boxes = json.loads(text_boxes_json)
+    ink_no_text = ink.copy()
+    for tb in text_boxes:
+        tw_norm = tb[3] - tb[1]
+        th_norm = tb[2] - tb[0]
+        if tw_norm < 42 and th_norm < 24:
+            continue
+        ty1 = max(0, int((tb[0] / 1000.0) * H) - 2)
+        tx1 = max(0, int((tb[1] / 1000.0) * W) - 3)
+        ty2 = min(H, int((tb[2] / 1000.0) * H) + 2)
+        tx2 = min(W, int((tb[3] / 1000.0) * W) + 3)
+        ink_no_text[ty1:ty2, tx1:tx2] = False
+
+    step = 4
+    gh, gw = H // step, W // step
+    grid = ink_no_text[:gh*step, :gw*step].reshape(gh, step, gw, step).any(axis=(1,3))
+
+    dil = grid.copy()
+    for dy in (-2, -1, 0, 1, 2):
+        for dx in (-2, -1, 0, 1, 2):
+            if dy == 0 and dx == 0: continue
+            y1s, y2s = max(0, dy), min(gh, gh+dy)
+            x1s, x2s = max(0, dx), min(gw, gw+dx)
+            y1d, y2d = max(0, -dy), min(gh, gh-dy)
+            x1d, x2d = max(0, -dx), min(gw, gw-dx)
+            dil[y1d:y2d, x1d:x2d] |= grid[y1s:y2s, x1s:x2s]
+
+    visited = np.zeros_like(dil, dtype=bool)
+    raw_boxes = []
+    for y in range(gh):
+        for x in range(gw):
+            if dil[y, x] and not visited[y, x]:
+                stack = [(y, x)]
+                visited[y, x] = True
+                miny = maxy = y
+                minx = maxx = x
+                while stack:
+                    cy, cx = stack.pop()
+                    if cy < miny: miny = cy
+                    if cy > maxy: maxy = cy
+                    if cx < minx: minx = cx
+                    if cx > maxx: maxx = cx
+                    for ny, nx in ((cy-1,cx),(cy+1,cx),(cy,cx-1),(cy,cx+1)):
+                        if 0 <= ny < gh and 0 <= nx < gw and dil[ny, nx] and not visited[ny, nx]:
+                            visited[ny, nx] = True
+                            stack.append((ny, nx))
+                px1, py1, px2, py2 = minx*step, miny*step, (maxx+1)*step, (maxy+1)*step
+                bw, bh = px2 - px1, py2 - py1
+                if bw < W * 0.062 or bh < H * 0.036:
+                    continue
+                if bh < 34 and (bw / max(1, bh)) > 5.5:
+                    continue
+                if bw < 28 and (bh / max(1, bw)) > 6.5:
+                    continue
+                if bw > W * 0.90 and bh > H * 0.65:
+                    continue
+                sub_ink = ink_no_text[py1:py2, px1:px2]
+                density = float(sub_ink.mean())
+                if density < 0.008 or density > 0.70:
+                    continue
+                # Reject empty rectangular Match-the-Following text table frames
+                if bw > W * 0.25 and bh > H * 0.07:
+                    ih1, ih2 = int(bh * 0.14), int(bh * 0.86)
+                    iw1, iw2 = int(bw * 0.10), int(bw * 0.90)
+                    if float(sub_ink[ih1:ih2, iw1:iw2].mean()) < 0.0035:
+                        continue
+                col_id = 0 if ((px1 + px2) / 2.0) < mid_x else 1
+                raw_boxes.append({
+                    "x1": px1, "y1": py1, "x2": px2, "y2": py2,
+                    "col": col_id,
+                    "yNorm1": int((py1 / H) * 1000),
+                    "yNorm2": int((py2 / H) * 1000),
+                    "qNum": None
+                })
+
+    q_spans = json.loads(q_spans_json)
+    final_boxes = []
+    if merge_multi and len(q_spans) > 0 and len(raw_boxes) > 0:
+        grouped = {}
+        unassigned = []
+        for b in raw_boxes:
+            yc = (b["yNorm1"] + b["yNorm2"]) / 2.0
+            matched_q = None
+            for sp in q_spans:
+                if sp["col"] == b["col"] and sp["yStart"] <= yc <= sp["yEnd"]:
+                    matched_q = (sp["col"], sp["qNum"])
+                    break
+            if matched_q is not None:
+                grouped.setdefault(matched_q, []).append(b)
+            else:
+                unassigned.append(b)
+        for (col_id, qn), blist in grouped.items():
+            mx1 = min(b["x1"] for b in blist)
+            my1 = min(b["y1"] for b in blist)
+            mx2 = max(b["x2"] for b in blist)
+            my2 = max(b["y2"] for b in blist)
+            if len(blist) >= 2:
+                col_left = 0 if col_id == 0 else mid_x + 6
+                mx1 = max(col_left, mx1 - int(W * 0.055))
+            final_boxes.append({"x1": mx1, "y1": my1, "x2": mx2, "y2": my2, "col": col_id, "qNum": qn, "mergedCount": len(blist)})
+        for b in unassigned:
+            b["mergedCount"] = 1
+            final_boxes.append(b)
+    else:
+        for b in raw_boxes:
+            b["mergedCount"] = 1
+            final_boxes.append(b)
+
+    final_boxes.sort(key=lambda b: (b["col"], b["y1"]))
+    results = []
+    pad_x = int(W * 0.022)
+    pad_y = int(H * 0.018)
+    for b in final_boxes:
+        col_min_x = 0 if b["col"] == 0 else mid_x + 4
+        col_max_x = mid_x - 4 if (layout_mode in ("left_only", "two_col") and b["col"] == 0) else W
+        cx1 = max(col_min_x, b["x1"] - pad_x)
+        cy1 = max(0, b["y1"] - pad_y)
+        cx2 = min(col_max_x, b["x2"] + pad_x)
+        cy2 = min(H, b["y2"] + pad_y)
+
+        crop_arr = np.array(clean_pil.crop((cx1, cy1, cx2, cy2)))
+        crop_gray = crop_arr.mean(axis=2)
+        ys, xs = np.where(crop_gray < 215)
+        if len(ys) > 20 and len(xs) > 20:
+            ty1, ty2 = max(0, int(ys.min()) - 4), min(crop_arr.shape[0], int(ys.max()) + 5)
+            tx1, tx2 = max(0, int(xs.min()) - 4), min(crop_arr.shape[1], int(xs.max()) + 5)
+            trimmed = Image.fromarray(crop_arr[ty1:ty2, tx1:tx2])
+            crop = Image.new("RGB", (trimmed.width + 20, trimmed.height + 20), (255, 255, 255))
+            crop.paste(trimmed, (10, 10))
+        else:
+            crop = clean_pil.crop((cx1, cy1, cx2, cy2))
+
+        if crop.width > max_out_w:
+            nh = max(10, int(crop.height * (max_out_w / crop.width)))
+            crop = crop.resize((max_out_w, nh), Image.LANCZOS)
+        buf = io.BytesIO()
+        crop.save(buf, format="JPEG", quality=int(jpeg_q * 100))
+        b64_out = "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode("ascii")
+        results.append({"col": b["col"], "qNum": b["qNum"], "mergedCount": b["mergedCount"], "yPct": int(((cy1 + cy2) / 2.0 / H) * 100), "dataUrl": b64_out})
+    return json.dumps(results)
+      `);
+      state.pyodide = py;
+      state.pyReady = true;
+      document.getElementById("pyStatusBadge").textContent = "Python CV Active";
+      logLine("Python CV Pro Engine ready!", "ok");
+      return py;
+    }
+
+    window.runPythonAutoCutter = async (standalone = true) => {
+      if (!state.pdfDoc) { showToast("Upload a PDF first!", "warn"); return; }
+      const py = await ensurePyodideReady();
+      const sPage = Math.max(1, parseInt(document.getElementById("startPage").value, 10) || 1);
+      const ePage = Math.min(state.totalPages, parseInt(document.getElementById("endPage").value, 10) || state.totalPages);
+      const layout = document.getElementById("columnLayout").value;
+      const wm = document.getElementById("chkWatermarkKiller").checked;
+      const mergeMulti = document.getElementById("chkMergeMulti").checked;
+      const { maxW, jpegQ } = getImageSettings();
+
+      state.extractedDiagrams = [];
+      let totalFound = 0;
+
+      for (let p = sPage; p <= ePage; p++) {
+        if (state.stopRequested) break;
+        if (standalone) setProgress(((p - sPage + 1) / (ePage - sPage + 1)) * 100, `Python CV scanning Page ${p}/${ePage}...`);
+        const [jpeg, sp] = await Promise.all([renderPdfPageToJpeg(p, 1.7), extractPageSpatialData(p)]);
+        const pyFn = py.globals.get("detect_and_crop_diagrams");
+        const outJson = pyFn(jpeg, layout, wm, mergeMulti, JSON.stringify(sp.qSpans), JSON.stringify(sp.textBoxes), maxW, jpegQ);
+        const list = JSON.parse(outJson);
+        list.forEach((d, idx) => {
+          totalFound++;
+          state.extractedDiagrams.push({
+            id: `p${p}_d${idx + 1}`,
+            page: p,
+            col: d.col,
+            qNum: d.qNum,
+            mergedCount: d.mergedCount,
+            yPct: d.yPct,
+            dataUrl: d.dataUrl,
+            used: false
+          });
+        });
+        logLine(`🐍 Page ${p}: Python CV cropped ${list.length} crisp diagram(s).`, list.length ? "ok" : "info");
+      }
+      renderDiagramPool();
+      if (standalone) {
+        setProgress(100, `Python CV extracted ${totalFound} HD diagrams!`);
+        showToast(`Python CV cropped ${totalFound} diagrams!`, "success");
+      }
+    };
+
+    window.clearDiagramPool = () => { state.extractedDiagrams = []; renderDiagramPool(); };
+
+    function renderDiagramPool() {
+      document.getElementById("diagPoolCount").textContent = state.extractedDiagrams.length;
+      const strip = document.getElementById("diagramPoolStrip");
+      if (!state.extractedDiagrams.length) {
+        strip.innerHTML = `<span class="text-slate-500">No cropped figures yet. AI Vision crops automatically or run Python Auto-Cutter.</span>`;
+        return;
+      }
+      strip.innerHTML = state.extractedDiagrams.map((d) => `
+        <div class="shrink-0 bg-navy-900 border border-slate-700 rounded-xl p-1 text-center w-20 cursor-pointer" onclick="openLightbox('${d.dataUrl}', '${d.id} (Pg ${d.page}${d.qNum ? ` • Q#${d.qNum}` : ""})')">
+          <img src="${d.dataUrl}" class="h-12 w-full object-contain bg-white rounded-lg" />
+          <p class="text-[9px] font-extrabold text-cyan-300 truncate mt-0.5">${d.qNum ? `Q#${d.qNum}` : `Pg${d.page}`}${d.mergedCount > 1 ? ` (${d.mergedCount}x)` : ""}</p>
+        </div>
+      `).join("");
+    }
+
+    // =========================================================================
+    // 8. HYDROGEN AI PARALLEL TURBO EXTRACTION (1x - 50x + ALL NEET TYPES)
+    // =========================================================================
+    window.requestStopExtraction = () => {
+      state.stopRequested = true;
+      logLine("Stop requested — finishing active batch cleanly...", "warn");
+    };
+
+    function getTargetLimit() { return parseInt(document.getElementById("questionLimitSelect").value, 10) || 0; }
+
+    window.startAIExtraction = async () => {
+      if (!state.pdfDoc) { showToast("Pehle koi NEET PDF upload karein!", "warn"); return; }
+      if (state.isRunning) return;
+
+      const sPage = Math.max(1, parseInt(document.getElementById("startPage").value, 10) || 1);
+      const ePage = Math.min(state.totalPages, parseInt(document.getElementById("endPage").value, 10) || state.totalPages);
+      const batchSize = Math.max(1, parseInt(document.getElementById("pagesPerBatch").value, 10) || 2);
+      const speed = Math.max(1, parseInt(document.getElementById("parallelSpeedSelect").value, 10) || 3);
+      const langPref = document.getElementById("langPrefSelect").value;
+      const activeLayout = document.getElementById("columnLayout").value;
+      const wmKiller = document.getElementById("chkWatermarkKiller").checked;
+      const targetLimit = getTargetLimit();
+
+      state.isRunning = true;
+      state.stopRequested = false;
+      state.extractedQuestions = [];
+      state.editingCloudTestId = null;
+      document.getElementById("publishBtnLabel").textContent = "Publish Live to Cloud";
+      document.getElementById("liveLogBox").innerHTML = "";
+      document.getElementById("btnStopExtract").classList.remove("hidden");
+      startElapsedTimer();
+
+      try {
+        const effectiveMode = state.cropMode === "python_cv" ? "python_cv" : "ai_vision";
+        if (effectiveMode === "python_cv" || state.cropMode === "hybrid") {
+          setProgress(8, "Step 1: Python CV Pre-Cutting Diagrams...");
+          await runPythonAutoCutter(false);
+        }
+
+        const diagById = new Map();
+        const diagByQNum = new Map();
+        state.extractedDiagrams.forEach((d) => {
+          diagById.set(d.id, d.dataUrl);
+          if (d.qNum && !diagByQNum.has(d.qNum)) diagByQNum.set(d.qNum, d.dataUrl);
+        });
+
+        const batches = [];
+        for (let p = sPage; p <= ePage; p += batchSize) {
+          batches.push({ start: p, end: Math.min(ePage, p + batchSize - 1) });
+        }
+        logLine(`🚀 Launching ${batches.length} batch(es) at ${speed}x Parallel Turbo (${effectiveMode}, ${langPref})...`, "ai");
+
+        let completed = 0;
+        let nextBatchIdx = 0;
+
+        async function runWorker(workerId) {
+          while (!state.stopRequested) {
+            if (targetLimit > 0 && state.extractedQuestions.length >= targetLimit) break;
+            const myIdx = nextBatchIdx++;
+            if (myIdx >= batches.length) break;
+            const batch = batches[myIdx];
+
+            try {
+              const pageJpegMap = new Map();
+              const pageImages = [];
+              let batchText = "";
+              const batchPool = [];
+
+              for (let p = batch.start; p <= batch.end; p++) {
+                const sp = await extractPageSpatialData(p);
+                batchText += `\n--- PAGE ${p} ---\n${sp.plainText}\n`;
+                if (effectiveMode === "ai_vision") {
+                  const jpeg = await renderPdfPageToJpeg(p, 1.55);
+                  pageJpegMap.set(p, jpeg);
+                  pageImages.push(jpeg);
+                } else {
+                  state.extractedDiagrams.filter((d) => d.page === p).forEach((d) => {
+                    batchPool.push(`${d.id} (Page ${d.page}, ${d.qNum ? `Q#${d.qNum}` : `y=${d.yPct}%`})`);
+                  });
+                }
+              }
+
+              const diagRule = effectiveMode === "ai_vision"
+                ? `PRECISION DIAGRAM CROPPING (WORLD-CLASS): Inspect page images carefully.
+- For ANY question containing a circuit, graph, ray diagram, biological diagram, organic ring/structure, or 2-4 option figures, return "page_num" (integer) AND tight-yet-complete "diagram_box": [ymin, xmin, ymax, xmax] (0-1000 normalized) that includes ALL labels (A, B, C, D, axes, values, arrows) with NO neighboring question text.
+- Stay strictly inside the active column (${activeLayout === "left_only" ? "xmin >= 0, xmax <= 500" : activeLayout === "right_only" ? "xmin >= 500, xmax <= 1000" : "question's column"}).
+- If a question has 2-4 sub-diagrams/option graphs, enclose ALL of them together in ONE combined box.
+- Do NOT return diagram_box for text-only Match-the-Following tables (use matchPairs instead). Return null if no diagram.`
+                : `DIAGRAM LINKING: Pre-cropped diagrams: ${batchPool.length ? batchPool.join("; ") : "None"}. Set "diagram_id" to matching ID or null.`;
+
+              const allTypesRule = `ALL NEET QUESTION TYPES STRUCTURING RULE (CRITICAL):
+Classify "qType" accurately as one of: "Single Choice" | "Match the Following" | "Assertion-Reason" | "Statement I & II" | "Multi-Statement" | "Diagram Based" | "Numerical" | "Incorrect / NOT Type".
+1. MATCH THE FOLLOWING: Whenever a question is "Match List-I with List-II" / "Match Column-I with Column-II", extract EVERY ROW into "matchPairs": [{"left": "(A) ...", "right": "(i) ..."}, ...].
+2. ASSERTION-REASON: Format cleanly with newlines: "Given below are two statements...\nAssertion (A): ...\nReason (R): ..."
+3. STATEMENT I & II: Format cleanly with newlines: "Given below are two statements:\nStatement I: ...\nStatement II: ..."
+4. MULTI-STATEMENT (A-E / i-v): Place each sub-statement on its own newline: "(A) ...\n(B) ...\n(C) ...\n(D) ..."`;
+
+              const mathRule = `HUMAN-READABLE MATH RULE: NEVER output LaTeX or computer code (NO $, \\frac, \\times, \\Omega, ^, _). ALWAYS output clean Unicode: 10⁻⁵, 2.5 × 10⁸ m/s, H₂SO₄, Fe³⁺, 50 Ω, 30°, √2, 1/2, π, Δ, μ, α, β, γ, →, ⇌.`;
+
+              const solverRule = `100% NEET ACCURACY RULE: Solve every Physics numerical, Chemistry reaction, and NCERT Biology line step-by-step in "explanation" BEFORE picking "answer" (0=A, 1=B, 2=C, 3=D). Watch for NOT/INCORRECT/EXCEPT traps!`;
+
+              const serialRule = state.extractType === "paper"
+                ? `EXACT SERIAL NUMBER: Set "qNum" to the EXACT printed question number from the PDF (e.g., 1, 2, 45, 180). NEVER renumber!`
+                : `Number generated questions sequentially.`;
+
+              const bilingualRule = langPref === "Bilingual"
+                ? `BILINGUAL DUAL-FIELD RULE: Keep "question", "options", "matchPairs" in clean English AND ALSO populate "question_hi", "options_hi", "matchPairs_hi" in pure Hindi.`
+                : "";
+
+              const systemPrompt = `You are India's #1 NEET Exam Digitizer & Master Solver. Output ONLY a strict JSON array.
+Each object: {"qNum": integer, "page_num": integer, "question": string, ${langPref === "Bilingual" ? '"question_hi": string, "options_hi": [optA_hi, optB_hi, optC_hi, optD_hi], "matchPairs_hi": [{"left":"","right":""}], ' : ""}"qType": string, "matchPairs": [{"left":"","right":""}], "options": [optA, optB, optC, optD], "explanation": "step-by-step formula/NCERT proof", "answer": 0..3, ${effectiveMode === "ai_vision" ? '"diagram_box": [ymin,xmin,ymax,xmax] or null' : '"diagram_id": string or null'}}
+${solverRule}
+${allTypesRule}
+${mathRule}
+${serialRule}
+${bilingualRule}`;
+
+              const userPrompt = state.extractType === "ncert"
+                ? `Generate high-yield NEET MCQs in ${langPref} from Pages ${batch.start}–${batch.end}.\n${diagRule}\nPDF TEXT:\n${batchText}`
+                : `Extract EVERY SINGLE NEET question printed on Pages ${batch.start}–${batch.end} (Language: ${langPref}).\n${diagRule}\nPDF TEXT:\n${batchText}`;
+
+              const raw = await callLLM({ systemPrompt, userPrompt, pageImages, requireVision: effectiveMode === "ai_vision", workerId });
+              const items = safeParseJsonArray(raw);
+              const decodedImgCache = new Map();
+              let added = 0;
+
+              for (const q of items) {
+                if (targetLimit > 0 && state.extractedQuestions.length >= targetLimit) break;
+                if (!q || !q.question || !Array.isArray(q.options) || q.options.length < 2) continue;
+
+                const normOpts = [0, 1, 2, 3].map((i) => cleanScientificText(q.options[i] || ""));
+                const cleanPairs = normalizeMatchPairs(q.matchPairs);
+                const qNumInt = parseInt(q.qNum, 10);
+                const validQNum = (!isNaN(qNumInt) && qNumInt >= 1 && qNumInt <= 300) ? qNumInt : null;
+                const pNum = parseInt(q.page_num, 10) || batch.start;
+
+                let imgUrl = "";
+                if (effectiveMode === "ai_vision" && Array.isArray(q.diagram_box) && q.diagram_box.length === 4) {
+                  const targetPageKey = pageJpegMap.has(pNum) ? pNum : batch.start;
+                  const jpegSrc = pageJpegMap.get(targetPageKey);
+                  if (jpegSrc) {
+                    let imgEl = decodedImgCache.get(targetPageKey);
+                    if (!imgEl) { imgEl = await loadImageFromDataUrl(jpegSrc); decodedImgCache.set(targetPageKey, imgEl); }
+                    imgUrl = cropNormalizedBox(imgEl, q.diagram_box, 26, wmKiller, activeLayout);
+                  }
+                }
+                if (!imgUrl) {
+                  if (q.diagram_id && diagById.has(q.diagram_id)) imgUrl = diagById.get(q.diagram_id);
+                  else if (validQNum && diagByQNum.has(validQNum)) imgUrl = diagByQNum.get(validQNum);
+                }
+
+                const cleanQ = structureNeetQuestionText(q.question);
+                const cleanQHi = q.question_hi ? structureNeetQuestionText(q.question_hi) : "";
+                const normOptsHi = Array.isArray(q.options_hi) && q.options_hi.length >= 2
+                  ? [0, 1, 2, 3].map((i) => cleanScientificText(q.options_hi[i] || ""))
+                  : [];
+                const cleanPairsHi = normalizeMatchPairs(q.matchPairs_hi);
+                const detectedType = detectNeetQType(cleanQ, cleanPairs, !!imgUrl);
+
+                const newObj = {
+                  qNum: validQNum || (state.extractedQuestions.length + 1),
+                  page: pNum,
+                  question: cleanQ,
+                  question_hi: cleanQHi,
+                  qType: cleanPairs.length ? "Match the Following" : (q.qType && q.qType !== "Single Choice" ? q.qType : detectedType),
+                  matchPairs: cleanPairs,
+                  matchPairs_hi: cleanPairsHi,
+                  options: normOpts,
+                  options_hi: normOptsHi,
+                  answer: Math.min(3, Math.max(0, parseInt(q.answer, 10) || 0)),
+                  explanation: cleanScientificText(q.explanation || ""),
+                  image: imgUrl,
+                  verified: false
+                };
+
+                // Deduplicate by exact qNum if paper mode
+                const dupIdx = validQNum ? state.extractedQuestions.findIndex((x) => Number(x.qNum) === validQNum) : -1;
+                if (dupIdx >= 0) state.extractedQuestions[dupIdx] = newObj;
+                else state.extractedQuestions.push(newObj);
+                added++;
+              }
+
+              pageJpegMap.clear();
+              decodedImgCache.clear();
+              logLine(`✅ Pages ${batch.start}–${batch.end}: Extracted ${added} question(s).`, "ok");
+            } catch (err) {
+              logLine(`⚠️ Pages ${batch.start}–${batch.end} error: ${err.message}`, "err");
+            }
+
+            completed++;
+            setProgress((completed / batches.length) * 100, `Processed ${completed}/${batches.length} batches (${state.extractedQuestions.length} Qs)`);
+            state.extractedQuestions.sort((a, b) => (Number(a.qNum) || 0) - (Number(b.qNum) || 0));
+            renderReviewList();
+          }
+        }
+
+        const workerCount = Math.min(speed, batches.length);
+        await Promise.all(Array.from({ length: workerCount }, (_, wi) => runWorker(wi)));
+
+        state.extractedQuestions.sort((a, b) => (Number(a.qNum) || 0) - (Number(b.qNum) || 0));
+        renderReviewList();
+        setProgress(100, `Done! Extracted ${state.extractedQuestions.length} NEET questions.`);
+        showToast(`Extracted ${state.extractedQuestions.length} questions!`, "success");
+      } catch (err) {
+        logLine(`❌ Extraction stopped: ${err.message}`, "err");
+        showToast(err.message, "error");
+      } finally {
+        state.isRunning = false;
+        stopElapsedTimer();
+        document.getElementById("btnStopExtract").classList.add("hidden");
+      }
+    };
+
+    // =========================================================================
+    // 9. ZERO-AI PYTHON EXTRACTOR (ALL NEET FORMATS + MATCH/STATEMENT PARSER)
+    // =========================================================================
+    function extractMatchPairsFromLines(stemText) {
+      const lines = String(stemText || "").split("\n").map((l) => l.trim()).filter(Boolean);
+      const pairs = [];
+      const keptStem = [];
+
+      for (const ln of lines) {
+        if (ln.includes("|")) {
+          const parts = ln.split("|").map((s) => s.trim()).filter(Boolean);
+          if (parts.length >= 2) {
+            if (/^(?:list|column|सूची)\s*[-–]?\s*(?:i|1)\b/i.test(parts[0]) && /^(?:list|column|सूची)\s*[-–]?\s*(?:ii|2)\b/i.test(parts[1])) continue;
+            pairs.push({ left: cleanScientificText(parts[0]), right: cleanScientificText(parts.slice(1).join(" ")) });
+            continue;
+          }
+        }
+        keptStem.push(ln);
+      }
+      if (pairs.length >= 2) return { stem: structureNeetQuestionText(keptStem.join("\n").trim() || "Match List-I with List-II:"), pairs };
+
+      const inlinePairs = [];
+      const nonPairLines = [];
+      const inlineRe = /^(\(?[A-Da-d]\)?[\.\)]?\s+.+?)\s+(\((?:i|ii|iii|iv|I|II|III|IV|[1-4])\)\s+.+|(?:i|ii|iii|iv|I|II|III|IV)[\.\)]\s+.+)$/;
+      for (const ln of lines) {
+        const cleanLn = ln.replace(/\s*\|\s*/g, " ").trim();
+        if (/^(?:list|column|सूची)\s*[-–]?\s*(?:i|1)\b.*(?:list|column|सूची)\s*[-–]?\s*(?:ii|2)\b/i.test(cleanLn)) continue;
+        const m = cleanLn.match(inlineRe);
+        if (m) inlinePairs.push({ left: cleanScientificText(m[1]), right: cleanScientificText(m[2]) });
+        else nonPairLines.push(cleanLn);
+      }
+      if (inlinePairs.length >= 2) return { stem: structureNeetQuestionText(nonPairLines.join("\n").trim() || "Match List-I with List-II:"), pairs: inlinePairs };
+
+      return { stem: structureNeetQuestionText(stemText.replace(/\s*\|\s*/g, " ").replace(/[ \t]{2,}/g, " ").trim()), pairs: [] };
+    }
+
+    function splitNeetOptionsZeroAI(fullBlock) {
+      const patterns = [
+        /([\s\S]*?)(?:^|\s)\(\s*1\s*\)\s*([\s\S]*?)(?:^|\s)\(\s*2\s*\)\s*([\s\S]*?)(?:^|\s)\(\s*3\s*\)\s*([\s\S]*?)(?:^|\s)\(\s*4\s*\)\s*([\s\S]*)/,
+        /([\s\S]*?)(?:^|\n|\s)1\)\s*([\s\S]*?)(?:^|\n|\s)2\)\s*([\s\S]*?)(?:^|\n|\s)3\)\s*([\s\S]*?)(?:^|\n|\s)4\)\s*([\s\S]*)/,
+        /([\s\S]*)(?:^|\n|\s)\(\s*A\s*\)\s*([\s\S]*?)(?:^|\n|\s)\(\s*B\s*\)\s*([\s\S]*?)(?:^|\n|\s)\(\s*C\s*\)\s*([\s\S]*?)(?:^|\n|\s)\(\s*D\s*\)\s*([\s\S]*)/,
+        /([\s\S]*)(?:^|\n|\s)\(\s*a\s*\)\s*([\s\S]*?)(?:^|\n|\s)\(\s*b\s*\)\s*([\s\S]*?)(?:^|\n|\s)\(\s*c\s*\)\s*([\s\S]*?)(?:^|\n|\s)\(\s*d\s*\)\s*([\s\S]*)/,
+        /([\s\S]*)(?:^|\n|\s)a\)\s*([\s\S]*?)(?:^|\n|\s)b\)\s*([\s\S]*?)(?:^|\n|\s)c\)\s*([\s\S]*?)(?:^|\n|\s)d\)\s*([\s\S]*)/,
+        /([\s\S]*)(?:^|\n)A\.\s+([\s\S]*?)(?:^|\n|\s)B\.\s+([\s\S]*?)(?:^|\n|\s)C\.\s+([\s\S]*?)(?:^|\n|\s)D\.\s+([\s\S]*)/
+      ];
+      for (const re of patterns) {
+        const m = fullBlock.match(re);
+        if (m && m[1].trim().length > 4) {
+          const opts = [m[2], m[3], m[4], m[5]].map((o) => cleanScientificText(o.replace(/\s*\|\s*/g, " ").replace(/\s+/g, " ").trim()));
+          if (opts.every((o) => o.length > 0)) return { rawStem: m[1], options: opts };
+        }
+      }
+      return null;
+    }
+
+    window.startZeroAIPythonExtraction = async () => {
+      if (!state.pdfDoc) { showToast("Pehle koi PDF upload karein!", "warn"); return; }
+      if (state.isRunning) return;
+
+      const sPage = Math.max(1, parseInt(document.getElementById("startPage").value, 10) || 1);
+      const ePage = Math.min(state.totalPages, parseInt(document.getElementById("endPage").value, 10) || state.totalPages);
+      const targetLimit = getTargetLimit();
+
+      state.isRunning = true;
+      state.stopRequested = false;
+      state.extractedQuestions = [];
+      state.editingCloudTestId = null;
+      document.getElementById("liveLogBox").innerHTML = "";
+      document.getElementById("btnStopExtract").classList.remove("hidden");
+      startElapsedTimer();
+
+      try {
+        setProgress(12, "Step 1/3: Python CV Pro Cutting & Merging Diagrams...");
+        await runPythonAutoCutter(false);
+
+        setProgress(58, "Step 2/3: All-Type Spatial NEET MCQ Extraction...");
+        const allLines = [];
+        for (let p = sPage; p <= ePage; p++) {
+          if (state.stopRequested) break;
+          const sp = await extractPageSpatialData(p);
+          if (p <= 2 && sp.qSpans.length === 0 && /instruction|roll\s*no|test\s*booklet/i.test(sp.plainText)) continue;
+          sp.lines.forEach((l) => allLines.push(l));
+        }
+
+        const parsedQs = [];
+        let current = null, lastQNum = 0;
+        const qRe = /^(?:Q\.?\s*)?(\d{1,3})\s*[\.\)]\s+(.+)/;
+
+        for (const ln of allLines) {
+          const t = ln.text.trim();
+          if (/^(ANSWER\s*KEY|HINTS\s*&?\s*SOLUTIONS)/i.test(t)) break;
+          const m = t.match(qRe);
+          if (m && !/^\(\d\)/.test(t)) {
+            const num = parseInt(m[1], 10);
+            const isValidNext = (lastQNum === 0 && num >= 1 && num <= 20) || (num > lastQNum && num <= lastQNum + 15);
+            if (isValidNext && num <= 250) {
+              if (current) parsedQs.push(current);
+              lastQNum = num;
+              current = { qNum: num, page: ln.page, col: ln.col, yStart: ln.yNorm, rawLines: [m[2]] };
+              continue;
+            }
+          }
+          if (current) current.rawLines.push(t);
+        }
+        if (current) parsedQs.push(current);
+
+        const diagByQNum = new Map();
+        state.extractedDiagrams.forEach((d) => { if (d.qNum && !diagByQNum.has(d.qNum)) diagByQNum.set(d.qNum, d.dataUrl); });
+
+        for (const pq of parsedQs) {
+          if (targetLimit > 0 && state.extractedQuestions.length >= targetLimit) break;
+          const splitRes = splitNeetOptionsZeroAI(pq.rawLines.join("\n"));
+          if (!splitRes) continue;
+          const parsedMatch = extractMatchPairsFromLines(splitRes.rawStem);
+          let img = diagByQNum.get(pq.qNum) || "";
+          if (!img) {
+            const near = state.extractedDiagrams.find((d) => d.page === pq.page && d.col === pq.col && !d.used && Math.abs(d.yPct * 10 - pq.yStart) < 220);
+            if (near) { img = near.dataUrl; near.used = true; }
+          }
+          state.extractedQuestions.push({
+            qNum: pq.qNum,
+            page: pq.page,
+            question: parsedMatch.stem,
+            qType: parsedMatch.pairs.length ? "Match the Following" : detectNeetQType(parsedMatch.stem, parsedMatch.pairs, !!img),
+            matchPairs: parsedMatch.pairs,
+            options: splitRes.options,
+            answer: 0,
+            explanation: "",
+            image: img,
+            verified: false
+          });
+        }
+
+        renderReviewList();
+        setProgress(100, `Zero-AI Python extracted ${state.extractedQuestions.length} structured MCQs!`);
+        logLine(`🐍 Zero-AI Done: ${state.extractedQuestions.length} questions + ${state.extractedQuestions.filter((q) => q.image).length} diagrams.`, "ok");
+        showToast(`Zero-AI extracted ${state.extractedQuestions.length} MCQs! Now paste/upload Answer Key or tap Vision AI Verify.`, "success");
+      } catch (err) {
+        logLine(`❌ Zero-AI Error: ${err.message}`, "err");
+        showToast(err.message, "error");
+      } finally {
+        state.isRunning = false;
+        stopElapsedTimer();
+        document.getElementById("btnStopExtract").classList.add("hidden");
+      }
+    };
+
+    // =========================================================================
+    // 10. PRO AI TOOLS: VISION VERIFY, AI SOLUTIONS, BILINGUAL HINDI & ANSWER KEY PDF
+    // =========================================================================
+    window.runVisionAIVerifyAnswers = async () => {
+      if (!state.extractedQuestions.length) { showToast("No questions to verify!", "warn"); return; }
+      if (state.isRunning) return;
+      state.isRunning = true; state.stopRequested = false;
+      document.getElementById("btnStopExtract").classList.remove("hidden");
+      startElapsedTimer();
+
+      const CHUNK = 8;
+      const chunks = [];
+      for (let i = 0; i < state.extractedQuestions.length; i += CHUNK) chunks.push(i);
+      const speed = Math.min(chunks.length, Math.max(1, parseInt(document.getElementById("parallelSpeedSelect").value, 10) || 3));
+      let done = 0, corrected = 0, nextIdx = 0;
+      const letters = ["A", "B", "C", "D"];
+
+      logLine(`✅ Starting Vision AI Answer Auditor on ${state.extractedQuestions.length} questions...`, "ai");
+
+      async function worker(wi) {
+        while (!state.stopRequested) {
+          const ci = nextIdx++;
+          if (ci >= chunks.length) break;
+          const start = chunks[ci];
+          const slice = state.extractedQuestions.slice(start, start + CHUNK);
+          const imgs = [];
+          const payload = slice.map((q) => {
+            let imgRef = null;
+            if (q.image) { imgs.push(q.image); imgRef = `Attached Image #${imgs.length}`; }
+            return { qNum: q.qNum, question: q.question, matchPairs: q.matchPairs || [], options: q.options, current_answer: q.answer, diagram: imgRef };
+          });
+
+          try {
+            const sys = `You are a Gold-Medalist NEET-UG Answer Key Auditor. Independently solve EVERY question (including attached diagrams & Match tables) with 100% NCERT & Physics/Chemistry rigor. Return ONLY a JSON array: [{"qNum": int, "answer": 0..3, "explanation": "concise clean Unicode proof"}]. NEVER use LaTeX.`;
+            const raw = await callLLM({ systemPrompt: sys, userPrompt: JSON.stringify(payload), pageImages: imgs, requireVision: imgs.length > 0, workerId: wi });
+            const resArr = safeParseJsonArray(raw);
+            for (const r of resArr) {
+              const target = slice.find((x) => Number(x.qNum) === Number(r.qNum));
+              if (!target) continue;
+              const newAns = Math.min(3, Math.max(0, parseInt(r.answer, 10)));
+              if (!isNaN(newAns)) {
+                if (target.answer !== newAns) {
+                  logLine(`🔧 Q#${target.qNum} Corrected: (${letters[target.answer]}) → (${letters[newAns]})`, "warn");
+                  target.answer = newAns;
+                  corrected++;
+                }
+                if (r.explanation) target.explanation = cleanScientificText(r.explanation);
+                target.verified = true;
+              }
+            }
+          } catch (e) {
+            logLine(`⚠️ Verify chunk error: ${e.message}`, "err");
+          }
+          done++;
+          setProgress((done / chunks.length) * 100, `Verified ${done}/${chunks.length} batches (${corrected} fixed)`);
+          renderReviewList();
+        }
+      }
+
+      await Promise.all(Array.from({ length: speed }, (_, wi) => worker(wi)));
+      state.isRunning = false; stopElapsedTimer();
+      document.getElementById("btnStopExtract").classList.add("hidden");
+      showToast(`Vision AI Verification Complete! ${corrected} answer(s) auto-corrected.`, "success");
+    };
+
+    window.runFillMissingSolutions = async () => {
+      const missing = state.extractedQuestions.filter((q) => !q.explanation || q.explanation.trim().length < 8);
+      if (!missing.length) { showToast("All questions already have solutions!", "success"); return; }
+      if (state.isRunning) return;
+      state.isRunning = true; state.stopRequested = false;
+      document.getElementById("btnStopExtract").classList.remove("hidden");
+      startElapsedTimer();
+
+      const CHUNK = 12;
+      const chunks = [];
+      for (let i = 0; i < missing.length; i += CHUNK) chunks.push(missing.slice(i, i + CHUNK));
+      const speed = Math.min(chunks.length, Math.max(1, parseInt(document.getElementById("parallelSpeedSelect").value, 10) || 3));
+      let done = 0, nextIdx = 0;
+
+      async function worker(wi) {
+        while (!state.stopRequested) {
+          const ci = nextIdx++;
+          if (ci >= chunks.length) break;
+          const slice = chunks[ci];
+          try {
+            const sys = `Write crisp 1-2 line NEET NCERT/Formula explanations for each question. Use clean Unicode math (NO LaTeX). Return ONLY JSON array: [{"qNum": int, "explanation": string}]`;
+            const raw = await callLLM({ systemPrompt: sys, userPrompt: JSON.stringify(slice.map((q) => ({ qNum: q.qNum, question: q.question, options: q.options, answer: q.answer }))), workerId: wi });
+            safeParseJsonArray(raw).forEach((r) => {
+              const t = slice.find((x) => Number(x.qNum) === Number(r.qNum));
+              if (t && r.explanation) t.explanation = cleanScientificText(r.explanation);
+            });
+          } catch (_) {}
+          done++;
+          setProgress((done / chunks.length) * 100, `Generated solutions ${done}/${chunks.length}`);
+          renderReviewList();
+        }
+      }
+
+      await Promise.all(Array.from({ length: speed }, (_, wi) => worker(wi)));
+      state.isRunning = false; stopElapsedTimer();
+      document.getElementById("btnStopExtract").classList.add("hidden");
+      showToast("AI Solutions populated!", "success");
+    };
+
+    window.runBulkAddHindi = async () => {
+      const needHi = state.extractedQuestions.filter((q) => !q.question_hi || !q.options_hi?.length);
+      if (!needHi.length) { showToast("All questions already have Bilingual Hindi!", "success"); return; }
+      if (state.isRunning) return;
+      state.isRunning = true; state.stopRequested = false;
+      document.getElementById("btnStopExtract").classList.remove("hidden");
+      startElapsedTimer();
+
+      const CHUNK = 10;
+      const chunks = [];
+      for (let i = 0; i < needHi.length; i += CHUNK) chunks.push(needHi.slice(i, i + CHUNK));
+      const speed = Math.min(chunks.length, Math.max(1, parseInt(document.getElementById("parallelSpeedSelect").value, 10) || 3));
+      let done = 0, nextIdx = 0;
+
+      async function worker(wi) {
+        while (!state.stopRequested) {
+          const ci = nextIdx++;
+          if (ci >= chunks.length) break;
+          const slice = chunks[ci];
+          try {
+            const sys = `Translate these NEET questions, options, and matchPairs into accurate NTA-standard Hindi (keep chemical formulas/units like H₂SO₄, 10⁻⁵ unchanged). Return ONLY JSON array: [{"qNum": int, "question_hi": string, "options_hi": [4 strings], "matchPairs_hi": [{"left":"","right":""}]}]`;
+            const raw = await callLLM({ systemPrompt: sys, userPrompt: JSON.stringify(slice.map((q) => ({ qNum: q.qNum, question: q.question, options: q.options, matchPairs: q.matchPairs || [] }))), workerId: wi });
+            safeParseJsonArray(raw).forEach((r) => {
+              const t = slice.find((x) => Number(x.qNum) === Number(r.qNum));
+              if (!t) return;
+              if (r.question_hi) t.question_hi = structureNeetQuestionText(r.question_hi);
+              if (Array.isArray(r.options_hi) && r.options_hi.length >= 2) t.options_hi = [0, 1, 2, 3].map((i) => cleanScientificText(r.options_hi[i] || ""));
+              if (Array.isArray(r.matchPairs_hi) && r.matchPairs_hi.length) t.matchPairs_hi = normalizeMatchPairs(r.matchPairs_hi);
+            });
+          } catch (_) {}
+          done++;
+          setProgress((done / chunks.length) * 100, `Bilingual Hindi ${done}/${chunks.length} batches`);
+          renderReviewList();
+        }
+      }
+
+      await Promise.all(Array.from({ length: speed }, (_, wi) => worker(wi)));
+      state.isRunning = false; stopElapsedTimer();
+      document.getElementById("btnStopExtract").classList.add("hidden");
+      showToast("Bilingual Hindi added to all questions!", "success");
+    };
+
+    function parseAnswerKeyMap(rawText) {
+      const map = new Map();
+      const s = String(rawText || "");
+      const letterToIdx = { A: 0, B: 1, C: 2, D: 3, "1": 0, "2": 1, "3": 2, "4": 3 };
+      const pairRe = /(\d{1,3})\s*[\.\-\:\)\s]+\(?\s*([A-Da-d1-4])\s*\)?/g;
+      let m;
+      while ((m = pairRe.exec(s)) !== null) {
+        const qn = parseInt(m[1], 10);
+        const ans = letterToIdx[m[2].toUpperCase()];
+        if (qn >= 1 && qn <= 300 && ans !== undefined) map.set(qn, ans);
+      }
+      if (!map.size) {
+        const seq = s.toUpperCase().match(/\b[A-D1-4]\b/g) || [];
+        seq.forEach((tok, i) => { if (letterToIdx[tok] !== undefined) map.set(i + 1, letterToIdx[tok]); });
+      }
+      return map;
+    }
+
+    function applyAnswerMapToQuestions(ansMap) {
+      let applied = 0;
+      state.extractedQuestions.forEach((q, idx) => {
+        const qn = Number(q.qNum) || (idx + 1);
+        if (ansMap.has(qn)) { q.answer = ansMap.get(qn); applied++; }
+      });
+      renderReviewList();
+      showToast(`Applied ${applied} answers from Answer Key!`, applied ? "success" : "warn");
+    }
+
+    window.applyBulkAnswerKey = () => {
+      const txt = document.getElementById("bulkAnswerKeyInput").value.trim();
+      if (!txt) { showToast("Paste answer key first or upload a Key PDF/Image!", "warn"); return; }
+      applyAnswerMapToQuestions(parseAnswerKeyMap(txt));
+    };
+
+    window.handleAnswerKeyFileUpload = async (ev) => {
+      const file = ev.target.files?.[0];
+      ev.target.value = "";
+      if (!file) return;
+      try {
+        if (file.type === "application/pdf") {
+          showToast("Reading Answer Key PDF...", "info");
+          const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+          let fullTxt = "";
+          for (let p = 1; p <= Math.min(pdf.numPages, 8); p++) {
+            const page = await pdf.getPage(p);
+            const tc = await page.getTextContent();
+            fullTxt += "\n" + tc.items.map((i) => i.str).join(" ");
+          }
+          const directMap = parseAnswerKeyMap(fullTxt);
+          if (directMap.size >= 5) {
+            applyAnswerMapToQuestions(directMap);
+            logLine(`📄 Key PDF parsed directly (0 API calls): ${directMap.size} answers found!`, "ok");
+            return;
+          }
+          // Vision OCR fallback for scanned PDF
+          logLine("Scanned Answer Key PDF detected — reading via Hydrogen Vision OCR...", "ai");
+          const imgs = [];
+          for (let p = 1; p <= Math.min(pdf.numPages, 4); p++) {
+            const page = await pdf.getPage(p);
+            const vp = page.getViewport({ scale: 1.5 });
+            const c = document.createElement("canvas"); c.width = vp.width; c.height = vp.height;
+            await page.render({ canvasContext: c.getContext("2d"), viewport: vp }).promise;
+            imgs.push(c.toDataURL("image/jpeg", 0.85));
+            c.width = 0; c.height = 0;
+          }
+          const raw = await callLLM({
+            systemPrompt: `Read the entire NEET Answer Key table from these image(s). Return ONLY JSON array: [{"qNum": int, "ans": "A"|"B"|"C"|"D"|"1"|"2"|"3"|"4"}]`,
+            userPrompt: "Extract every Q.No and its Answer.",
+            pageImages: imgs,
+            requireVision: true
+          });
+          const map = new Map();
+          const l2i = { A: 0, B: 1, C: 2, D: 3, "1": 0, "2": 1, "3": 2, "4": 3 };
+          safeParseJsonArray(raw).forEach((r) => {
+            const k = parseInt(r.qNum, 10), v = l2i[String(r.ans || "").trim().toUpperCase()];
+            if (!isNaN(k) && v !== undefined) map.set(k, v);
+          });
+          applyAnswerMapToQuestions(map);
+        } else {
+          // Image screenshot Answer Key
+          const reader = new FileReader();
+          reader.onload = async () => {
+            showToast("Reading Answer Key image via Vision AI...", "info");
+            const raw = await callLLM({
+              systemPrompt: `Read the NEET Answer Key table from this image. Return ONLY JSON array: [{"qNum": int, "ans": "A"|"B"|"C"|"D"|"1"|"2"|"3"|"4"}]`,
+              userPrompt: "Extract all question numbers and answers.",
+              pageImages: [reader.result],
+              requireVision: true
+            });
+            const map = new Map();
+            const l2i = { A: 0, B: 1, C: 2, D: 3, "1": 0, "2": 1, "3": 2, "4": 3 };
+            safeParseJsonArray(raw).forEach((r) => {
+              const k = parseInt(r.qNum, 10), v = l2i[String(r.ans || "").trim().toUpperCase()];
+              if (!isNaN(k) && v !== undefined) map.set(k, v);
+            });
+            applyAnswerMapToQuestions(map);
+          };
+          reader.readAsDataURL(file);
+        }
+      } catch (err) {
+        showToast("Key read failed: " + err.message, "error");
+      }
+    };
+
+    // =========================================================================
+    // 11. REVIEW WORKSPACE, GAP DETECTOR & MANUAL QUESTION EDITOR
+    // =========================================================================
+    function getMissingQNumbers() {
+      if (!state.extractedQuestions.length) return [];
+      const nums = state.extractedQuestions.map((q) => Number(q.qNum)).filter((n) => n >= 1 && n <= 300);
+      if (!nums.length) return [];
+      const maxQ = Math.max(...nums);
+      const set = new Set(nums);
+      const miss = [];
+      for (let n = 1; n <= maxQ; n++) if (!set.has(n)) miss.push(n);
+      return miss;
+    }
+
+    window.renderReviewList = () => {
+      const list = document.getElementById("reviewList");
+      const total = state.extractedQuestions.length;
+      const withImg = state.extractedQuestions.filter((q) => q.image).length;
+      const verifiedCnt = state.extractedQuestions.filter((q) => q.verified).length;
+      const missingNums = getMissingQNumbers();
+
+      document.getElementById("reviewSubStats").textContent =
+        `${total} questions • ${withImg} HD diagrams • ${verifiedCnt}/${total} AI Verified` + (missingNums.length ? ` • ${missingNums.length} skipped slot(s)` : "");
+
+      const gapBanner = document.getElementById("gapDetectorBanner");
+      if (missingNums.length && missingNums.length <= 60) {
+        gapBanner.classList.remove("hidden");
+        document.getElementById("gapDetectorText").textContent = `⚠️ Skipped Serial Slots Detected (${missingNums.length}): Q#${missingNums.slice(0, 14).join(", ")}${missingNums.length > 14 ? "..." : ""}`;
+      } else {
+        gapBanner.classList.add("hidden");
+      }
+
+      // Live Question-Type Breakdown Pills
+      const typeCounts = {};
+      state.extractedQuestions.forEach((q) => {
+        const qt = q.qType || detectNeetQType(q.question, q.matchPairs, !!q.image);
+        typeCounts[qt] = (typeCounts[qt] || 0) + 1;
+      });
+      const typeToFilter = {
+        "Match the Following": "type_match", "Assertion-Reason": "type_ar", "Statement I & II": "type_stmt",
+        "Multi-Statement": "type_multi", "Diagram Based": "with_img", "Numerical": "type_num", "Incorrect / NOT Type": "type_neg"
+      };
+      document.getElementById("reviewTypePills").innerHTML = Object.entries(typeCounts).map(([qt, cnt]) => {
+        const fVal = typeToFilter[qt] || "all";
+        return `<button onclick="document.getElementById('reviewFilter').value='${fVal}'; renderReviewList();" class="px-2 py-0.5 rounded-lg bg-navy-900 hover:bg-navy-800 border border-slate-700 text-slate-300 transition">${escapeHtml(qt)}: <span class="text-emerald-400">${cnt}</span></button>`;
+      }).join("");
+
+      const search = (document.getElementById("reviewSearch").value || "").toLowerCase();
+      const filter = document.getElementById("reviewFilter").value;
+      const letters = ["A", "B", "C", "D"];
+
+      const displayEntries = [];
+      const qByNum = new Map();
+      state.extractedQuestions.forEach((q, idx) => qByNum.set(Number(q.qNum), { q, idx }));
+
+      const showGaps = !search && (filter === "all" || filter === "missing_only") && missingNums.length > 0 && missingNums.length <= 60;
+      if (showGaps) {
+        const maxQ = Math.max(...state.extractedQuestions.map((q) => Number(q.qNum) || 0));
+        for (let n = 1; n <= maxQ; n++) {
+          if (qByNum.has(n)) {
+            if (filter !== "missing_only") displayEntries.push({ type: "question", ...qByNum.get(n) });
+          } else {
+            displayEntries.push({ type: "missing", qNum: n });
+          }
+        }
+        if (filter !== "missing_only") {
+          state.extractedQuestions.forEach((q, idx) => {
+            const n = Number(q.qNum);
+            if (!n || n < 1 || n > maxQ) displayEntries.push({ type: "question", q, idx });
+          });
+        }
+      } else {
+        state.extractedQuestions.forEach((q, idx) => {
+          const qt = q.qType || detectNeetQType(q.question, q.matchPairs, !!q.image);
+          if (filter === "missing_only") return;
+          if (filter === "with_img" && !q.image) return;
+          if (filter === "no_img" && q.image) return;
+          if (filter === "verified_only" && !q.verified) return;
+          if (filter === "type_match" && qt !== "Match the Following") return;
+          if (filter === "type_ar" && qt !== "Assertion-Reason") return;
+          if (filter === "type_stmt" && qt !== "Statement I & II") return;
+          if (filter === "type_multi" && qt !== "Multi-Statement") return;
+          if (filter === "type_num" && qt !== "Numerical") return;
+          if (filter === "type_neg" && qt !== "Incorrect / NOT Type") return;
+          if (search && !q.question.toLowerCase().includes(search) && !String(q.qNum).includes(search) && !qt.toLowerCase().includes(search)) return;
+          displayEntries.push({ type: "question", q, idx });
+        });
+      }
+
+      if (!displayEntries.length) {
+        list.innerHTML = `<div class="text-center py-8 text-xs text-slate-400">No items match this filter.</div>`;
+        return;
+      }
+
+      const typeBadgeStyle = {
+        "Match the Following": "bg-amber-500/20 text-amber-300 border border-amber-500/35",
+        "Assertion-Reason": "bg-purple-500/20 text-purple-300 border border-purple-500/35",
+        "Statement I & II": "bg-emerald-500/20 text-emerald-300 border border-emerald-500/35",
+        "Multi-Statement": "bg-indigo-500/20 text-indigo-300 border border-indigo-500/35",
+        "Diagram Based": "bg-cyan-500/20 text-cyan-300 border border-cyan-500/35",
+        "Numerical": "bg-sky-500/20 text-sky-300 border border-sky-500/35",
+        "Incorrect / NOT Type": "bg-rose-500/20 text-rose-300 border border-rose-500/35",
+        "Single Choice": "bg-navy-800 text-slate-300"
+      };
+
+      list.innerHTML = displayEntries.map((entry) => {
+        if (entry.type === "missing") {
+          return `
+            <div class="bg-amber-500/10 border border-dashed border-amber-500/50 rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                <span class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 text-xs font-black">Q#${entry.qNum}</span>
+                <span class="text-xs font-bold text-amber-200">Skipped / Missing — Serial #${entry.qNum} reserved here</span>
+              </div>
+              <button onclick="openInsertManualQModal(${entry.qNum})" class="px-3.5 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-navy-950 text-xs font-black transition">
+                <i class="fa-solid fa-plus mr-1"></i>Add Q#${entry.qNum} Manually
+              </button>
+            </div>
+          `;
+        }
+
+        const { q, idx } = entry;
+        const qt = q.qType || detectNeetQType(q.question, q.matchPairs, !!q.image);
+        const structuredStemHtml = renderStructuredNeetQuestionHtml(q);
+        const missingMatchWarning = (qt === "Match the Following" && (!q.matchPairs || !q.matchPairs.length) && !/list\s*[-–]?\s*ii|column\s*[-–]?\s*ii/i.test(q.question))
+          ? `<div class="text-[11px] text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-lg px-2.5 py-1.5 flex items-center justify-between gap-2">
+               <span><i class="fa-solid fa-triangle-exclamation mr-1"></i>Match table missing — tap Edit to add List-I & List-II rows!</span>
+               <button onclick="openEditQModal(${idx})" class="underline font-extrabold">Add Table</button>
+             </div>`
+          : "";
+
+        return `
+          <div class="bg-navy-950/90 border border-slate-800 rounded-xl p-3.5 space-y-2.5">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex flex-wrap items-center gap-1.5">
+                <span class="px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 text-xs font-extrabold">Q#${q.qNum}</span>
+                <span class="px-2 py-0.5 rounded-lg text-[10px] font-extrabold ${typeBadgeStyle[qt] || typeBadgeStyle["Single Choice"]}">${escapeHtml(qt)}</span>
+                ${q.question_hi ? `<span class="px-2 py-0.5 rounded-lg bg-sky-500/15 text-sky-300 border border-sky-500/30 text-[10px] font-extrabold">🌐 EN+हिं</span>` : ""}
+                ${q.verified ? `<span class="px-2 py-0.5 rounded-lg bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 text-[10px] font-extrabold"><i class="fa-solid fa-circle-check mr-0.5"></i>Verified</span>` : ""}
+                ${q.page ? `<span class="text-[10px] text-slate-500 font-bold">Pg ${q.page}</span>` : ""}
+              </div>
+              <div class="flex items-center gap-1">
+                ${letters.map((L, oi) => `
+                  <button onclick="setQuickAnswer(${idx}, ${oi})" class="w-7 h-7 rounded-lg text-xs font-black transition ${q.answer === oi ? "bg-emerald-500 text-navy-950" : "bg-navy-800 text-slate-400 hover:text-white"}">${L}</button>
+                `).join("")}
+                <button onclick="openSnipModal(${idx})" title="Snip Diagram on Page ${q.page || 1}" class="px-2.5 py-1.5 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 text-[11px] font-bold"><i class="fa-solid fa-scissors"></i></button>
+                <button onclick="openEditQModal(${idx})" title="Edit" class="px-2.5 py-1.5 rounded-lg bg-navy-800 hover:bg-navy-700 text-slate-200 text-[11px] font-bold"><i class="fa-solid fa-pen"></i></button>
+                <button onclick="deleteExtractedQ(${idx})" title="Delete" class="px-2.5 py-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 text-[11px] font-bold"><i class="fa-solid fa-trash"></i></button>
+              </div>
+            </div>
+            ${structuredStemHtml}
+            ${missingMatchWarning}
+            ${q.image ? `<div class="inline-block bg-white rounded-xl p-1.5 shadow-md"><img src="${q.image}" onclick="openLightbox('${q.image}', 'Q#${q.qNum} Diagram')" class="max-h-48 object-contain rounded cursor-zoom-in" /></div>` : ""}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+              ${(q.options || []).map((opt, oi) => `
+                <div class="px-2.5 py-1.5 rounded-lg text-xs border ${q.answer === oi ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-200 font-bold" : "bg-navy-900 border-slate-800 text-slate-300"}">
+                  <span class="font-extrabold mr-1">(${letters[oi]})</span> ${escapeHtml(opt)}
+                </div>
+              `).join("")}
+            </div>
+            ${q.explanation ? `<p class="text-[11px] text-cyan-300 bg-cyan-950/30 border border-cyan-500/20 rounded-lg px-2.5 py-1.5"><strong>Solution:</strong> ${escapeHtml(q.explanation)}</p>` : ""}
+          </div>
+        `;
+      }).join("");
+    };
+
+    window.setQuickAnswer = (idx, oi) => { if (state.extractedQuestions[idx]) { state.extractedQuestions[idx].answer = oi; renderReviewList(); } };
+    window.deleteExtractedQ = (idx) => { state.extractedQuestions.splice(idx, 1); renderReviewList(); };
+
+    // Edit & Insert Question Modal Logic
+    window.openEditQModal = (idx) => {
+      const q = state.extractedQuestions[idx];
+      if (!q) return;
+      state.editIndex = idx;
+      state.editImageUrl = q.image || "";
+      document.getElementById("editModalTitle").textContent = `Edit Q#${q.qNum}`;
+      document.getElementById("editQNum").value = q.qNum || (idx + 1);
+      document.getElementById("editQPage").value = q.page || 1;
+      document.getElementById("editQType").value = q.qType || detectNeetQType(q.question, q.matchPairs, !!q.image);
+      document.getElementById("editQText").value = q.question || "";
+      document.getElementById("editQTextHi").value = q.question_hi || "";
+      [0, 1, 2, 3].forEach((i) => document.getElementById(`editOpt${i}`).value = q.options?.[i] || "");
+      document.getElementById("editAnswer").value = String(q.answer || 0);
+      document.getElementById("editExplanation").value = q.explanation || "";
+      renderEditMatchRows(q.matchPairs || []);
+      updateEditImagePreview();
+      openModal("editQModal");
+    };
+
+    window.openInsertManualQModal = (presetQNum = null) => {
+      state.editIndex = -1;
+      state.editImageUrl = "";
+      const nextNum = presetQNum || (state.extractedQuestions.length ? Math.max(...state.extractedQuestions.map((x) => Number(x.qNum) || 0)) + 1 : 1);
+      document.getElementById("editModalTitle").textContent = `Add Manual Q#${nextNum}`;
+      document.getElementById("editQNum").value = nextNum;
+      document.getElementById("editQPage").value = 1;
+      document.getElementById("editQType").value = "Single Choice";
+      document.getElementById("editQText").value = "";
+      document.getElementById("editQTextHi").value = "";
+      [0, 1, 2, 3].forEach((i) => document.getElementById(`editOpt${i}`).value = "");
+      document.getElementById("editAnswer").value = "0";
+      document.getElementById("editExplanation").value = "";
+      renderEditMatchRows([]);
+      updateEditImagePreview();
+      openModal("editQModal");
+    };
+
+    function renderEditMatchRows(pairs) {
+      const wrap = document.getElementById("editMatchRowsWrap");
+      wrap.innerHTML = "";
+      (pairs || []).forEach((p) => addEditMatchRow(p.left, p.right));
+    }
+    window.addEditMatchRow = (left = "", right = "") => {
+      const wrap = document.getElementById("editMatchRowsWrap");
+      const row = document.createElement("div");
+      row.className = "grid grid-cols-11 gap-1.5 edit-match-row";
+      row.innerHTML = `
+        <input type="text" value="${escapeHtml(left)}" placeholder="(A) List-I item" class="col-span-5 bg-navy-900 border border-slate-700 rounded-lg px-2 py-1.5 text-white outline-none" />
+        <input type="text" value="${escapeHtml(right)}" placeholder="(i) List-II item" class="col-span-5 bg-navy-900 border border-slate-700 rounded-lg px-2 py-1.5 text-white outline-none" />
+        <button onclick="this.parentElement.remove()" class="col-span-1 rounded-lg bg-rose-500/15 text-rose-300 font-bold">×</button>
+      `;
+      wrap.appendChild(row);
+    };
+
+    function updateEditImagePreview() {
+      const wrap = document.getElementById("editImagePreviewWrap");
+      if (state.editImageUrl) {
+        document.getElementById("editImagePreview").src = state.editImageUrl;
+        wrap.classList.remove("hidden");
+      } else {
+        wrap.classList.add("hidden");
+      }
+    }
+    window.handleEditImageUpload = (ev) => {
+      const f = ev.target.files?.[0];
+      if (!f) return;
+      const r = new FileReader();
+      r.onload = () => { state.editImageUrl = r.result; updateEditImagePreview(); };
+      r.readAsDataURL(f);
+    };
+    window.clearEditImage = () => { state.editImageUrl = ""; updateEditImagePreview(); };
+
+    window.saveEditedQuestion = () => {
+      const qText = structureNeetQuestionText(document.getElementById("editQText").value.trim());
+      if (!qText) { showToast("Question text required!", "warn"); return; }
+      const matchPairs = [];
+      document.querySelectorAll(".edit-match-row").forEach((r) => {
+        const ins = r.querySelectorAll("input");
+        const l = ins[0].value.trim(), rt = ins[1].value.trim();
+        if (l || rt) matchPairs.push({ left: cleanScientificText(l), right: cleanScientificText(rt) });
+      });
+      const obj = {
+        qNum: parseInt(document.getElementById("editQNum").value, 10) || 1,
+        page: parseInt(document.getElementById("editQPage").value, 10) || 1,
+        qType: matchPairs.length ? "Match the Following" : document.getElementById("editQType").value,
+        question: qText,
+        question_hi: structureNeetQuestionText(document.getElementById("editQTextHi").value.trim()),
+        matchPairs,
+        options: [0, 1, 2, 3].map((i) => cleanScientificText(document.getElementById(`editOpt${i}`).value.trim())),
+        answer: parseInt(document.getElementById("editAnswer").value, 10) || 0,
+        explanation: cleanScientificText(document.getElementById("editExplanation").value.trim()),
+        image: state.editImageUrl,
+        verified: true
+      };
+      if (state.editIndex >= 0) {
+        state.extractedQuestions[state.editIndex] = { ...state.extractedQuestions[state.editIndex], ...obj };
+      } else {
+        state.extractedQuestions.push(obj);
+      }
+      state.extractedQuestions.sort((a, b) => (Number(a.qNum) || 0) - (Number(b.qNum) || 0));
+      closeModal("editQModal");
+      renderReviewList();
+      showToast(`Saved Q#${obj.qNum}!`, "success");
+    };
+
+    // =========================================================================
+    // 12. MANUAL HD DIAGRAM SNIPPER
+    // =========================================================================
+    let snipInit = false, snipDragging = false, snipStart = null, snipBaseImg = null;
+    window.openSnipModal = async (targetIdx = -1) => {
+      if (!state.pdfDoc) { showToast("Upload a PDF first to snip!", "warn"); return; }
+      state.snipTargetIdx = targetIdx;
+      state.snipPage = targetIdx >= 0 ? (state.extractedQuestions[targetIdx]?.page || 1) : (parseInt(document.getElementById("startPage").value, 10) || 1);
+      document.getElementById("snipModalTitle").textContent = targetIdx >= 0 ? `Snip Diagram for Q#${state.extractedQuestions[targetIdx].qNum}` : "Manual HD Snip to Pool";
+      openModal("snipModal");
+      await drawSnipPage();
+      initSnipCanvasEvents();
+    };
+
+    window.changeSnipPage = async (delta) => {
+      state.snipPage = Math.max(1, Math.min(state.totalPages, state.snipPage + delta));
+      await drawSnipPage();
+    };
+
+    async function drawSnipPage() {
+      document.getElementById("snipPageLabel").textContent = `Page ${state.snipPage} / ${state.totalPages}`;
+      const jpeg = await renderPdfPageToJpeg(state.snipPage, 1.5);
+      snipBaseImg = await loadImageFromDataUrl(jpeg);
+      state.snipRect = null;
+      const c = document.getElementById("snipCanvas");
+      c.width = snipBaseImg.width; c.height = snipBaseImg.height;
+      c.getContext("2d").drawImage(snipBaseImg, 0, 0);
+    }
+
+    function initSnipCanvasEvents() {
+      if (snipInit) return;
+      snipInit = true;
+      const c = document.getElementById("snipCanvas");
+      const getPos = (e) => {
+        const r = c.getBoundingClientRect();
+        const cx = e.touches ? e.touches[0].clientX : e.clientX;
+        const cy = e.touches ? e.touches[0].clientY : e.clientY;
+        return { x: ((cx - r.left) / r.width) * c.width, y: ((cy - r.top) / r.height) * c.height };
+      };
+      const start = (e) => { e.preventDefault(); snipDragging = true; snipStart = getPos(e); };
+      const move = (e) => {
+        if (!snipDragging || !snipBaseImg) return;
+        e.preventDefault();
+        const cur = getPos(e);
+        state.snipRect = {
+          x: Math.min(snipStart.x, cur.x), y: Math.min(snipStart.y, cur.y),
+          w: Math.abs(cur.x - snipStart.x), h: Math.abs(cur.y - snipStart.y)
+        };
+        const ctx = c.getContext("2d");
+        ctx.drawImage(snipBaseImg, 0, 0);
+        ctx.strokeStyle = "#10b981"; ctx.lineWidth = 3;
+        ctx.fillStyle = "rgba(16,185,129,0.16)";
+        ctx.fillRect(state.snipRect.x, state.snipRect.y, state.snipRect.w, state.snipRect.h);
+        ctx.strokeRect(state.snipRect.x, state.snipRect.y, state.snipRect.w, state.snipRect.h);
+      };
+      const stop = () => { snipDragging = false; };
+      c.addEventListener("mousedown", start); c.addEventListener("mousemove", move); window.addEventListener("mouseup", stop);
+      c.addEventListener("touchstart", start, { passive: false }); c.addEventListener("touchmove", move, { passive: false }); window.addEventListener("touchend", stop);
+    }
+
+    window.confirmManualSnip = () => {
+      if (!state.snipRect || state.snipRect.w < 12 || state.snipRect.h < 12 || !snipBaseImg) {
+        showToast("Drag a box around the diagram first!", "warn"); return;
+      }
+      const r = state.snipRect;
+      const box = [
+        Math.round((r.y / snipBaseImg.height) * 1000),
+        Math.round((r.x / snipBaseImg.width) * 1000),
+        Math.round(((r.y + r.h) / snipBaseImg.height) * 1000),
+        Math.round(((r.x + r.w) / snipBaseImg.width) * 1000)
+      ];
+      const url = cropNormalizedBox(snipBaseImg, box, 4, document.getElementById("chkWatermarkKiller").checked, "");
+      if (state.snipTargetIdx >= 0 && state.extractedQuestions[state.snipTargetIdx]) {
+        state.extractedQuestions[state.snipTargetIdx].image = url;
+        renderReviewList();
+        showToast(`Attached HD diagram to Q#${state.extractedQuestions[state.snipTargetIdx].qNum}!`, "success");
+      } else {
+        state.extractedDiagrams.unshift({ id: `manual_${Date.now()}`, page: state.snipPage, col: 0, qNum: null, mergedCount: 1, yPct: 50, dataUrl: url });
+        renderDiagramPool();
+        showToast("Manual diagram added to pool!", "success");
+      }
+      closeModal("snipModal");
+    };
+
+    // =========================================================================
+    // 13. CLOUD PUBLISH, CLOUD MANAGER & ALL-STUDENTS ANALYTICS
+    // =========================================================================
+    window.publishTestToCloud = async () => {
+      if (!state.cloudApi) { showToast("Cloud not connected!", "error"); return; }
+      if (!state.extractedQuestions.length) { showToast("No questions to publish!", "warn"); return; }
+      const title = document.getElementById("publishTestTitle").value.trim() || `NEET Mock Test (${new Date().toLocaleDateString()})`;
+      const subject = document.getElementById("publishSubject").value;
+      const tag = document.getElementById("publishTag").value.trim() || "NEET 2027";
+      const btn = document.getElementById("btnPublishLive");
+      btn.disabled = true;
+      document.getElementById("publishBtnLabel").textContent = "Publishing...";
+
+      try {
+        const testId = state.editingCloudTestId || `test_${Date.now()}`;
+        const meta = { title, subject, tag, createdAt: Date.now() };
+        await state.cloudApi.publishTest(testId, meta, state.extractedQuestions);
+        state.editingCloudTestId = testId;
+        showToast(`Published "${title}" (${state.extractedQuestions.length} Qs) LIVE to NEET Ace Portal!`, "success");
+        logLine(`☁️ Published Live: ${title} (${state.extractedQuestions.length} Qs)`, "ok");
+      } catch (err) {
+        showToast("Publish failed: " + err.message, "error");
+      } finally {
+        btn.disabled = false;
+        document.getElementById("publishBtnLabel").textContent = state.editingCloudTestId ? "Update Live Cloud Test" : "Publish Live to Cloud";
+      }
+    };
+
+    window.openCloudManagerModal = (tab = "tests") => {
+      openModal("cloudManagerModal");
+      switchCloudTab(tab);
+    };
+
+    window.switchCloudTab = (tab) => {
+      document.getElementById("cloudTabTests").className = tab === "tests" ? "px-3.5 py-1.5 rounded-xl text-xs font-black bg-emerald-500 text-navy-950" : "px-3.5 py-1.5 rounded-xl text-xs font-bold bg-navy-800 text-slate-300";
+      document.getElementById("cloudTabStudents").className = tab === "students" ? "px-3.5 py-1.5 rounded-xl text-xs font-black bg-amber-400 text-navy-950" : "px-3.5 py-1.5 rounded-xl text-xs font-bold bg-navy-800 text-slate-300";
+      const body = document.getElementById("cloudManagerBody");
+
+      if (tab === "tests") {
+        if (!state.cloudTests.length) {
+          body.innerHTML = `<p class="text-center py-8 text-slate-400">No Cloud Tests published yet.</p>`;
+          return;
+        }
+        body.innerHTML = state.cloudTests.map((t) => `
+          <div class="p-3.5 rounded-2xl bg-navy-950 border border-slate-800 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p class="font-extrabold text-white text-sm">${escapeHtml(t.title)}</p>
+              <p class="text-[11px] text-slate-400">${escapeHtml(t.subject || "Full Mock")} • ${t.questionCount || (t.questions || []).length} Qs • ${escapeHtml(t.tag || "NEET 2027")}</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="loadCloudTestForEdit('${t.id}')" class="px-3 py-1.5 rounded-xl bg-cyan-500/15 text-cyan-300 font-extrabold">Edit in Studio</button>
+              <button onclick="confirmDeleteCloudTest('${t.id}', '${escapeHtml(t.title).replace(/'/g, "")}')" class="px-3 py-1.5 rounded-xl bg-rose-500/15 text-rose-300 font-extrabold">Delete</button>
+            </div>
+          </div>
+        `).join("");
+      } else {
+        if (!state.cloudSubs.length) {
+          body.innerHTML = `<p class="text-center py-8 text-slate-400">No student attempts recorded yet.</p>`;
+          return;
+        }
+        const totals = new Map();
+        state.cloudSubs.forEach((s) => {
+          const k = (s.studentName || "Unknown").trim();
+          const cur = totals.get(k) || { name: k, batch: s.batch || "NEET 2027", points: 0, attempts: 0, accSum: 0 };
+          cur.points += (s.score || 0); cur.attempts++; cur.accSum += (s.accuracy || 0);
+          totals.set(k, cur);
+        });
+        const lb = [...totals.values()].sort((a, b) => b.points - a.points);
+        body.innerHTML = `
+          <div class="space-y-2">
+            <p class="font-extrabold text-amber-300 uppercase text-[11px]">Admin-Only All-Students Leaderboard (${lb.length} Students)</p>
+            ${lb.map((st, i) => `
+              <div class="p-3 rounded-xl bg-navy-950 border border-slate-800 flex items-center justify-between">
+                <div>
+                  <span class="font-black text-amber-400 mr-2">#${i + 1}</span>
+                  <span class="font-extrabold text-white">${escapeHtml(st.name)}</span>
+                  <span class="text-[10px] text-slate-400 ml-1.5">(${escapeHtml(st.batch)} • ${st.attempts} tests • Avg ${Math.round(st.accSum / st.attempts)}%)</span>
+                </div>
+                <span class="px-2.5 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-300 font-black">${st.points} pts</span>
+              </div>
+            `).join("")}
+            <p class="font-extrabold text-cyan-300 uppercase text-[11px] pt-3">Recent Live Attempts Feed</p>
+            ${state.cloudSubs.slice(0, 40).map((s) => `
+              <div class="p-2.5 rounded-xl bg-navy-950/70 border border-slate-800/80 flex items-center justify-between text-[11px]">
+                <div><strong class="text-white">${escapeHtml(s.studentName)}</strong> — ${escapeHtml(s.testTitle)}</div>
+                <span class="font-black text-emerald-400">${s.score}/${s.maxScore || 720} (${s.accuracy ?? 0}%)</span>
+              </div>
+            `).join("")}
+          </div>
+        `;
+      }
+    };
+
+    window.loadCloudTestForEdit = async (id) => {
+      const meta = state.cloudTests.find((t) => t.id === id);
+      if (!meta || !state.cloudApi) return;
+      showToast("Loading Cloud test into Studio...", "info");
+      const qs = await state.cloudApi.loadTestQuestions(meta);
+      state.editingCloudTestId = id;
+      state.extractedQuestions = qs.map((q, i) => {
+        const cleanQ = structureNeetQuestionText(q.question || "");
+        const pairs = normalizeMatchPairs(q.matchPairs);
+        return {
+          ...q,
+          qNum: q.qNum || (i + 1),
+          question: cleanQ,
+          matchPairs: pairs,
+          qType: pairs.length ? "Match the Following" : (q.qType || detectNeetQType(cleanQ, pairs, !!q.image)),
+          options: (q.options || []).map((o) => cleanScientificText(o)),
+          explanation: cleanScientificText(q.explanation || "")
+        };
+      });
+      document.getElementById("publishTestTitle").value = meta.title || "";
+      document.getElementById("publishSubject").value = meta.subject || "Full Mock";
+      document.getElementById("publishTag").value = meta.tag || "NEET 2027";
+      document.getElementById("publishBtnLabel").textContent = "Update Live Cloud Test";
+      closeModal("cloudManagerModal");
+      renderReviewList();
+      showToast(`Loaded "${meta.title}" (${qs.length} Qs) — math auto-cleaned!`, "success");
+    };
+
+    window.confirmDeleteCloudTest = (id, title) => {
+      openConfirm("Delete Cloud Test?", `Permanently delete "${title}" from Firebase Cloud?`, async () => {
+        await state.cloudApi.deleteTest(id);
+        showToast("Cloud test deleted.", "info");
+        switchCloudTab("tests");
+      });
+    };
+
+    // Bulk JSON Import / Export
+    window.openBulkJsonModal = () => {
+      document.getElementById("bulkJsonTextarea").value = JSON.stringify(state.extractedQuestions, null, 2);
+      openModal("bulkJsonModal");
+    };
+    window.copyBulkJson = async () => {
+      try { await navigator.clipboard.writeText(document.getElementById("bulkJsonTextarea").value); showToast("JSON copied!", "success"); } catch (_) {}
+    };
+    window.importBulkJson = () => {
+      const parsed = safeParseJsonArray(document.getElementById("bulkJsonTextarea").value);
+      if (!parsed.length) { showToast("Invalid or empty JSON array!", "error"); return; }
+      state.extractedQuestions = parsed.map((q, i) => ({
+        qNum: q.qNum || (i + 1),
+        page: q.page || 1,
+        question: structureNeetQuestionText(q.question || ""),
+        question_hi: q.question_hi ? structureNeetQuestionText(q.question_hi) : "",
+        matchPairs: normalizeMatchPairs(q.matchPairs),
+        matchPairs_hi: normalizeMatchPairs(q.matchPairs_hi),
+        qType: q.qType || detectNeetQType(q.question, q.matchPairs, !!q.image),
+        options: [0, 1, 2, 3].map((oi) => cleanScientificText(q.options?.[oi] || "")),
+        options_hi: Array.isArray(q.options_hi) ? q.options_hi.map((o) => cleanScientificText(o)) : [],
+        answer: Math.min(3, Math.max(0, parseInt(q.answer, 10) || 0)),
+        explanation: cleanScientificText(q.explanation || ""),
+        image: q.image || "",
+        verified: !!q.verified
+      }));
+      closeModal("bulkJsonModal");
+      renderReviewList();
+      showToast(`Imported ${state.extractedQuestions.length} questions!`, "success");
+    };
+
+    // Bootstrap
+    loadSavedKeys();
+    initCloud();
+  </script>
+</body>
+</html>
